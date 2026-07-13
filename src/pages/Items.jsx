@@ -28,7 +28,7 @@ import {
   Pagination,
 } from "@mui/material";
 
-const API_BASE = "https://vjc-invoice-backend.vercel.app/api/items";
+const API_BASE = "https://vjc-invoice-backend-main.vercel.app/api/items";
 // ✅ Indian currency format
 const formatPrice = (value) => {
   if (!value) return "₹0";
