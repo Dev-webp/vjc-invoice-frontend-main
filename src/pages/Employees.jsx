@@ -11,7 +11,8 @@ import BadgeIcon from "@mui/icons-material/Badge";
 
 const API = "https://vjc-invoice-backend-main.vercel.app/api";
 
-const DEPARTMENTS = ["Sales", "Operations", "Accounts", "HR", "Marketing", "Management", "MIS", "Developer"];
+const DEPARTMENTS = ["Sales", "Operations", "Accounts", "HR", "Marketing", "Management", "MIS", "Developer" ,  "Study/Visit Process Consultant",
+  "Immigration Process Consultant"];
 const ROLES = ["employee", "manager", "mis-executive", "Full-Stack-Developer"];
 const LOCATIONS = ["Hyderabad", "Bangalore"];
 
