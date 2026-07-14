@@ -55,7 +55,7 @@ const NEXT_STATUS = {
   Expired:  [],
 };
 
-const SALESPERSONS = ["Ravi Kumar", "Sneha Reddy", "Arjun Sharma", "Deepika Nair"];
+const SALESPERSONS = [];
 
 const emptyLineItem = () => ({
   _key: Date.now() + Math.random(),
@@ -301,6 +301,27 @@ console.log("QUOTE PAYLOAD", payload);
     }
   };
 
+  // ── Download PDF ──
+  const handleDownloadPdf = async (id, quoteNumber) => {
+    try {
+      const res = await API.get(`/quotes/${id}/download-pdf`, {
+        responseType: "blob",
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Quote-${quoteNumber || id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError("Failed to download PDF.");
+    }
+  };
+
+  // ── Normalize list for display ──
+
   // ── Normalize list for display ──
   const normalizedQuotes = quotes.map(normalizeQuote);
 
@@ -425,6 +446,9 @@ console.log("QUOTE PAYLOAD", payload);
                 <TableCell>
                   <Button size="small" onClick={() => { setSelected(qt); setViewOpen(true); }}>View</Button>
                   <Button size="small" onClick={() => { setForm({ ...qt }); setOpen(true); }}>Edit</Button>
+                  <Button size="small" color="primary" onClick={() => handleDownloadPdf(qt.id, qt.quote_number)}>
+                    PDF
+                  </Button>
                   {qt.status === "Accepted" && (
                     <Button size="small" color="success" variant="outlined"
                       onClick={() => handleConvertToInvoice(qt)}>
