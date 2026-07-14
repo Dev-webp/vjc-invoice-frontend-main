@@ -197,7 +197,7 @@ const nextQuoteNo = () => {
   // ── Normalize quote from API response ──
   const normalizeQuote = (q) => ({
     id:               q.id || q.quote_id,
-    quote_number:     q.quote_number || q.id,
+   quote_number: q.quote_number ?? q.quote_id ?? q.id,
     customerId:       q.customer_id || q.customerId,
     customerName:     q.customer_name || q.customerName || "",
     reference:        q.reference || "",
