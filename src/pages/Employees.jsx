@@ -13,7 +13,8 @@ const API = "https://vjc-invoice-backend-main.vercel.app/api";
 
 const DEPARTMENTS = ["Sales", "Operations", "Accounts", "HR", "Marketing", "Management", "MIS", "Developer" ,  "Study/Visit Process Consultant",
   "Immigration Process Consultant"];
-const ROLES = ["employee", "manager", "mis-executive", "Full-Stack-Developer"];
+const ROLES = ["employee", "manager", "mis-executive", "Full-Stack-Developer" , "Study/Visit Process Consultant",
+  "Immigration Process Consultant"];
 const LOCATIONS = ["Hyderabad", "Bangalore"];
 
 const ALL_PERMISSIONS = [
