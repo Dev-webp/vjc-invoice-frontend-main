@@ -1318,10 +1318,10 @@ const displayCustomers = sortedCustomers.filter((customer) => {
   
                 <TableRow key={customer.id} hover>
                   <TableCell>
-                    <Typography variant="body2" fontWeight={600} color="primary">
-                      {customer.customer_id}
-                    </Typography>
-                  </TableCell>
+  <Typography variant="body2" fontWeight={600} color="primary">
+    {customer.display_customer_id || customer.customer_id}
+  </Typography>
+</TableCell>
                   <TableCell>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <Avatar sx={{ width: 32, height: 32, fontSize: 12, bgcolor: "#1976d2" }}>
