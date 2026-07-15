@@ -170,10 +170,14 @@ const boxedFieldSx = {
   },
 
   "& .MuiSelect-select": {
-    width: "100%",
-    overflow: "visible",
-    textOverflow: "clip",
-  },
+  width: "100%",
+  paddingRight: "32px !important",
+},
+
+"& .MuiSelect-icon": {
+  right: "12px",
+  top: "calc(50% - 12px)",
+},
 };
 
 // ── Add Enquiry Form — inline (lives inside the "Add Enquiry" tab, not a popup) ──
@@ -232,7 +236,7 @@ function AddEnquiryForm({ onSaved }) {
       {/* Breadcrumb-style header bar, matches reference screenshot */}
       <Box sx={{ bgcolor: "#0f9b8e", color: "#fff", px: 3, py: 1.5, borderRadius: "8px 8px 0 0" }}>
         <Typography variant="subtitle2" sx={{ opacity: 0.9 }}>
-          Enquiry &raquo; Add Enquiry
+          Lead &raquo; Add Enquiry
         </Typography>
       </Box>
 
@@ -272,7 +276,7 @@ function AddEnquiryForm({ onSaved }) {
             </IconField>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <IconField icon={<WcIcon fontSize="small" />}>
               <TextField select variant="standard" fullWidth label="Gender" sx={boxedFieldSx}
                 value={form.gender} onChange={set("gender")}
@@ -284,7 +288,7 @@ function AddEnquiryForm({ onSaved }) {
             </IconField>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={5}>
+          <Grid item xs={12} sm={6} md={4}>
             <IconField icon={<CampaignIcon fontSize="small" />} error={!!errors.source} helperText={errors.source}>
               <TextField select variant="standard" fullWidth label="Source *" sx={boxedFieldSx}
                 value={form.source} onChange={set("source")} error={!!errors.source}
@@ -314,7 +318,7 @@ function AddEnquiryForm({ onSaved }) {
             </IconField>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={5}>
+          <Grid item xs={12} sm={6} md={4}>
             <IconField icon={<CategoryIcon fontSize="small" />} error={!!errors.service_type} helperText={errors.service_type}>
               <TextField select variant="standard" fullWidth label="Service Type *" sx={boxedFieldSx}
                 value={form.service_type} onChange={set("service_type")} error={!!errors.service_type}
@@ -325,9 +329,9 @@ function AddEnquiryForm({ onSaved }) {
           </Grid>
 
           {/* Work Description — full width row, own box */}
-          <Grid item xs={12}>
-            <IconField icon={<DescriptionIcon fontSize="small" sx={{ mt: 1 }} />}>
-              <TextField variant="standard" fullWidth multiline rows={2} label="Work Description" sx={boxedFieldSx}
+                <Grid item xs={12}>
+                <IconField icon={<DescriptionIcon fontSize="small" sx={{ mt: 1 }} />}>
+              <TextField variant="standard" fullWidth multiline rows={3} label="Work Description" sx={boxedFieldSx}
                 value={form.work_description} onChange={set("work_description")}
                 InputProps={{ disableUnderline: true }} />
             </IconField>
