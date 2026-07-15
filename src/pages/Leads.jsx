@@ -7,19 +7,42 @@ import {
   FormGroup, FormControlLabel, Select, InputLabel, FormControl,
   Tabs, Tab, InputAdornment,
 } from "@mui/material";
-import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
-import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
-import PhoneIcon from "@mui/icons-material/Phone";
-import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
-import WcIcon from "@mui/icons-material/Wc";
-import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined";
-import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
-import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
-import PublicIcon from "@mui/icons-material/Public";
-import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
-import CampaignOutlinedIcon from "@mui/icons-material/CampaignOutlined";
-import Person2OutlinedIcon from "@mui/icons-material/Person2Outlined";
-import ContactMailOutlinedIcon from "@mui/icons-material/ContactMailOutlined";
+// ── Lightweight inline SVG icons ──────────────────────────────────────
+// @mui/icons-material is not a dependency of this project, so importing
+// from it breaks the Vercel build. These small self-contained SVGs give
+// the same visual effect (icon + label) with zero extra packages.
+const makeIcon = (path) => ({ fontSize = "small", sx = {} }) => (
+  <Box
+    component="svg"
+    viewBox="0 0 24 24"
+    sx={{
+      width: fontSize === "small" ? 20 : 24,
+      height: fontSize === "small" ? 20 : 24,
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: 1.8,
+      strokeLinecap: "round",
+      strokeLinejoin: "round",
+      ...sx,
+    }}
+  >
+    <path d={path} />
+  </Box>
+);
+
+const PersonOutlineIcon = makeIcon("M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 9a7 7 0 0 1 14 0");
+const Person2OutlinedIcon = PersonOutlineIcon;
+const PhoneIphoneIcon = makeIcon("M8 3h8a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm4 15h.01");
+const PhoneIcon = makeIcon("M6.6 10.8a15.5 15.5 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C11.4 21 3 12.6 3 3c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1.1L6.6 10.8Z");
+const EmailOutlinedIcon = makeIcon("M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm0 0 8 7 8-7");
+const WcIcon = makeIcon("M9 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM6 21v-6H4l3-7h4l3 7h-2v6M17.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Zm0 0v5m-2.5 8 2.5-6 2.5 6m-4-3h3");
+const SchoolOutlinedIcon = makeIcon("m12 3 10 5-10 5L2 8l10-5Zm-7 7.5V16c0 1.7 3.1 3 7 3s7-1.3 7-3v-5.5");
+const WorkOutlineIcon = makeIcon("M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m-9 0h14a1 1 0 0 1 1 1v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a1 1 0 0 1 1-1Z");
+const DescriptionOutlinedIcon = makeIcon("M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm7 0v5h5M9 13h6m-6 4h6");
+const PublicIcon = makeIcon("M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm-9-9h18M12 3a13.5 13.5 0 0 1 0 18M12 3a13.5 13.5 0 0 0 0 18");
+const CategoryOutlinedIcon = makeIcon("m12 2 9 5v10l-9 5-9-5V7l9-5Zm0 0v10m0 0-9-5m9 5 9-5");
+const CampaignOutlinedIcon = makeIcon("M3 11v2a2 2 0 0 0 2 2h1l1 5h2l-1-5h2l9 4V6l-9 4H6a2 2 0 0 0-2 2Zm7-1V6");
+const ContactMailOutlinedIcon = makeIcon("M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm0 0 8 7 8-7M4 19l6-5m10 5-6-5");
 
 const API = "https://vjc-invoice-backend-main.vercel.app/api";
 
