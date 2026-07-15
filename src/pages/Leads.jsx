@@ -116,11 +116,20 @@ function SectionHeader({ icon, label }) {
   );
 }
 
-// Boxed field wrapper — bordered box + icon on the left, matches reference screenshot 2.
-// Works with a plain (non-select) TextField child OR a select TextField child.
-function IconField({ icon, error, helperText, children }) {
+// ── Boxed field wrapper — matches reference screenshot 2 exactly ───────────
+// Label sits as PLAIN STATIC TEXT above the box (never moves).
+// Inside the box: icon + input showing a placeholder (not a floating label),
+// so nothing jumps or overlaps the border while typing.
+function BoxedField({ icon, label, required, error, helperText, children }) {
   return (
     <Box>
+      <Typography
+        variant="caption"
+        sx={{ fontWeight: 600, color: "#555", mb: 0.5, display: "block" }}
+      >
+        {label}
+        {required && <span style={{ color: "#d32f2f" }}> *</span>}
+      </Typography>
       <Box
         sx={{
           display: "flex",
@@ -130,6 +139,7 @@ function IconField({ icon, error, helperText, children }) {
           borderColor: error ? "#d32f2f" : "#d9dee3",
           borderRadius: 2,
           px: 1.5,
+          py: 0.25,
           bgcolor: "#fff",
           "&:hover": { borderColor: "#0f9b8e" },
           "&:focus-within": { borderColor: "#0f9b8e", boxShadow: "0 0 0 2px rgba(15,155,142,0.15)" },
@@ -139,7 +149,7 @@ function IconField({ icon, error, helperText, children }) {
         <Box sx={{ flex: 1, minWidth: 0, width: "100%" }}>{children}</Box>
       </Box>
       {error && helperText && (
-        <Typography variant="caption" color="error" sx={{ ml: 1.5 }}>
+        <Typography variant="caption" color="error" sx={{ ml: 0.5 }}>
           {helperText}
         </Typography>
       )}
@@ -147,9 +157,8 @@ function IconField({ icon, error, helperText, children }) {
   );
 }
 
-// Underlying input, styled to sit borderless inside IconField's own box
-// width:"100%" forces select fields (Gender/Source/Service Type) to match
-// the same full width as plain text fields, instead of shrinking to content.
+// Underlying input, styled to sit borderless inside BoxedField's own box.
+// No label-related CSS needed anymore — we only ever show a placeholder now.
 const boxedFieldSx = {
   width: "100%",
 
@@ -162,26 +171,19 @@ const boxedFieldSx = {
     display: "none",
   },
 
-  "& .MuiInputLabel-root": {
-    fontSize: 13,
-    whiteSpace: "nowrap",
-    overflow: "visible",
-    textOverflow: "unset",
-    maxWidth: "none",
+  "& .MuiSelect-select": {
+    padding: "8px 32px 8px 4px !important",
+    display: "flex",
+    alignItems: "center",
   },
 
- "& .MuiSelect-select": {
-  padding: "8px 40px 8px 20px !important",
-  display: "flex",
-  alignItems: "center",
-},
-
-"& .MuiSelect-icon": {
-  right: "10px",
-  top: "50%",
-  transform: "translateY(-50%)",
-},
+  "& .MuiSelect-icon": {
+    right: "4px",
+    top: "50%",
+    transform: "translateY(-50%)",
+  },
 };
+
 // ── Add Enquiry Form — inline (lives inside the "Add Enquiry" tab, not a popup) ──
 function AddEnquiryForm({ onSaved }) {
   const [form, setForm] = useState(EMPTY_LEAD_FORM);
@@ -247,74 +249,99 @@ function AddEnquiryForm({ onSaved }) {
         <SectionHeader icon={<PersonIcon sx={{ color: "#0f9b8e" }} />} label="Personal Details" />
         <Grid container spacing={2.5} sx={{ mb: 1 }}>
           <Grid item xs={12} sm={6} md={4}>
-            <IconField icon={<PersonIcon fontSize="small" />} error={!!errors.lead_name} helperText={errors.lead_name}>
-              <TextField variant="standard" fullWidth label="Lead Name *" sx={boxedFieldSx}
-                value={form.lead_name} onChange={set("lead_name")} error={!!errors.lead_name}
-                InputProps={{ disableUnderline: true }} />
-            </IconField>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={4}>
-            <IconField icon={<CallIcon fontSize="small" />} error={!!errors.contact_number} helperText={errors.contact_number}>
-              <TextField variant="standard" fullWidth label="Contact Number *" sx={boxedFieldSx}
-                value={form.contact_number} onChange={set("contact_number")} error={!!errors.contact_number}
-                InputProps={{ disableUnderline: true }} />
-            </IconField>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={4}>
-            <IconField icon={<PhoneAndroidIcon fontSize="small" />}>
-              <TextField variant="standard" fullWidth label="Alternate Contact Number" sx={boxedFieldSx}
-                value={form.alternate_contact_number} onChange={set("alternate_contact_number")}
-                InputProps={{ disableUnderline: true }} />
-            </IconField>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={4}>
-            <IconField icon={<EmailIcon fontSize="small" />}>
-              <TextField variant="standard" fullWidth label="Email Id" sx={boxedFieldSx}
-                value={form.email} onChange={set("email")}
-                InputProps={{ disableUnderline: true }} />
-            </IconField>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={4}>
-            <IconField icon={<WcIcon fontSize="small" />}>
+            <BoxedField
+              icon={<PersonIcon fontSize="small" />}
+              label="Lead Name"
+              required
+              error={!!errors.lead_name}
+              helperText={errors.lead_name}
+            >
               <TextField
-  select
-  variant="standard"
-  fullWidth
-  label="Gender"
-  sx={boxedFieldSx}
-  value={form.gender}
-  onChange={set("gender")}
-  SelectProps={{ displayEmpty: true }}
-  InputProps={{ disableUnderline: true }}
->
+                variant="standard" fullWidth placeholder="Lead Name" sx={boxedFieldSx}
+                value={form.lead_name} onChange={set("lead_name")}
+                InputProps={{ disableUnderline: true }}
+              />
+            </BoxedField>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={4}>
+            <BoxedField
+              icon={<CallIcon fontSize="small" />}
+              label="Contact Number"
+              required
+              error={!!errors.contact_number}
+              helperText={errors.contact_number}
+            >
+              <TextField
+                variant="standard" fullWidth placeholder="Contact Number" sx={boxedFieldSx}
+                value={form.contact_number} onChange={set("contact_number")}
+                InputProps={{ disableUnderline: true }}
+              />
+            </BoxedField>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={4}>
+            <BoxedField icon={<PhoneAndroidIcon fontSize="small" />} label="Alternate Contact Number">
+              <TextField
+                variant="standard" fullWidth placeholder="Alternate Contact Number" sx={boxedFieldSx}
+                value={form.alternate_contact_number} onChange={set("alternate_contact_number")}
+                InputProps={{ disableUnderline: true }}
+              />
+            </BoxedField>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={4}>
+            <BoxedField icon={<EmailIcon fontSize="small" />} label="Email Id">
+              <TextField
+                variant="standard" fullWidth placeholder="Email Id" sx={boxedFieldSx}
+                value={form.email} onChange={set("email")}
+                InputProps={{ disableUnderline: true }}
+              />
+            </BoxedField>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={4}>
+            <BoxedField icon={<WcIcon fontSize="small" />} label="Gender">
+              <TextField
+                select
+                variant="standard"
+                fullWidth
+                sx={boxedFieldSx}
+                value={form.gender}
+                onChange={set("gender")}
+                SelectProps={{ displayEmpty: true }}
+                InputProps={{ disableUnderline: true }}
+              >
+                <MenuItem value="" disabled><em>Select Gender</em></MenuItem>
                 <MenuItem value="Male">Male</MenuItem>
                 <MenuItem value="Female">Female</MenuItem>
                 <MenuItem value="Other">Other</MenuItem>
               </TextField>
-            </IconField>
+            </BoxedField>
           </Grid>
 
           <Grid item xs={12} sm={6} md={4}>
-            <IconField icon={<CampaignIcon fontSize="small" />} error={!!errors.source} helperText={errors.source}>
-            <TextField
-  select
-  variant="standard"
-  fullWidth
-  label="Source *"
-  sx={boxedFieldSx}
-  value={form.source}
-  onChange={set("source")}
-  error={!!errors.source}
-  SelectProps={{ displayEmpty: true }}
-  InputProps={{ disableUnderline: true }}
->
+            <BoxedField
+              icon={<CampaignIcon fontSize="small" />}
+              label="Source"
+              required
+              error={!!errors.source}
+              helperText={errors.source}
+            >
+              <TextField
+                select
+                variant="standard"
+                fullWidth
+                sx={boxedFieldSx}
+                value={form.source}
+                onChange={set("source")}
+                SelectProps={{ displayEmpty: true }}
+                InputProps={{ disableUnderline: true }}
+              >
+                <MenuItem value="" disabled><em>Select Source</em></MenuItem>
                 {SOURCES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
               </TextField>
-            </IconField>
+            </BoxedField>
           </Grid>
         </Grid>
 
@@ -322,47 +349,58 @@ function AddEnquiryForm({ onSaved }) {
         <SectionHeader icon={<BadgeIcon sx={{ color: "#0f9b8e" }} />} label="Other Details" />
         <Grid container spacing={2.5}>
           <Grid item xs={12} sm={6} md={4}>
-            <IconField icon={<SchoolIcon fontSize="small" />}>
-              <TextField variant="standard" fullWidth label="Education Qualification" sx={boxedFieldSx}
+            <BoxedField icon={<SchoolIcon fontSize="small" />} label="Education Qualification">
+              <TextField
+                variant="standard" fullWidth placeholder="Education Qualification" sx={boxedFieldSx}
                 value={form.education_qualification} onChange={set("education_qualification")}
-                InputProps={{ disableUnderline: true }} />
-            </IconField>
+                InputProps={{ disableUnderline: true }}
+              />
+            </BoxedField>
           </Grid>
 
           <Grid item xs={12} sm={6} md={4}>
-            <IconField icon={<WorkHistoryIcon fontSize="small" />}>
-              <TextField variant="standard" fullWidth label="Work Experience (In Years)" sx={boxedFieldSx}
+            <BoxedField icon={<WorkHistoryIcon fontSize="small" />} label="Work Experience (In Years)">
+              <TextField
+                variant="standard" fullWidth placeholder="Work Experience (In Years)" sx={boxedFieldSx}
                 value={form.work_experience} onChange={set("work_experience")}
-                InputProps={{ disableUnderline: true }} />
-            </IconField>
+                InputProps={{ disableUnderline: true }}
+              />
+            </BoxedField>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={5}>
-            <IconField icon={<CategoryIcon fontSize="small" />} error={!!errors.service_type} helperText={errors.service_type}>
-<TextField
-  select
-  variant="standard"
-  fullWidth
-  label="Service Type *"
-  sx={boxedFieldSx}
-  value={form.service_type}
-  onChange={set("service_type")}
-  error={!!errors.service_type}
-  SelectProps={{ displayEmpty: true }}
-  InputProps={{ disableUnderline: true }}
->
+          <Grid item xs={12} sm={6} md={4}>
+            <BoxedField
+              icon={<CategoryIcon fontSize="small" />}
+              label="Service Type"
+              required
+              error={!!errors.service_type}
+              helperText={errors.service_type}
+            >
+              <TextField
+                select
+                variant="standard"
+                fullWidth
+                sx={boxedFieldSx}
+                value={form.service_type}
+                onChange={set("service_type")}
+                SelectProps={{ displayEmpty: true }}
+                InputProps={{ disableUnderline: true }}
+              >
+                <MenuItem value="" disabled><em>Select Service Type</em></MenuItem>
                 {SERVICE_TYPES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
               </TextField>
-            </IconField>
+            </BoxedField>
           </Grid>
 
-          {/* Work Description — full width row, own box */}
-                <Grid item xs={12} md={8}>
-                <IconField icon={<DescriptionIcon fontSize="small" sx={{ mt: 1 }} />}>
-              <TextField variant="standard" fullWidth multiline rows={2} label="Work Description" sx={boxedFieldSx}
+          {/* Work Description — wider box, own row */}
+          <Grid item xs={12} md={8}>
+            <BoxedField icon={<DescriptionIcon fontSize="small" sx={{ mt: 1 }} />} label="Work Description">
+              <TextField
+                variant="standard" fullWidth multiline rows={2} placeholder="Work Description" sx={boxedFieldSx}
                 value={form.work_description} onChange={set("work_description")}
-                InputProps={{ disableUnderline: true }} />
-            </IconField>
+                InputProps={{ disableUnderline: true }}
+              />
+            </BoxedField>
           </Grid>
 
           {/* Interested Country — full width row, own box, matches reference */}
