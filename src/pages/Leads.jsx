@@ -152,10 +152,28 @@ function IconField({ icon, error, helperText, children }) {
 // the same full width as plain text fields, instead of shrinking to content.
 const boxedFieldSx = {
   width: "100%",
-  "& .MuiInput-root": { fontSize: 14, width: "100%" },
-  "& .MuiInput-root:before, & .MuiInput-root:after": { display: "none" },
-  "& .MuiInputLabel-root": { fontSize: 13 },
-  "& .MuiSelect-select": { width: "100%" },
+  "& .MuiInput-root": {
+    fontSize: 14,
+    width: "100%",
+  },
+
+  "& .MuiInput-root:before, & .MuiInput-root:after": {
+    display: "none",
+  },
+
+  "& .MuiInputLabel-root": {
+    fontSize: 13,
+    whiteSpace: "nowrap",
+    overflow: "visible",
+    textOverflow: "unset",
+    maxWidth: "none",
+  },
+
+  "& .MuiSelect-select": {
+    width: "100%",
+    overflow: "visible",
+    textOverflow: "clip",
+  },
 };
 
 // ── Add Enquiry Form — inline (lives inside the "Add Enquiry" tab, not a popup) ──
