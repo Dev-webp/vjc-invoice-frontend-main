@@ -19,6 +19,7 @@ const LOCATIONS = ["Hyderabad", "Bangalore"];
 
 const ALL_PERMISSIONS = [
   { key: "dashboard",  label: "Dashboard",          icon: "🏠" },
+  { key: "leads",      label: "Leads",              icon: "🎯" },
   { key: "customers",  label: "Customers",          icon: "👤" },
   { key: "invoices",   label: "Invoices",           icon: "🧾" },
   { key: "quotes",     label: "Quotes",             icon: "📋" },
