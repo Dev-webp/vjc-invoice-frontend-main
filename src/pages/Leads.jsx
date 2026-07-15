@@ -171,12 +171,15 @@ const boxedFieldSx = {
   },
 
  "& .MuiSelect-select": {
-  padding: "8px 40px 8px 0 !important",
+  padding: "8px 40px 8px 12px !important",
+  display: "flex",
+  alignItems: "center",
 },
 
 "& .MuiSelect-icon": {
-  right: "12px",
-  top: "calc(50% - 12px)",
+  right: "10px",
+  top: "50%",
+  transform: "translateY(-50%)",
 },
 };
 // ── Add Enquiry Form — inline (lives inside the "Add Enquiry" tab, not a popup) ──
@@ -285,6 +288,7 @@ function AddEnquiryForm({ onSaved }) {
   sx={boxedFieldSx}
   value={form.gender}
   onChange={set("gender")}
+  SelectProps={{ displayEmpty: true }}
   InputProps={{ disableUnderline: true }}
 >
                 <MenuItem value="Male">Male</MenuItem>
@@ -305,6 +309,7 @@ function AddEnquiryForm({ onSaved }) {
   value={form.source}
   onChange={set("source")}
   error={!!errors.source}
+  SelectProps={{ displayEmpty: true }}
   InputProps={{ disableUnderline: true }}
 >
                 {SOURCES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
@@ -343,6 +348,7 @@ function AddEnquiryForm({ onSaved }) {
   value={form.service_type}
   onChange={set("service_type")}
   error={!!errors.service_type}
+  SelectProps={{ displayEmpty: true }}
   InputProps={{ disableUnderline: true }}
 >
                 {SERVICE_TYPES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
