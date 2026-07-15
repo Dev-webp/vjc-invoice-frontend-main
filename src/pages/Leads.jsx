@@ -337,7 +337,7 @@ function AddEnquiryForm({ onSaved }) {
             </IconField>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid item xs={12} sm={6} md={5}>
             <IconField icon={<CategoryIcon fontSize="small" />} error={!!errors.service_type} helperText={errors.service_type}>
 <TextField
   select
