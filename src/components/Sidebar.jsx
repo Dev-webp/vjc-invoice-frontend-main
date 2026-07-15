@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import PeopleIcon from "@mui/icons-material/People";
+import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import RequestQuoteIcon from "@mui/icons-material/RequestQuote";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
@@ -23,6 +24,7 @@ console.log("Logged User =", user);
   (user?.role === "chairman" || user?.role === "mis-executive")
     ? [
         { name: "Dashboard", icon: <DashboardIcon /> },
+        { name: "Leads", icon: <PersonSearchIcon /> },
         { name: "Customers", icon: <PeopleIcon /> },
         { name: "Services", icon: <InventoryIcon /> },
         { name: "Quotes", icon: <RequestQuoteIcon /> },
@@ -35,6 +37,7 @@ console.log("Logged User =", user);
       ]
     : [
         { name: "Dashboard", icon: <DashboardIcon /> },
+        { name: "Leads", icon: <PersonSearchIcon /> },
         { name: "Customers", icon: <PeopleIcon /> },
         { name: "Services", icon: <InventoryIcon /> },
         { name: "Quotes", icon: <RequestQuoteIcon /> },
@@ -44,6 +47,7 @@ console.log("Logged User =", user);
       ];
       const nameToPermKey = {
     "Dashboard": "dashboard",
+     "Leads": "leads",
     "Customers": "customers",
     "Services": "services",
     "Quotes": "quotes",

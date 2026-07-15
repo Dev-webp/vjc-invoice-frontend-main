@@ -5,6 +5,7 @@ import Topbar from "../components/Topbar";
 
 import Dashboard from "../pages/Dashboard";
 import Customers from "../pages/Customers";
+import Leads from "../pages/Leads";
 import Items from "../pages/Items";
 import Quotes from "../pages/Quotes";
 import Invoices from "../pages/Invoices";
@@ -44,6 +45,8 @@ const MainLayout = () => {
           }}
         >
           {page === "Dashboard" && <Dashboard />}
+          
+          {page === "Leads" && <Leads />}
 
           {page === "Customers" && <Customers />}
 
