@@ -254,7 +254,7 @@ function AddEnquiryForm({ onSaved }) {
             </IconField>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid item xs={12} sm={6} md={3}>
             <IconField icon={<WcIcon fontSize="small" />}>
               <TextField select variant="standard" fullWidth label="Gender" sx={boxedFieldSx}
                 value={form.gender} onChange={set("gender")}
@@ -266,7 +266,7 @@ function AddEnquiryForm({ onSaved }) {
             </IconField>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid item xs={12} sm={6} md={5}>
             <IconField icon={<CampaignIcon fontSize="small" />} error={!!errors.source} helperText={errors.source}>
               <TextField select variant="standard" fullWidth label="Source *" sx={boxedFieldSx}
                 value={form.source} onChange={set("source")} error={!!errors.source}
@@ -296,7 +296,7 @@ function AddEnquiryForm({ onSaved }) {
             </IconField>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid item xs={12} sm={6} md={5}>
             <IconField icon={<CategoryIcon fontSize="small" />} error={!!errors.service_type} helperText={errors.service_type}>
               <TextField select variant="standard" fullWidth label="Service Type *" sx={boxedFieldSx}
                 value={form.service_type} onChange={set("service_type")} error={!!errors.service_type}
