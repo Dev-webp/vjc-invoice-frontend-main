@@ -136,7 +136,7 @@ function IconField({ icon, error, helperText, children }) {
         }}
       >
         <Box sx={{ color: "#7b8794", display: "flex", flexShrink: 0 }}>{icon}</Box>
-        <Box sx={{ flex: 1, minWidth: 0 }}>{children}</Box>
+        <Box sx={{ flex: 1, minWidth: 0, width: "100%" }}>{children}</Box>
       </Box>
       {error && helperText && (
         <Typography variant="caption" color="error" sx={{ ml: 1.5 }}>
@@ -148,10 +148,14 @@ function IconField({ icon, error, helperText, children }) {
 }
 
 // Underlying input, styled to sit borderless inside IconField's own box
+// width:"100%" forces select fields (Gender/Source/Service Type) to match
+// the same full width as plain text fields, instead of shrinking to content.
 const boxedFieldSx = {
-  "& .MuiInput-root": { fontSize: 14 },
+  width: "100%",
+  "& .MuiInput-root": { fontSize: 14, width: "100%" },
   "& .MuiInput-root:before, & .MuiInput-root:after": { display: "none" },
   "& .MuiInputLabel-root": { fontSize: 13 },
+  "& .MuiSelect-select": { width: "100%" },
 };
 
 // ── Add Enquiry Form — inline (lives inside the "Add Enquiry" tab, not a popup) ──
