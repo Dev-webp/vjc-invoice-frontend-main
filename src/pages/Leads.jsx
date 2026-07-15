@@ -170,13 +170,14 @@ const boxedFieldSx = {
     maxWidth: "none",
   },
 
-  "& .MuiSelect-select": {
-    paddingRight: "36px !important",
-  },
+ "& .MuiSelect-select": {
+  padding: "8px 40px 8px 0 !important",
+},
 
-  "& .MuiSelect-icon": {
-    right: "10px",
-  },
+"& .MuiSelect-icon": {
+  right: "12px",
+  top: "calc(50% - 12px)",
+},
 };
 // ── Add Enquiry Form — inline (lives inside the "Add Enquiry" tab, not a popup) ──
 function AddEnquiryForm({ onSaved }) {
@@ -280,18 +281,12 @@ function AddEnquiryForm({ onSaved }) {
   select
   variant="standard"
   fullWidth
+  label="Gender"
   sx={boxedFieldSx}
   value={form.gender}
   onChange={set("gender")}
-  displayEmpty
-  SelectProps={{
-    displayEmpty: true,
-  }}
   InputProps={{ disableUnderline: true }}
 >
-    <MenuItem value="">
-      <em>Gender</em>
-    </MenuItem>
                 <MenuItem value="Male">Male</MenuItem>
                 <MenuItem value="Female">Female</MenuItem>
                 <MenuItem value="Other">Other</MenuItem>
@@ -305,19 +300,13 @@ function AddEnquiryForm({ onSaved }) {
   select
   variant="standard"
   fullWidth
+  label="Source *"
   sx={boxedFieldSx}
   value={form.source}
   onChange={set("source")}
   error={!!errors.source}
-  displayEmpty
-  SelectProps={{
-    displayEmpty: true,
-  }}
   InputProps={{ disableUnderline: true }}
 >
-    <MenuItem value="">
-      <em>Source *</em>
-    </MenuItem>
                 {SOURCES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
               </TextField>
             </IconField>
@@ -349,19 +338,13 @@ function AddEnquiryForm({ onSaved }) {
   select
   variant="standard"
   fullWidth
+  label="Service Type *"
   sx={boxedFieldSx}
   value={form.service_type}
   onChange={set("service_type")}
   error={!!errors.service_type}
-  displayEmpty
-  SelectProps={{
-    displayEmpty: true,
-  }}
   InputProps={{ disableUnderline: true }}
 >
-    <MenuItem value="">
-      <em>Service Type *</em>
-    </MenuItem>
                 {SERVICE_TYPES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
               </TextField>
             </IconField>
