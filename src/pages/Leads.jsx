@@ -48,8 +48,200 @@ const SERVICE_TYPES = [
 ];
 
 const COUNTRIES = [
-  "Germany", "Canada", "Australia", "UK", "USA",
-  "Luxembourg", "New Zealand", "Ireland", "Others",
+  "Afghanistan",
+  "Albania",
+  "Algeria",
+  "Andorra",
+  "Angola",
+  "Antigua and Barbuda",
+  "Argentina",
+  "Armenia",
+  "Australia",
+  "Austria",
+  "Azerbaijan",
+  "Bahamas",
+  "Bahrain",
+  "Bangladesh",
+  "Barbados",
+  "Belarus",
+  "Belgium",
+  "Belize",
+  "Benin",
+  "Bhutan",
+  "Bolivia",
+  "Bosnia and Herzegovina",
+  "Botswana",
+  "Brazil",
+  "Brunei",
+  "Bulgaria",
+  "Burkina Faso",
+  "Burundi",
+  "Cambodia",
+  "Cameroon",
+  "Canada",
+  "Cape Verde",
+  "Central African Republic",
+  "Chad",
+  "Chile",
+  "China",
+  "Colombia",
+  "Comoros",
+  "Congo",
+  "Costa Rica",
+  "Croatia",
+  "Cuba",
+  "Cyprus",
+  "Czech Republic",
+  "Denmark",
+  "Djibouti",
+  "Dominica",
+  "Dominican Republic",
+  "Ecuador",
+  "Egypt",
+  "El Salvador",
+  "Equatorial Guinea",
+  "Eritrea",
+  "Estonia",
+  "Eswatini",
+  "Ethiopia",
+  "Fiji",
+  "Finland",
+  "France",
+  "Gabon",
+  "Gambia",
+  "Georgia",
+  "Germany",
+  "Ghana",
+  "Greece",
+  "Grenada",
+  "Guatemala",
+  "Guinea",
+  "Guinea-Bissau",
+  "Guyana",
+  "Haiti",
+  "Honduras",
+  "Hungary",
+  "Iceland",
+  "India",
+  "Indonesia",
+  "Iran",
+  "Iraq",
+  "Ireland",
+  "Israel",
+  "Italy",
+  "Jamaica",
+  "Japan",
+  "Jordan",
+  "Kazakhstan",
+  "Kenya",
+  "Kiribati",
+  "Kuwait",
+  "Kyrgyzstan",
+  "Laos",
+  "Latvia",
+  "Lebanon",
+  "Lesotho",
+  "Liberia",
+  "Libya",
+  "Liechtenstein",
+  "Lithuania",
+  "Luxembourg",
+  "Madagascar",
+  "Malawi",
+  "Malaysia",
+  "Maldives",
+  "Mali",
+  "Malta",
+  "Marshall Islands",
+  "Mauritania",
+  "Mauritius",
+  "Mexico",
+  "Micronesia",
+  "Moldova",
+  "Monaco",
+  "Mongolia",
+  "Montenegro",
+  "Morocco",
+  "Mozambique",
+  "Myanmar",
+  "Namibia",
+  "Nauru",
+  "Nepal",
+  "Netherlands",
+  "New Zealand",
+  "Nicaragua",
+  "Niger",
+  "Nigeria",
+  "North Korea",
+  "North Macedonia",
+  "Norway",
+  "Oman",
+  "Pakistan",
+  "Palau",
+  "Palestine",
+  "Panama",
+  "Papua New Guinea",
+  "Paraguay",
+  "Peru",
+  "Philippines",
+  "Poland",
+  "Portugal",
+  "Qatar",
+  "Romania",
+  "Russia",
+  "Rwanda",
+  "Saint Kitts and Nevis",
+  "Saint Lucia",
+  "Saint Vincent and the Grenadines",
+  "Samoa",
+  "San Marino",
+  "Sao Tome and Principe",
+  "Saudi Arabia",
+  "Senegal",
+  "Serbia",
+  "Seychelles",
+  "Sierra Leone",
+  "Singapore",
+  "Slovakia",
+  "Slovenia",
+  "Solomon Islands",
+  "Somalia",
+  "South Africa",
+  "South Korea",
+  "South Sudan",
+  "Spain",
+  "Sri Lanka",
+  "Sudan",
+  "Suriname",
+  "Sweden",
+  "Switzerland",
+  "Syria",
+  "Taiwan",
+  "Tajikistan",
+  "Tanzania",
+  "Thailand",
+  "Timor-Leste",
+  "Togo",
+  "Tonga",
+  "Trinidad and Tobago",
+  "Tunisia",
+  "Turkey",
+  "Turkmenistan",
+  "Tuvalu",
+  "Uganda",
+  "Ukraine",
+  "United Arab Emirates",
+  "United Kingdom",
+  "United States",
+  "Uruguay",
+  "Uzbekistan",
+  "Vanuatu",
+  "Vatican City",
+  "Venezuela",
+  "Vietnam",
+  "Yemen",
+  "Zambia",
+  "Zimbabwe",
 ];
 
 const STATUS_OPTIONS = ["New", "Warm", "Cold", "Prospect", "HOLD", "Pending Agreement", "Dead"];
@@ -192,14 +384,7 @@ function AddEnquiryForm({ onSaved }) {
 
   const set = (field) => (e) => setForm({ ...form, [field]: e.target.value });
 
-  const toggleCountry = (country) => {
-    setForm((prev) => {
-      const list = prev.interested_countries.includes(country)
-        ? prev.interested_countries.filter((c) => c !== country)
-        : [...prev.interested_countries, country];
-      return { ...prev, interested_countries: list };
-    });
-  };
+  
 
   const validate = () => {
     const e = {};
@@ -404,32 +589,38 @@ function AddEnquiryForm({ onSaved }) {
           </Grid>
 
           {/* Interested Country — full width row, own box, matches reference */}
-          <Grid item xs={12}>
-            <Box sx={{ border: "1px solid #d9dee3", borderRadius: 2, px: 2, py: 1.5 }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-                <PublicIcon fontSize="small" sx={{ color: "#7b8794" }} />
-                <Typography variant="body2" fontWeight={700} color="text.secondary">
-                  Interested Country
-                </Typography>
-              </Box>
-              <Grid container>
-                {COUNTRIES.map((c) => (
-                  <Grid item xs={6} sm={4} md={3} key={c}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={form.interested_countries.includes(c)}
-                          onChange={() => toggleCountry(c)}
-                          size="small"
-                        />
-                      }
-                      label={c}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
-            </Box>
-          </Grid>
+         <Grid item xs={12}>
+  <BoxedField
+    icon={<PublicIcon fontSize="small" />}
+    label="Interested Country"
+  >
+    <TextField
+      select
+      variant="standard"
+      fullWidth
+      sx={boxedFieldSx}
+      value={form.interested_countries[0] || ""}
+      onChange={(e) =>
+        setForm({
+          ...form,
+          interested_countries: [e.target.value],
+        })
+      }
+      SelectProps={{ displayEmpty: true }}
+      InputProps={{ disableUnderline: true }}
+    >
+      <MenuItem value="" disabled>
+        <em>Select Country</em>
+      </MenuItem>
+
+      {COUNTRIES.map((country) => (
+        <MenuItem key={country} value={country}>
+          {country}
+        </MenuItem>
+      ))}
+    </TextField>
+  </BoxedField>
+</Grid>
         </Grid>
 
         <Divider sx={{ my: 3 }} />
