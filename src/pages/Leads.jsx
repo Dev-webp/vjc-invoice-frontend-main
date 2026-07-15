@@ -5,6 +5,7 @@ import {
   Paper, Dialog, DialogTitle, DialogContent, DialogActions,
   MenuItem, Chip, Checkbox, Stack, CircularProgress, Alert,
   FormGroup, FormControlLabel, Select, InputLabel, FormControl,
+  Tabs, Tab,
 } from "@mui/material";
 
 const API = "https://vjc-invoice-backend-main.vercel.app/api";
@@ -79,15 +80,11 @@ const EMPTY_LEAD_FORM = {
   service_type: "",
 };
 
-// ── Add Enquiry Dialog ───────────────────────────────────────────────────
-function AddEnquiryDialog({ open, onClose, onSaved }) {
+// ── Add Enquiry Form — inline (lives inside the "Add Enquiry" tab, not a popup) ──
+function AddEnquiryForm({ onSaved }) {
   const [form, setForm] = useState(EMPTY_LEAD_FORM);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (open) { setForm(EMPTY_LEAD_FORM); setErrors({}); }
-  }, [open]);
 
   const set = (field) => (e) => setForm({ ...form, [field]: e.target.value });
 
@@ -121,8 +118,9 @@ function AddEnquiryDialog({ open, onClose, onSaved }) {
       });
       const data = await res.json();
       if (data.success) {
-        onSaved();
-        onClose();
+        setForm(EMPTY_LEAD_FORM);
+        setErrors({});
+        onSaved(); // refreshes the list + switches to "View Enquiry" tab
       } else {
         alert("❌ " + (data.message || "Failed to save enquiry"));
       }
@@ -134,9 +132,10 @@ function AddEnquiryDialog({ open, onClose, onSaved }) {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Add Enquiry</DialogTitle>
-      <DialogContent>
+    <Card sx={{ maxWidth: 640 }}>
+      <CardContent>
+        <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>Add Enquiry</Typography>
+
         <TextField fullWidth margin="normal" label="Lead Name *"
           value={form.lead_name} onChange={set("lead_name")}
           error={!!errors.lead_name} helperText={errors.lead_name} />
@@ -199,14 +198,14 @@ function AddEnquiryDialog({ open, onClose, onSaved }) {
           error={!!errors.service_type} helperText={errors.service_type}>
           {SERVICE_TYPES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
         </TextField>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button variant="contained" onClick={handleSave} disabled={saving}>
-          {saving ? "Saving..." : "Save Enquiry"}
-        </Button>
-      </DialogActions>
-    </Dialog>
+
+        <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
+          <Button variant="contained" size="large" onClick={handleSave} disabled={saving}>
+            {saving ? "Saving..." : "Save Enquiry"}
+          </Button>
+        </Box>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -326,7 +325,7 @@ function LeadManagement() {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [addOpen, setAddOpen] = useState(false);
+  const [tab, setTab] = useState(0); // 0 = Add Enquiry, 1 = View Enquiry
   const [assignOpen, setAssignOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
   const [statusFilter, setStatusFilter] = useState("All");
@@ -376,15 +375,32 @@ function LeadManagement() {
 
   return (
     <Box>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-        <Typography variant="h4" fontWeight="bold">Lead Management</Typography>
-        <Button variant="contained" size="large" onClick={() => setAddOpen(true)}>
-          + Add Enquiry
-        </Button>
-      </Box>
+      <Typography variant="h4" fontWeight="bold" sx={{ mb: 2 }}>Lead Management</Typography>
+
+      <Tabs
+        value={tab}
+        onChange={(_, v) => setTab(v)}
+        sx={{ mb: 3, borderBottom: "1px solid #e0e0e0" }}
+      >
+        <Tab label="Add Enquiry" />
+        <Tab label="View Enquiry" />
+      </Tabs>
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
+      {/* ── Tab 0: Add Enquiry ── */}
+      {tab === 0 && (
+        <AddEnquiryForm
+          onSaved={() => {
+            fetchLeads();   // refresh the list so the new lead is already there
+            setTab(1);      // jump straight to "View Enquiry" to show it
+          }}
+        />
+      )}
+
+      {/* ── Tab 1: View Enquiry ── */}
+      {tab === 1 && (
+      <>
       <Box sx={{ display: "flex", gap: 2, mb: 2, flexWrap: "wrap", alignItems: "center" }}>
         <TextField select label="Status" size="small" value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)} sx={{ width: 180 }}>
@@ -486,8 +502,8 @@ function LeadManagement() {
           </Table>
         </TableContainer>
       )}
-
-      <AddEnquiryDialog open={addOpen} onClose={() => setAddOpen(false)} onSaved={fetchLeads} />
+      </>
+      )}
 
       <AssignEnquiryDialog
         open={assignOpen}
