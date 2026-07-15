@@ -5,8 +5,20 @@ import {
   Paper, Dialog, DialogTitle, DialogContent, DialogActions,
   MenuItem, Chip, Checkbox, Stack, CircularProgress, Alert,
   FormGroup, FormControlLabel, Select, InputLabel, FormControl,
-  Tabs, Tab,
+  Tabs, Tab, InputAdornment, Divider,
 } from "@mui/material";
+import PersonIcon from "@mui/icons-material/Person";
+import CallIcon from "@mui/icons-material/Call";
+import PhoneAndroidIcon from "@mui/icons-material/PhoneAndroid";
+import EmailIcon from "@mui/icons-material/Email";
+import WcIcon from "@mui/icons-material/Wc";
+import CampaignIcon from "@mui/icons-material/Campaign";
+import SchoolIcon from "@mui/icons-material/School";
+import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
+import DescriptionIcon from "@mui/icons-material/Description";
+import PublicIcon from "@mui/icons-material/Public";
+import CategoryIcon from "@mui/icons-material/Category";
+import BadgeIcon from "@mui/icons-material/Badge";
 
 const API = "https://vjc-invoice-backend-main.vercel.app/api";
 
@@ -80,6 +92,30 @@ const EMPTY_LEAD_FORM = {
   service_type: "",
 };
 
+// Small reusable section header — light teal bar, matches reference screenshot
+function SectionHeader({ icon, label }) {
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 1,
+        bgcolor: "#e6f3f2",
+        borderLeft: "4px solid #0f9b8e",
+        px: 2,
+        py: 1,
+        borderRadius: "6px 6px 0 0",
+        mb: 2,
+      }}
+    >
+      {icon}
+      <Typography variant="subtitle1" fontWeight={700} color="#0f6f65">
+        {label}
+      </Typography>
+    </Box>
+  );
+}
+
 // ── Add Enquiry Form — inline (lives inside the "Add Enquiry" tab, not a popup) ──
 function AddEnquiryForm({ onSaved }) {
   const [form, setForm] = useState(EMPTY_LEAD_FORM);
@@ -132,75 +168,137 @@ function AddEnquiryForm({ onSaved }) {
   };
 
   return (
-    <Card sx={{ maxWidth: 640 }}>
-      <CardContent>
-        <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>Add Enquiry</Typography>
-
-        <TextField fullWidth margin="normal" label="Lead Name *"
-          value={form.lead_name} onChange={set("lead_name")}
-          error={!!errors.lead_name} helperText={errors.lead_name} />
-
-        <TextField fullWidth margin="normal" label="Contact Number *"
-          value={form.contact_number} onChange={set("contact_number")}
-          error={!!errors.contact_number} helperText={errors.contact_number} />
-
-        <TextField fullWidth margin="normal" label="Alternate Contact Number (Optional)"
-          value={form.alternate_contact_number} onChange={set("alternate_contact_number")} />
-
-        <TextField fullWidth margin="normal" label="Email Id"
-          value={form.email} onChange={set("email")} />
-
-        <TextField select fullWidth margin="normal" label="Gender"
-          value={form.gender} onChange={set("gender")}>
-          <MenuItem value="Male">Male</MenuItem>
-          <MenuItem value="Female">Female</MenuItem>
-          <MenuItem value="Other">Other</MenuItem>
-        </TextField>
-
-        <TextField select fullWidth margin="normal" label="Source *"
-          value={form.source} onChange={set("source")}
-          error={!!errors.source} helperText={errors.source}>
-          {SOURCES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
-        </TextField>
-
-        <TextField fullWidth margin="normal" label="Education Qualification"
-          value={form.education_qualification} onChange={set("education_qualification")} />
-
-        <TextField fullWidth margin="normal" label="Work Experience (In Years)"
-          value={form.work_experience} onChange={set("work_experience")} />
-
-        <TextField fullWidth margin="normal" label="Work Description" multiline rows={2}
-          value={form.work_description} onChange={set("work_description")} />
-
-        {/* Interested Country — multi-select checkboxes */}
-        <Typography variant="body2" sx={{ mt: 2, mb: 1, fontWeight: 600 }}>
-          Interested Country
+    <Card sx={{ width: "100%", borderRadius: 2, boxShadow: 3 }}>
+      {/* Breadcrumb-style header bar, matches reference screenshot */}
+      <Box sx={{ bgcolor: "#0f9b8e", color: "#fff", px: 3, py: 1.5, borderRadius: "8px 8px 0 0" }}>
+        <Typography variant="subtitle2" sx={{ opacity: 0.9 }}>
+          Enquiry &raquo; Add Enquiry
         </Typography>
-        <FormGroup row>
-          {COUNTRIES.map((c) => (
-            <FormControlLabel
-              key={c}
-              sx={{ width: "45%" }}
-              control={
-                <Checkbox
-                  checked={form.interested_countries.includes(c)}
-                  onChange={() => toggleCountry(c)}
-                  size="small"
-                />
-              }
-              label={c}
-            />
-          ))}
-        </FormGroup>
+      </Box>
 
-        <TextField select fullWidth margin="normal" label="Service Type *"
-          value={form.service_type} onChange={set("service_type")}
-          error={!!errors.service_type} helperText={errors.service_type}>
-          {SERVICE_TYPES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
-        </TextField>
+      <CardContent sx={{ p: 3 }}>
+        <Grid container spacing={3}>
+          {/* ── LEFT COLUMN: Personal Details ── */}
+          <Grid item xs={12} md={6}>
+            <SectionHeader icon={<PersonIcon sx={{ color: "#0f9b8e" }} />} label="Personal Details" />
 
-        <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
-          <Button variant="contained" size="large" onClick={handleSave} disabled={saving}>
+            <TextField fullWidth margin="normal" size="small" label="Lead Name *"
+              value={form.lead_name} onChange={set("lead_name")}
+              error={!!errors.lead_name} helperText={errors.lead_name}
+              InputProps={{ startAdornment: (
+                <InputAdornment position="start"><PersonIcon fontSize="small" color="action" /></InputAdornment>
+              ) }} />
+
+            <TextField fullWidth margin="normal" size="small" label="Contact Number *"
+              value={form.contact_number} onChange={set("contact_number")}
+              error={!!errors.contact_number} helperText={errors.contact_number}
+              InputProps={{ startAdornment: (
+                <InputAdornment position="start"><CallIcon fontSize="small" color="action" /></InputAdornment>
+              ) }} />
+
+            <TextField fullWidth margin="normal" size="small" label="Alternate Contact Number (Optional)"
+              value={form.alternate_contact_number} onChange={set("alternate_contact_number")}
+              InputProps={{ startAdornment: (
+                <InputAdornment position="start"><PhoneAndroidIcon fontSize="small" color="action" /></InputAdornment>
+              ) }} />
+
+            <TextField fullWidth margin="normal" size="small" label="Email Id"
+              value={form.email} onChange={set("email")}
+              InputProps={{ startAdornment: (
+                <InputAdornment position="start"><EmailIcon fontSize="small" color="action" /></InputAdornment>
+              ) }} />
+
+            <TextField select fullWidth margin="normal" size="small" label="Gender"
+              value={form.gender} onChange={set("gender")}
+              InputProps={{ startAdornment: (
+                <InputAdornment position="start"><WcIcon fontSize="small" color="action" /></InputAdornment>
+              ) }}>
+              <MenuItem value="Male">Male</MenuItem>
+              <MenuItem value="Female">Female</MenuItem>
+              <MenuItem value="Other">Other</MenuItem>
+            </TextField>
+
+            <TextField select fullWidth margin="normal" size="small" label="Source *"
+              value={form.source} onChange={set("source")}
+              error={!!errors.source} helperText={errors.source}
+              InputProps={{ startAdornment: (
+                <InputAdornment position="start"><CampaignIcon fontSize="small" color="action" /></InputAdornment>
+              ) }}>
+              {SOURCES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
+            </TextField>
+          </Grid>
+
+          {/* ── RIGHT COLUMN: Other Details ── */}
+          <Grid item xs={12} md={6}>
+            <SectionHeader icon={<BadgeIcon sx={{ color: "#0f9b8e" }} />} label="Other Details" />
+
+            <TextField fullWidth margin="normal" size="small" label="Education Qualification"
+              value={form.education_qualification} onChange={set("education_qualification")}
+              InputProps={{ startAdornment: (
+                <InputAdornment position="start"><SchoolIcon fontSize="small" color="action" /></InputAdornment>
+              ) }} />
+
+            <TextField fullWidth margin="normal" size="small" label="Work Experience (In Years)"
+              value={form.work_experience} onChange={set("work_experience")}
+              InputProps={{ startAdornment: (
+                <InputAdornment position="start"><WorkHistoryIcon fontSize="small" color="action" /></InputAdornment>
+              ) }} />
+
+            <TextField fullWidth margin="normal" size="small" label="Work Description" multiline rows={2}
+              value={form.work_description} onChange={set("work_description")}
+              InputProps={{ startAdornment: (
+                <InputAdornment position="start" sx={{ alignSelf: "flex-start", mt: 1 }}>
+                  <DescriptionIcon fontSize="small" color="action" />
+                </InputAdornment>
+              ) }} />
+
+            <TextField select fullWidth margin="normal" size="small" label="Service Type *"
+              value={form.service_type} onChange={set("service_type")}
+              error={!!errors.service_type} helperText={errors.service_type}
+              InputProps={{ startAdornment: (
+                <InputAdornment position="start"><CategoryIcon fontSize="small" color="action" /></InputAdornment>
+              ) }}>
+              {SERVICE_TYPES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
+            </TextField>
+
+            {/* Interested Country — multi-select checkboxes, boxed like reference */}
+            <Box sx={{ mt: 2, p: 1.5, border: "1px solid #e0e0e0", borderRadius: 1 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                <PublicIcon fontSize="small" sx={{ color: "#0f9b8e" }} />
+                <Typography variant="body2" fontWeight={700}>
+                  Interested Country
+                </Typography>
+              </Box>
+              <FormGroup row>
+                {COUNTRIES.map((c) => (
+                  <FormControlLabel
+                    key={c}
+                    sx={{ width: "45%" }}
+                    control={
+                      <Checkbox
+                        checked={form.interested_countries.includes(c)}
+                        onChange={() => toggleCountry(c)}
+                        size="small"
+                      />
+                    }
+                    label={c}
+                  />
+                ))}
+              </FormGroup>
+            </Box>
+          </Grid>
+        </Grid>
+
+        <Divider sx={{ my: 3 }} />
+
+        <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+          <Button
+            variant="contained"
+            size="large"
+            sx={{ bgcolor: "#0f9b8e", "&:hover": { bgcolor: "#0c7d72" } }}
+            onClick={handleSave}
+            disabled={saving}
+          >
             {saving ? "Saving..." : "Save Enquiry"}
           </Button>
         </Box>
