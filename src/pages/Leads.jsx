@@ -171,7 +171,7 @@ const boxedFieldSx = {
   },
 
  "& .MuiSelect-select": {
-  padding: "8px 40px 8px 12px !important",
+  padding: "8px 40px 8px 20px !important",
   display: "flex",
   alignItems: "center",
 },
