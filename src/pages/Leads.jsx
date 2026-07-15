@@ -277,10 +277,17 @@ function AddEnquiryForm({ onSaved }) {
           </Grid>
 
           <Grid item xs={12} sm={6} md={4}>
-            <IconField icon={<WcIcon fontSize="small" />}>
-              <TextField select variant="standard" fullWidth label="Gender" sx={boxedFieldSx}
-                value={form.gender} onChange={set("gender")}
-                InputProps={{ disableUnderline: true }}>
+  <IconField icon={<WcIcon fontSize="small" />}>
+    <TextField
+      select
+      variant="outlined"
+      fullWidth
+      label="Gender"
+      sx={boxedFieldSx}
+      value={form.gender}
+      onChange={set("gender")}
+      InputProps={{ notched: false }}
+    >
                 <MenuItem value="Male">Male</MenuItem>
                 <MenuItem value="Female">Female</MenuItem>
                 <MenuItem value="Other">Other</MenuItem>
@@ -289,10 +296,18 @@ function AddEnquiryForm({ onSaved }) {
           </Grid>
 
           <Grid item xs={12} sm={6} md={4}>
-            <IconField icon={<CampaignIcon fontSize="small" />} error={!!errors.source} helperText={errors.source}>
-              <TextField select variant="standard" fullWidth label="Source *" sx={boxedFieldSx}
-                value={form.source} onChange={set("source")} error={!!errors.source}
-                InputProps={{ disableUnderline: true }}>
+  <IconField icon={<CampaignIcon fontSize="small" />} error={!!errors.source} helperText={errors.source}>
+    <TextField
+      select
+      variant="outlined"
+      fullWidth
+      label="Source *"
+      sx={boxedFieldSx}
+      value={form.source}
+      onChange={set("source")}
+      error={!!errors.source}
+      InputProps={{ notched: false }}
+    >
                 {SOURCES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
               </TextField>
             </IconField>
@@ -318,20 +333,28 @@ function AddEnquiryForm({ onSaved }) {
             </IconField>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={4}>
-            <IconField icon={<CategoryIcon fontSize="small" />} error={!!errors.service_type} helperText={errors.service_type}>
-              <TextField select variant="standard" fullWidth label="Service Type *" sx={boxedFieldSx}
-                value={form.service_type} onChange={set("service_type")} error={!!errors.service_type}
-                InputProps={{ disableUnderline: true }}>
+          <Grid item xs={12} sm={6} md={5}>
+  <IconField icon={<CategoryIcon fontSize="small" />} error={!!errors.service_type} helperText={errors.service_type}>
+    <TextField
+      select
+      variant="outlined"
+      fullWidth
+      label="Service Type *"
+      sx={boxedFieldSx}
+      value={form.service_type}
+      onChange={set("service_type")}
+      error={!!errors.service_type}
+      InputProps={{ notched: false }}
+    >
                 {SERVICE_TYPES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
               </TextField>
             </IconField>
           </Grid>
 
           {/* Work Description — full width row, own box */}
-                <Grid item xs={12}>
+                <Grid item xs={12} sm={6} md={7}>
                 <IconField icon={<DescriptionIcon fontSize="small" sx={{ mt: 1 }} />}>
-              <TextField variant="standard" fullWidth multiline rows={3} label="Work Description" sx={boxedFieldSx}
+              <TextField variant="standard" fullWidth multiline rows={2} label="Work Description" sx={boxedFieldSx}
                 value={form.work_description} onChange={set("work_description")}
                 InputProps={{ disableUnderline: true }} />
             </IconField>
