@@ -38,7 +38,7 @@ const authHeader = () => ({
 });
 
 const SOURCES = [
-  "Direct Call", "Facebook", "Insta", "LinkedIn",
+  "Direct Call", "Facebook", "Instagram", "LinkedIn",
   "Reference", "Walk-in", "Google Ad", "WhatsApp",
 ];
 
