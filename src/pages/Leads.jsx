@@ -223,15 +223,16 @@ function AssignEnquiryDialog({ open, onClose, selectedIds, onAssigned }) {
   useEffect(() => {
     if (!open) return;
     setBranch(""); setStaffId(""); setStaffList([]);
-    // Assumption: existing endpoint /api/employees returns { success, employees: [{id, name, branch}] }
-    fetch(`${API}/employees`, { headers: authHeader() })
+    // Confirmed from auth.js: GET /api/auth/employees (chairman/mis-executive only)
+    // returns { success, employees: [{id, name, location, ...}] } — field is "location", not "branch"
+    fetch(`${API}/auth/employees`, { headers: authHeader() })
       .then((r) => r.json())
       .then((d) => { if (d.success) setStaffList(d.employees || []); })
       .catch(() => {});
   }, [open]);
 
   const staffForBranch = branch
-    ? staffList.filter((s) => !s.branch || s.branch === branch)
+    ? staffList.filter((s) => !s.location || s.location === branch)
     : staffList;
 
   const doAssign = async () => {
@@ -320,7 +321,7 @@ function AssignEnquiryDialog({ open, onClose, selectedIds, onAssigned }) {
 // ── Main Lead Management Page ────────────────────────────────────────────
 function LeadManagement() {
   const currentUser = getCurrentUser();
-  const isChairman = currentUser.role === "chairman" || currentUser.role === "admin";
+  const isChairman = currentUser.role === "chairman" || currentUser.role === "mis-executive";
 
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
