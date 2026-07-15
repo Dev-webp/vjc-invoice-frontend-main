@@ -5,44 +5,8 @@ import {
   Paper, Dialog, DialogTitle, DialogContent, DialogActions,
   MenuItem, Chip, Checkbox, Stack, CircularProgress, Alert,
   FormGroup, FormControlLabel, Select, InputLabel, FormControl,
-  Tabs, Tab, InputAdornment,
+  Tabs, Tab,
 } from "@mui/material";
-// ── Lightweight inline SVG icons ──────────────────────────────────────
-// @mui/icons-material is not a dependency of this project, so importing
-// from it breaks the Vercel build. These small self-contained SVGs give
-// the same visual effect (icon + label) with zero extra packages.
-const makeIcon = (path) => ({ fontSize = "small", sx = {} }) => (
-  <Box
-    component="svg"
-    viewBox="0 0 24 24"
-    sx={{
-      width: fontSize === "small" ? 20 : 24,
-      height: fontSize === "small" ? 20 : 24,
-      fill: "none",
-      stroke: "currentColor",
-      strokeWidth: 1.8,
-      strokeLinecap: "round",
-      strokeLinejoin: "round",
-      ...sx,
-    }}
-  >
-    <path d={path} />
-  </Box>
-);
-
-const PersonOutlineIcon = makeIcon("M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 9a7 7 0 0 1 14 0");
-const Person2OutlinedIcon = PersonOutlineIcon;
-const PhoneIphoneIcon = makeIcon("M8 3h8a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm4 15h.01");
-const PhoneIcon = makeIcon("M6.6 10.8a15.5 15.5 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C11.4 21 3 12.6 3 3c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1.1L6.6 10.8Z");
-const EmailOutlinedIcon = makeIcon("M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm0 0 8 7 8-7");
-const WcIcon = makeIcon("M9 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM6 21v-6H4l3-7h4l3 7h-2v6M17.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Zm0 0v5m-2.5 8 2.5-6 2.5 6m-4-3h3");
-const SchoolOutlinedIcon = makeIcon("m12 3 10 5-10 5L2 8l10-5Zm-7 7.5V16c0 1.7 3.1 3 7 3s7-1.3 7-3v-5.5");
-const WorkOutlineIcon = makeIcon("M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m-9 0h14a1 1 0 0 1 1 1v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a1 1 0 0 1 1-1Z");
-const DescriptionOutlinedIcon = makeIcon("M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm7 0v5h5M9 13h6m-6 4h6");
-const PublicIcon = makeIcon("M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm-9-9h18M12 3a13.5 13.5 0 0 1 0 18M12 3a13.5 13.5 0 0 0 0 18");
-const CategoryOutlinedIcon = makeIcon("m12 2 9 5v10l-9 5-9-5V7l9-5Zm0 0v10m0 0-9-5m9 5 9-5");
-const CampaignOutlinedIcon = makeIcon("M3 11v2a2 2 0 0 0 2 2h1l1 5h2l-1-5h2l9 4V6l-9 4H6a2 2 0 0 0-2 2Zm7-1V6");
-const ContactMailOutlinedIcon = makeIcon("M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm0 0 8 7 8-7M4 19l6-5m10 5-6-5");
 
 const API = "https://vjc-invoice-backend-main.vercel.app/api";
 
@@ -116,29 +80,6 @@ const EMPTY_LEAD_FORM = {
   service_type: "",
 };
 
-// Section header bar — light teal band with icon, matches the reference
-// screenshot's "Personal Details" / "Follow Up" style headers.
-function SectionHeader({ icon, label }) {
-  return (
-    <Box
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        gap: 1,
-        bgcolor: "#e3f2f1",
-        color: "#0f9b8e",
-        px: 2,
-        py: 1,
-        borderRadius: 1,
-        mb: 2.5,
-      }}
-    >
-      {icon}
-      <Typography variant="subtitle1" fontWeight={700}>{label}</Typography>
-    </Box>
-  );
-}
-
 // ── Add Enquiry Form — inline (lives inside the "Add Enquiry" tab, not a popup) ──
 function AddEnquiryForm({ onSaved }) {
   const [form, setForm] = useState(EMPTY_LEAD_FORM);
@@ -190,107 +131,76 @@ function AddEnquiryForm({ onSaved }) {
     }
   };
 
-  const iconAdornment = (Icon) => ({
-    startAdornment: (
-      <InputAdornment position="start">
-        <Icon fontSize="small" sx={{ color: "#0f9b8e" }} />
-      </InputAdornment>
-    ),
-  });
-
   return (
-    <Card sx={{ borderRadius: 2 }}>
-      <CardContent sx={{ p: 3 }}>
-        <Typography variant="h6" fontWeight={700} sx={{ mb: 3 }}>Add Enquiry</Typography>
+    <Card sx={{ maxWidth: 640 }}>
+      <CardContent>
+        <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>Add Enquiry</Typography>
 
-        <Grid container spacing={3}>
-          {/* ── Left column: Personal Details ── */}
-          <Grid item xs={12} md={6}>
-            <SectionHeader icon={<PersonOutlineIcon />} label="Personal Details" />
+        <TextField fullWidth margin="normal" label="Lead Name *"
+          value={form.lead_name} onChange={set("lead_name")}
+          error={!!errors.lead_name} helperText={errors.lead_name} />
 
-            <TextField fullWidth margin="normal" label="Lead Name *"
-              value={form.lead_name} onChange={set("lead_name")}
-              error={!!errors.lead_name} helperText={errors.lead_name}
-              InputProps={iconAdornment(Person2OutlinedIcon)} />
+        <TextField fullWidth margin="normal" label="Contact Number *"
+          value={form.contact_number} onChange={set("contact_number")}
+          error={!!errors.contact_number} helperText={errors.contact_number} />
 
-            <TextField fullWidth margin="normal" label="Contact Number *"
-              value={form.contact_number} onChange={set("contact_number")}
-              error={!!errors.contact_number} helperText={errors.contact_number}
-              InputProps={iconAdornment(PhoneIphoneIcon)} />
+        <TextField fullWidth margin="normal" label="Alternate Contact Number (Optional)"
+          value={form.alternate_contact_number} onChange={set("alternate_contact_number")} />
 
-            <TextField fullWidth margin="normal" label="Alternate Contact Number (Optional)"
-              value={form.alternate_contact_number} onChange={set("alternate_contact_number")}
-              InputProps={iconAdornment(PhoneIcon)} />
+        <TextField fullWidth margin="normal" label="Email Id"
+          value={form.email} onChange={set("email")} />
 
-            <TextField fullWidth margin="normal" label="Email Id"
-              value={form.email} onChange={set("email")}
-              InputProps={iconAdornment(EmailOutlinedIcon)} />
+        <TextField select fullWidth margin="normal" label="Gender"
+          value={form.gender} onChange={set("gender")}>
+          <MenuItem value="Male">Male</MenuItem>
+          <MenuItem value="Female">Female</MenuItem>
+          <MenuItem value="Other">Other</MenuItem>
+        </TextField>
 
-            <TextField select fullWidth margin="normal" label="Gender"
-              value={form.gender} onChange={set("gender")}
-              InputProps={iconAdornment(WcIcon)}>
-              <MenuItem value="Male">Male</MenuItem>
-              <MenuItem value="Female">Female</MenuItem>
-              <MenuItem value="Other">Other</MenuItem>
-            </TextField>
-          </Grid>
+        <TextField select fullWidth margin="normal" label="Source *"
+          value={form.source} onChange={set("source")}
+          error={!!errors.source} helperText={errors.source}>
+          {SOURCES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
+        </TextField>
 
-          {/* ── Right column: Enquiry Details ── */}
-          <Grid item xs={12} md={6}>
-            <SectionHeader icon={<ContactMailOutlinedIcon />} label="Enquiry Details" />
+        <TextField fullWidth margin="normal" label="Education Qualification"
+          value={form.education_qualification} onChange={set("education_qualification")} />
 
-            <TextField select fullWidth margin="normal" label="Source *"
-              value={form.source} onChange={set("source")}
-              error={!!errors.source} helperText={errors.source}
-              InputProps={iconAdornment(CampaignOutlinedIcon)}>
-              {SOURCES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
-            </TextField>
+        <TextField fullWidth margin="normal" label="Work Experience (In Years)"
+          value={form.work_experience} onChange={set("work_experience")} />
 
-            <TextField fullWidth margin="normal" label="Education Qualification"
-              value={form.education_qualification} onChange={set("education_qualification")}
-              InputProps={iconAdornment(SchoolOutlinedIcon)} />
+        <TextField fullWidth margin="normal" label="Work Description" multiline rows={2}
+          value={form.work_description} onChange={set("work_description")} />
 
-            <TextField fullWidth margin="normal" label="Work Experience (In Years)"
-              value={form.work_experience} onChange={set("work_experience")}
-              InputProps={iconAdornment(WorkOutlineIcon)} />
-
-            <TextField fullWidth margin="normal" label="Work Description" multiline rows={2}
-              value={form.work_description} onChange={set("work_description")}
-              InputProps={iconAdornment(DescriptionOutlinedIcon)} />
-
-            <TextField select fullWidth margin="normal" label="Service Type *"
-              value={form.service_type} onChange={set("service_type")}
-              error={!!errors.service_type} helperText={errors.service_type}
-              InputProps={iconAdornment(CategoryOutlinedIcon)}>
-              {SERVICE_TYPES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
-            </TextField>
-          </Grid>
-
-          {/* ── Full width: Interested Country ── */}
-          <Grid item xs={12}>
-            <SectionHeader icon={<PublicIcon />} label="Interested Country" />
-            <FormGroup row>
-              {COUNTRIES.map((c) => (
-                <FormControlLabel
-                  key={c}
-                  sx={{ width: { xs: "100%", sm: "30%" } }}
-                  control={
-                    <Checkbox
-                      checked={form.interested_countries.includes(c)}
-                      onChange={() => toggleCountry(c)}
-                      size="small"
-                    />
-                  }
-                  label={c}
+        {/* Interested Country — multi-select checkboxes */}
+        <Typography variant="body2" sx={{ mt: 2, mb: 1, fontWeight: 600 }}>
+          Interested Country
+        </Typography>
+        <FormGroup row>
+          {COUNTRIES.map((c) => (
+            <FormControlLabel
+              key={c}
+              sx={{ width: "45%" }}
+              control={
+                <Checkbox
+                  checked={form.interested_countries.includes(c)}
+                  onChange={() => toggleCountry(c)}
+                  size="small"
                 />
-              ))}
-            </FormGroup>
-          </Grid>
-        </Grid>
+              }
+              label={c}
+            />
+          ))}
+        </FormGroup>
+
+        <TextField select fullWidth margin="normal" label="Service Type *"
+          value={form.service_type} onChange={set("service_type")}
+          error={!!errors.service_type} helperText={errors.service_type}>
+          {SERVICE_TYPES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
+        </TextField>
 
         <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
-          <Button variant="contained" size="large" sx={{ bgcolor: "#0f9b8e" }}
-            onClick={handleSave} disabled={saving}>
+          <Button variant="contained" size="large" onClick={handleSave} disabled={saving}>
             {saving ? "Saving..." : "Save Enquiry"}
           </Button>
         </Box>
