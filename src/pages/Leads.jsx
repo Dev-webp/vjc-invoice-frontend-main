@@ -897,7 +897,7 @@ function LeadManagement() {
         </Box>
       ) : (
         <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
-          <Table size="small">
+          <Table size="small" sx={{ tableLayout: "fixed" }}>
             <TableHead sx={{ bgcolor: "#f5f5f5" }}>
               <TableRow>
                 <TableCell
@@ -912,16 +912,16 @@ function LeadManagement() {
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.created.left, width: STICKY_COL.created.width, zIndex: 3, bgcolor: "#f5f5f5" }}>Created - Updated</TableCell>
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.name.left, width: STICKY_COL.name.width, zIndex: 3, bgcolor: "#f5f5f5" }}>Name</TableCell>
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.mobile.left, width: STICKY_COL.mobile.width, zIndex: 3, bgcolor: "#f5f5f5" }}>Mobile</TableCell>
-                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>Email</TableCell>
-                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>Interested Country</TableCell>
-                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>Service Type</TableCell>
-                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>Source</TableCell>
-                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>Status</TableCell>
-                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>Assigned By</TableCell>
-                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>Assigned To</TableCell>
-                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>Created By</TableCell>
-                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>Branch</TableCell>
-                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>Last Remark</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 200 }}>Email</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 160 }}>Interested Country</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 140 }}>Service Type</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 120 }}>Source</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 160 }}>Status</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 120 }}>Assigned By</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 120 }}>Assigned To</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 120 }}>Created By</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 100 }}>Branch</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 160 }}>Last Remark</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
