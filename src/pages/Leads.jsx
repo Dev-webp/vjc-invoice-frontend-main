@@ -917,10 +917,12 @@ function LeadManagement() {
                     onChange={toggleSelectAll}
                   />
                 </TableCell>
-                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.created.left, width: STICKY_COL.created.width, zIndex: 3, bgcolor: "#f5f5f5" }}>Created - Updated</TableCell>
-                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.name.left, width: STICKY_COL.name.width, zIndex: 3, bgcolor: "#f5f5f5" }}>Name</TableCell>
-                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.mobile.left, width: STICKY_COL.mobile.width, zIndex: 3, bgcolor: "#f5f5f5" }}>Mobile</TableCell>
-                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 200, pl: 3 }}>Email</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.created.left, width: STICKY_COL.created.width, zIndex: 3, bgcolor: "#f5f5f5", borderRight: "1px solid #e0e0e0" }}>Created - Updated</TableCell>
+
+<TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.name.left, width: STICKY_COL.name.width, zIndex: 3, bgcolor: "#f5f5f5", borderRight: "1px solid #e0e0e0" }}>Name</TableCell>
+
+<TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.mobile.left, width: STICKY_COL.mobile.width, zIndex: 3, bgcolor: "#f5f5f5", borderRight: "1px solid #e0e0e0" }}>Mobile</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 260, pl: 3 }}>Email</TableCell>
                 <TableCell
   sx={{
     fontWeight: 700,
@@ -1024,7 +1026,15 @@ function LeadManagement() {
 >
   {lead.contact_number}
 </TableCell>
-                  <TableCell sx={{ pl: 3 }}>{lead.email || "—"}</TableCell>
+                  <TableCell
+  sx={{
+    pl: 3,
+    width: 260,
+    whiteSpace: "nowrap",
+  }}
+>
+  {lead.email || "—"}
+</TableCell>
                   <TableCell sx={{ pl: 2 }}>
   {(lead.interested_countries || []).map((c) => (
     <Chip key={c} label={c} size="small" sx={{ mr: 0.5, mb: 0.5 }} />
