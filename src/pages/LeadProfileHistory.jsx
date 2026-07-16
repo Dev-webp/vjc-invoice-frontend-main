@@ -117,7 +117,7 @@ export default function LeadProfileHistory() {
     <Box sx={{ p: 3, bgcolor: "#f4f6f8", minHeight: "100vh" }}>
       <Grid container spacing={3}>
         {/* ── LEFT: Profile card ── */}
-        <Grid item xs={12} md={7}>
+        <Grid item xs={12} md={8}>
           <Paper sx={{ p: 3 }}>
             <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
               <Button
@@ -175,7 +175,7 @@ export default function LeadProfileHistory() {
         </Grid>
 
         {/* ── RIGHT: Assigned History + Notes ── */}
-        <Grid item xs={12} md={5}>
+        <Grid item xs={12} md={4}>
           <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, letterSpacing: 0.5 }}>
             ASSIGNED HISTORY
           </Typography>
