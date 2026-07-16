@@ -62,9 +62,11 @@ export default function LeadProfileHistory() {
         });
         const data = await res.json();
         if (data.success) {
-          setLead(data.lead);
-          setAssignedHistory(data.assigned_history || []);
-          setNotes(data.notes || []);
+  console.log("PROFILE HISTORY RESPONSE:", data);
+
+  setLead(data.lead);
+  setAssignedHistory(data.assigned_history || []);
+  setNotes(data.notes || []);
         } else {
           setError(data.message || "Failed to load profile history");
         }
@@ -96,7 +98,7 @@ export default function LeadProfileHistory() {
     <Box sx={{ p: 3, bgcolor: "#f4f6f8", minHeight: "100vh" }}>
       <Grid container spacing={3}>
         {/* ── LEFT: Profile card ── */}
-        <Grid item xs={12} md={5}>
+        <Grid item xs={12} md={6}>
           <Paper sx={{ p: 3 }}>
             <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
               <Button
@@ -154,7 +156,7 @@ export default function LeadProfileHistory() {
         </Grid>
 
         {/* ── RIGHT: Assigned History + Notes ── */}
-        <Grid item xs={12} md={7}>
+        <Grid item xs={12} md={6}>
           <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, letterSpacing: 0.5 }}>
             ASSIGNED HISTORY
           </Typography>
