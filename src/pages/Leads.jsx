@@ -1137,7 +1137,7 @@ const [statusFilter, setStatusFilter] = useState("All");
            <TableHead
   sx={{
     bgcolor: "#f5f5f5",
-    borderBottom: "1px solid #bdbdbd",
+    
     "& th": {
       borderTop: "none",
     },
