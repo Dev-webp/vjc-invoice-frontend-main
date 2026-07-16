@@ -1126,7 +1126,7 @@ const [statusFilter, setStatusFilter] = useState("All");
     borderCollapse: "separate",
     borderSpacing: 0,
    "& .MuiTableCell-root": {
- 
+  borderRight: "1px solid #c4c4c4",
   borderBottom: "1px solid #c4c4c4",
 }
   }}
