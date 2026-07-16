@@ -1128,7 +1128,10 @@ const [statusFilter, setStatusFilter] = useState("All");
    "& .MuiTableCell-root": {
   borderRight: "1px solid #c4c4c4",
   borderBottom: "1px solid #c4c4c4",
-}
+},
+"& .MuiTableHead-root .MuiTableCell-root": {
+  borderBottom: "none",
+},
   }}
 >
            <TableHead
