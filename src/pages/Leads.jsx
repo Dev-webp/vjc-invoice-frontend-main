@@ -1125,14 +1125,16 @@ const [statusFilter, setStatusFilter] = useState("All");
     tableLayout: "fixed",
     borderCollapse: "separate",
     borderSpacing: 0,
-    "& .MuiTableCell-root": {
-      borderRight: "1px solid #e0e0e0",
-    },
+   "& .MuiTableCell-root": {
+  borderRight: "1px solid #c4c4c4",
+  borderBottom: "1px solid #c4c4c4",
+}
   }}
 >
            <TableHead
   sx={{
     bgcolor: "#f5f5f5",
+    borderBottom: "1px solid #bdbdbd",
     "& th": {
       borderTop: "none",
     },
@@ -1154,11 +1156,11 @@ const [statusFilter, setStatusFilter] = useState("All");
                     onChange={toggleSelectAll}
                   />
                 </TableCell>
-                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.created.left, width: STICKY_COL.created.width, zIndex: 3, bgcolor: "#f5f5f5", borderRight: "1px solid #e0e0e0" }}>Created - Updated</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.created.left, width: STICKY_COL.created.width, zIndex: 3, bgcolor: "#f5f5f5", borderRight: "1px solid #c4c4c4" }}>Created - Updated</TableCell>
 
-<TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.name.left, width: STICKY_COL.name.width, zIndex: 3, bgcolor: "#f5f5f5", borderRight: "1px solid #e0e0e0" }}>Name</TableCell>
+<TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.name.left, width: STICKY_COL.name.width, zIndex: 3, bgcolor: "#f5f5f5", borderRight: "1px solid #c4c4c4" }}>Name</TableCell>
 
-<TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.mobile.left, width: STICKY_COL.mobile.width, zIndex: 3, bgcolor: "#f5f5f5", borderRight: "1px solid #e0e0e0" }}>Mobile</TableCell>
+<TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.mobile.left, width: STICKY_COL.mobile.width, zIndex: 3, bgcolor: "#f5f5f5", borderRight: "1px solid #c4c4c4" }}>Mobile</TableCell>
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 260, pl: 3 }}>Email</TableCell>
                 <TableCell
   sx={{
@@ -1208,7 +1210,7 @@ const [statusFilter, setStatusFilter] = useState("All");
     zIndex: 1,
     bgcolor: statusRowColor(lead.status),
     lineHeight: 1.8,
-    borderRight: "1px solid #e0e0e0",
+    borderRight: "1px solid #c4c4c4",
   }}
 >
   <Typography variant="body2">
@@ -1245,7 +1247,7 @@ const [statusFilter, setStatusFilter] = useState("All");
     zIndex: 1,
     bgcolor: statusRowColor(lead.status),
     whiteSpace: "nowrap",
-    borderRight: "1px solid #e0e0e0",
+    borderRight: "1px solid #c4c4c4",
   }}
 >
   {lead.lead_name}
@@ -1258,7 +1260,7 @@ const [statusFilter, setStatusFilter] = useState("All");
     zIndex: 1,
     bgcolor: statusRowColor(lead.status),
     whiteSpace: "nowrap",
-    borderRight: "1px solid #e0e0e0",
+    borderRight: "1px solid #c4c4c4",
   }}
 >
   {lead.contact_number}
