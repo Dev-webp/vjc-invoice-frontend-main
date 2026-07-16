@@ -250,9 +250,9 @@ const STATUS_OPTIONS = ["New", "Warm", "Cold", "Prospect", "HOLD", "Pending Agre
 // Name / Mobile stay pinned on the left while the remaining columns scroll.
 const STICKY_COL = {
   checkbox: { width: 48, left: 0 },
-  created: { width: 160, left: 48 },
-  name: { width: 130, left: 208 },
-  mobile: { width: 130, left: 338 },
+  created: { width: 190, left: 48 },
+  name: { width: 130, left: 238 },
+  mobile: { width: 130, left: 368 },
 };
 
 // Row background color per status — matches the reference screenshots
