@@ -899,8 +899,11 @@ function LeadManagement() {
         <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
           <Table
   size="small"
+  stickyHeader
   sx={{
     tableLayout: "fixed",
+    borderCollapse: "separate",
+    borderSpacing: 0,
     "& .MuiTableCell-root": {
       borderRight: "1px solid #e0e0e0",
     },
