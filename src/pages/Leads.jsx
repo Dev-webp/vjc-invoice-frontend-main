@@ -943,14 +943,51 @@ function LeadManagement() {
                       onChange={() => toggleSelect(lead.id)}
                     />
                   </TableCell>
-                  <TableCell sx={{ position: "sticky", left: STICKY_COL.created.left, width: STICKY_COL.created.width, zIndex: 1, bgcolor: statusRowColor(lead.status) }}>
-                    <Typography variant="caption" display="block">
-                      {lead.created_at ? new Date(lead.created_at).toLocaleString("en-IN") : "—"}
-                    </Typography>
-                    <Typography variant="caption" display="block" color="text.secondary">
-                      {lead.updated_at ? new Date(lead.updated_at).toLocaleString("en-IN") : "—"}
-                    </Typography>
-                  </TableCell>
+                 <TableCell
+  sx={{
+    position: "sticky",
+    left: STICKY_COL.created.left,
+    width: STICKY_COL.created.width,
+    zIndex: 1,
+    bgcolor: statusRowColor(lead.status),
+    whiteSpace: "nowrap",
+    lineHeight: 1.4,
+  }}
+>
+  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+  {lead.created_at
+    ? new Date(lead.created_at).toLocaleDateString("en-GB")
+    : "—"}
+</Typography>
+
+  <Typography variant="caption" color="text.secondary">
+    {lead.created_at
+      ? new Date(lead.created_at).toLocaleTimeString("en-IN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        })
+      : "—"}
+  </Typography>
+
+  <Box sx={{ my: 0.5 }} />
+
+  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+    {lead.updated_at
+      ? new Date(lead.updated_at).toLocaleDateString("en-GB")
+      : "—"}
+  </Typography>
+
+  <Typography variant="caption" color="text.secondary">
+    {lead.updated_at
+      ? new Date(lead.updated_at).toLocaleTimeString("en-IN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        })
+      : "—"}
+  </Typography>
+</TableCell>
                   <TableCell sx={{ position: "sticky", left: STICKY_COL.name.left, width: STICKY_COL.name.width, zIndex: 1, bgcolor: statusRowColor(lead.status), whiteSpace: "nowrap" }}>{lead.lead_name}</TableCell>
                   <TableCell sx={{ position: "sticky", left: STICKY_COL.mobile.left, width: STICKY_COL.mobile.width, zIndex: 1, bgcolor: statusRowColor(lead.status), whiteSpace: "nowrap" }}>{lead.contact_number}</TableCell>
                   <TableCell sx={{ pl: 3 }}>{lead.email || "—"}</TableCell>
