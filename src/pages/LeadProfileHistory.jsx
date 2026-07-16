@@ -34,17 +34,19 @@ function DetailRow({ label, value }) {
     <Box
       sx={{
         display: "flex",
+        justifyContent: "space-between",
         borderBottom: "1px solid #eee",
         py: 1,
       }}
     >
-      <Typography variant="body2" sx={{ color: "#555", width: 120, flexShrink: 0 }}>{label}:</Typography>
-      <Typography variant="body2" sx={{ fontWeight: 500, textAlign: "left" }}>
+      <Typography variant="body2" sx={{ color: "#555" }}>{label}:</Typography>
+      <Typography variant="body2" sx={{ fontWeight: 500, textAlign: "right" }}>
         {value || ""}
       </Typography>
     </Box>
   );
 }
+
 export default function LeadProfileHistory() {
   const { id } = useParams();
   const [lead, setLead] = useState(null);
