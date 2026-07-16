@@ -921,7 +921,16 @@ function LeadManagement() {
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.name.left, width: STICKY_COL.name.width, zIndex: 3, bgcolor: "#f5f5f5" }}>Name</TableCell>
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.mobile.left, width: STICKY_COL.mobile.width, zIndex: 3, bgcolor: "#f5f5f5" }}>Mobile</TableCell>
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 200, pl: 3 }}>Email</TableCell>
-                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 160 }}>Interested Country</TableCell>
+                <TableCell
+  sx={{
+    fontWeight: 700,
+    whiteSpace: "nowrap",
+    width: 160,
+    pl: 2,
+  }}
+>
+  Interested Country
+</TableCell>
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 140 }}>Service Type</TableCell>
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 120 }}>Source</TableCell>
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 160 }}>Status</TableCell>
@@ -952,6 +961,7 @@ function LeadManagement() {
                     />
                   </TableCell>
                  <TableCell
+  
   sx={{
     position: "sticky",
     left: STICKY_COL.created.left,
@@ -959,6 +969,7 @@ function LeadManagement() {
     zIndex: 1,
     bgcolor: statusRowColor(lead.status),
     lineHeight: 1.8,
+    borderRight: "1px solid #e0e0e0",
   }}
 >
   <Typography variant="body2">
@@ -987,14 +998,38 @@ function LeadManagement() {
       : "—"}
   </Typography>
 </TableCell>
-                  <TableCell sx={{ position: "sticky", left: STICKY_COL.name.left, width: STICKY_COL.name.width, zIndex: 1, bgcolor: statusRowColor(lead.status), whiteSpace: "nowrap" }}>{lead.lead_name}</TableCell>
-                  <TableCell sx={{ position: "sticky", left: STICKY_COL.mobile.left, width: STICKY_COL.mobile.width, zIndex: 1, bgcolor: statusRowColor(lead.status), whiteSpace: "nowrap" }}>{lead.contact_number}</TableCell>
+<TableCell
+  sx={{
+    position: "sticky",
+    left: STICKY_COL.name.left,
+    width: STICKY_COL.name.width,
+    zIndex: 1,
+    bgcolor: statusRowColor(lead.status),
+    whiteSpace: "nowrap",
+    borderRight: "1px solid #e0e0e0",
+  }}
+>
+  {lead.lead_name}
+</TableCell>                 
+<TableCell
+  sx={{
+    position: "sticky",
+    left: STICKY_COL.mobile.left,
+    width: STICKY_COL.mobile.width,
+    zIndex: 1,
+    bgcolor: statusRowColor(lead.status),
+    whiteSpace: "nowrap",
+    borderRight: "1px solid #e0e0e0",
+  }}
+>
+  {lead.contact_number}
+</TableCell>
                   <TableCell sx={{ pl: 3 }}>{lead.email || "—"}</TableCell>
-                  <TableCell>
-                    {(lead.interested_countries || []).map((c) => (
-                      <Chip key={c} label={c} size="small" sx={{ mr: 0.5, mb: 0.5 }} />
-                    ))}
-                  </TableCell>
+                  <TableCell sx={{ pl: 2 }}>
+  {(lead.interested_countries || []).map((c) => (
+    <Chip key={c} label={c} size="small" sx={{ mr: 0.5, mb: 0.5 }} />
+  ))}
+</TableCell>
                   <TableCell>{lead.service_type || "—"}</TableCell>
                   <TableCell>{lead.source}</TableCell>
                   <TableCell>
