@@ -912,7 +912,7 @@ function LeadManagement() {
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.created.left, width: STICKY_COL.created.width, zIndex: 3, bgcolor: "#f5f5f5" }}>Created - Updated</TableCell>
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.name.left, width: STICKY_COL.name.width, zIndex: 3, bgcolor: "#f5f5f5" }}>Name</TableCell>
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.mobile.left, width: STICKY_COL.mobile.width, zIndex: 3, bgcolor: "#f5f5f5" }}>Mobile</TableCell>
-                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 200 }}>Email</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 200, pl: 3 }}>Email</TableCell>
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 160 }}>Interested Country</TableCell>
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 140 }}>Service Type</TableCell>
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 120 }}>Source</TableCell>
@@ -953,7 +953,7 @@ function LeadManagement() {
                   </TableCell>
                   <TableCell sx={{ position: "sticky", left: STICKY_COL.name.left, width: STICKY_COL.name.width, zIndex: 1, bgcolor: statusRowColor(lead.status), whiteSpace: "nowrap" }}>{lead.lead_name}</TableCell>
                   <TableCell sx={{ position: "sticky", left: STICKY_COL.mobile.left, width: STICKY_COL.mobile.width, zIndex: 1, bgcolor: statusRowColor(lead.status), whiteSpace: "nowrap" }}>{lead.contact_number}</TableCell>
-                  <TableCell>{lead.email || "—"}</TableCell>
+                  <TableCell sx={{ pl: 3 }}>{lead.email || "—"}</TableCell>
                   <TableCell>
                     {(lead.interested_countries || []).map((c) => (
                       <Chip key={c} label={c} size="small" sx={{ mr: 0.5, mb: 0.5 }} />
