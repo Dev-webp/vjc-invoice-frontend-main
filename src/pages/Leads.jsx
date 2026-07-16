@@ -950,19 +950,15 @@ function LeadManagement() {
     width: STICKY_COL.created.width,
     zIndex: 1,
     bgcolor: statusRowColor(lead.status),
-    whiteSpace: "nowrap",
-    lineHeight: 1.4,
+    lineHeight: 1.8,
   }}
 >
-  <Typography variant="body2" sx={{ fontWeight: 500 }}>
-  {lead.created_at
-    ? new Date(lead.created_at).toLocaleDateString("en-GB")
-    : "—"}
-</Typography>
-
-  <Typography variant="caption" color="text.secondary">
+  <Typography variant="body2">
     {lead.created_at
-      ? new Date(lead.created_at).toLocaleTimeString("en-IN", {
+      ? new Date(lead.created_at).toLocaleString("en-GB", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
           hour: "2-digit",
           minute: "2-digit",
           hour12: true,
@@ -970,17 +966,12 @@ function LeadManagement() {
       : "—"}
   </Typography>
 
-  <Box sx={{ my: 0.5 }} />
-
-  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+  <Typography variant="body2" color="text.secondary">
     {lead.updated_at
-      ? new Date(lead.updated_at).toLocaleDateString("en-GB")
-      : "—"}
-  </Typography>
-
-  <Typography variant="caption" color="text.secondary">
-    {lead.updated_at
-      ? new Date(lead.updated_at).toLocaleTimeString("en-IN", {
+      ? new Date(lead.updated_at).toLocaleString("en-GB", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
           hour: "2-digit",
           minute: "2-digit",
           hour12: true,
