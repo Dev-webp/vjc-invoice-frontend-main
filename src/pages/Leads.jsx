@@ -909,12 +909,18 @@ function LeadManagement() {
     },
   }}
 >
-            <TableHead sx={{ bgcolor: "#f5f5f5" }}>
-              <TableRow>
-                <TableCell
-                  padding="checkbox"
-                  sx={{ position: "sticky", left: STICKY_COL.checkbox.left, zIndex: 3, bgcolor: "#f5f5f5" }}
-                >
+           <TableHead sx={{ bgcolor: "#f5f5f5" }}>
+  <TableRow>
+    <TableCell
+      padding="checkbox"
+      sx={{
+        position: "sticky",
+        left: STICKY_COL.checkbox.left,
+        zIndex: 3,
+        bgcolor: "#f5f5f5",
+        borderBottom: "none",
+      }}
+    >
                   <Checkbox
                     checked={filteredLeads.length > 0 && selectedIds.length === filteredLeads.length}
                     onChange={toggleSelectAll}
