@@ -246,6 +246,14 @@ const COUNTRIES = [
 ];
 
 const STATUS_OPTIONS = ["New", "Warm", "Cold", "Prospect", "HOLD", "Pending Agreement", "Dead"];
+// Sticky-column layout for the View Enquiry table — Checkbox / Created-Updated /
+// Name / Mobile stay pinned on the left while the remaining columns scroll.
+const STICKY_COL = {
+  checkbox: { width: 48, left: 0 },
+  created: { width: 160, left: 48 },
+  name: { width: 130, left: 208 },
+  mobile: { width: 130, left: 338 },
+};
 
 // Row background color per status — matches the reference screenshots
 const statusRowColor = (status) => {
@@ -892,30 +900,28 @@ function LeadManagement() {
           <Table size="small">
             <TableHead sx={{ bgcolor: "#f5f5f5" }}>
               <TableRow>
-                {/* Checkbox column — shown to everyone now (UI only for employees;
-                    the Assign Enquiry action itself stays chairman/mis-executive only) */}
-                <TableCell padding="checkbox">
+                <TableCell
+                  padding="checkbox"
+                  sx={{ position: "sticky", left: STICKY_COL.checkbox.left, zIndex: 3, bgcolor: "#f5f5f5" }}
+                >
                   <Checkbox
                     checked={filteredLeads.length > 0 && selectedIds.length === filteredLeads.length}
                     onChange={toggleSelectAll}
                   />
                 </TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Created - Updated</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Name</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Mobile</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Email</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Interested Country</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Service Type</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Source</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-                {/* Assigned By / Created By — now visible to everyone (each user only
-                    ever sees their own leads anyway, filtered server-side, so there's
-                    no privacy issue showing who created/assigned their own leads) */}
-                <TableCell sx={{ fontWeight: 700 }}>Assigned By</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Assigned To</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Created By</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Branch</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Last Remark</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.created.left, width: STICKY_COL.created.width, zIndex: 3, bgcolor: "#f5f5f5" }}>Created - Updated</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.name.left, width: STICKY_COL.name.width, zIndex: 3, bgcolor: "#f5f5f5" }}>Name</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.mobile.left, width: STICKY_COL.mobile.width, zIndex: 3, bgcolor: "#f5f5f5" }}>Mobile</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>Email</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>Interested Country</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>Service Type</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>Source</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>Status</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>Assigned By</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>Assigned To</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>Created By</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>Branch</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>Last Remark</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -928,13 +934,16 @@ function LeadManagement() {
               )}
               {filteredLeads.map((lead) => (
                 <TableRow key={lead.id} sx={{ bgcolor: statusRowColor(lead.status) }}>
-                  <TableCell padding="checkbox">
+                  <TableCell
+                    padding="checkbox"
+                    sx={{ position: "sticky", left: STICKY_COL.checkbox.left, zIndex: 1, bgcolor: statusRowColor(lead.status) }}
+                  >
                     <Checkbox
                       checked={selectedIds.includes(lead.id)}
                       onChange={() => toggleSelect(lead.id)}
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ position: "sticky", left: STICKY_COL.created.left, width: STICKY_COL.created.width, zIndex: 1, bgcolor: statusRowColor(lead.status) }}>
                     <Typography variant="caption" display="block">
                       {lead.created_at ? new Date(lead.created_at).toLocaleString("en-IN") : "—"}
                     </Typography>
@@ -942,8 +951,8 @@ function LeadManagement() {
                       {lead.updated_at ? new Date(lead.updated_at).toLocaleString("en-IN") : "—"}
                     </Typography>
                   </TableCell>
-                  <TableCell>{lead.lead_name}</TableCell>
-                  <TableCell>{lead.contact_number}</TableCell>
+                  <TableCell sx={{ position: "sticky", left: STICKY_COL.name.left, width: STICKY_COL.name.width, zIndex: 1, bgcolor: statusRowColor(lead.status), whiteSpace: "nowrap" }}>{lead.lead_name}</TableCell>
+                  <TableCell sx={{ position: "sticky", left: STICKY_COL.mobile.left, width: STICKY_COL.mobile.width, zIndex: 1, bgcolor: statusRowColor(lead.status), whiteSpace: "nowrap" }}>{lead.contact_number}</TableCell>
                   <TableCell>{lead.email || "—"}</TableCell>
                   <TableCell>
                     {(lead.interested_countries || []).map((c) => (
