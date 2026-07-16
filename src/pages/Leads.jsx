@@ -1304,31 +1304,44 @@ const [statusFilter, setStatusFilter] = useState("All");
                       {/* Assumption: backend GET /leads should also return
                           notes_count per lead. Falls back to 0 if missing. */}
                       <Button
-                        size="small"
-                        variant="outlined"
-                        startIcon={<StickyNote2Icon fontSize="small" />}
-                        endIcon={
-                          <Box
-                            sx={{
-                              bgcolor: "#1a2472",
-                              color: "#fff",
-                              borderRadius: "4px",
-                              px: 0.8,
-                              minWidth: 18,
-                              fontSize: 12,
-                              fontWeight: 700,
-                              textAlign: "center",
-                              lineHeight: "18px",
-                            }}
-                          >
-                            {lead.notes_count || 0}
-                          </Box>
-                        }
-                        onClick={() => { setNotesLead(lead); setNotesOpen(true); }}
-                        sx={{ textTransform: "none" }}
-                      >
-                        Notes
-                      </Button>
+  size="small"
+  variant="outlined"
+  startIcon={<StickyNote2Icon fontSize="small" />}
+  onClick={() => {
+    setNotesLead(lead);
+    setNotesOpen(true);
+  }}
+  sx={{
+    textTransform: "none",
+    minHeight: 32,
+    px: 1.2,
+    display: "flex",
+    alignItems: "center",
+    gap: 0.5,
+  }}
+>
+  Notes
+
+  <Box
+    sx={{
+      ml: 0.5,
+      minWidth: 18,
+      height: 18,
+      px: 0.5,
+      borderRadius: "9px",
+      bgcolor: "#1a2472",
+      color: "#fff",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: 11,
+      fontWeight: 700,
+      lineHeight: 1,
+    }}
+  >
+    {lead.notes_count || 0}
+  </Box>
+</Button>
                     </Stack>
                   </TableCell>
                   <TableCell>{lead.branch || "—"}</TableCell>
