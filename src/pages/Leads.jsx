@@ -1291,16 +1291,26 @@ const [statusFilter, setStatusFilter] = useState("All");
                   <TableCell>{lead.assigned_by_name || "—"}</TableCell>
                   <TableCell>{lead.assigned_to_name || "Not Assigned"}</TableCell>
                   <TableCell>
-                    <Stack direction="row" spacing={1}>
+                    <Stack
+  direction="row"
+  spacing={0.5}
+  alignItems="center"
+>
                       <Button
-                        size="small"
-                        variant="outlined"
-                        startIcon={<HistoryIcon fontSize="small" />}
-                        onClick={() => openHistory(lead)}
-                        sx={{ textTransform: "none" }}
-                      >
-                        History
-                      </Button>
+  size="small"
+  variant="outlined"
+  startIcon={<HistoryIcon fontSize="small" />}
+  onClick={() => openHistory(lead)}
+  sx={{
+    textTransform: "none",
+    height: 32,
+    minWidth: "auto",
+    px: 1,
+    borderRadius: 1,
+  }}
+>
+  History
+</Button>
                       {/* Assumption: backend GET /leads should also return
                           notes_count per lead. Falls back to 0 if missing. */}
                       <Button
@@ -1313,29 +1323,29 @@ const [statusFilter, setStatusFilter] = useState("All");
   }}
   sx={{
     textTransform: "none",
-    minHeight: 32,
-    px: 1.2,
+    minWidth: "auto",
+    px: 1,
+    height: 32,
+    borderRadius: 1,
     display: "flex",
     alignItems: "center",
     gap: 0.5,
   }}
 >
-  Notes
+  <span>Notes</span>
 
   <Box
     sx={{
-      ml: 0.5,
-      minWidth: 18,
-      height: 18,
-      px: 0.5,
-      borderRadius: "9px",
+      width: 16,
+      height: 16,
+      borderRadius: "3px",
       bgcolor: "#1a2472",
       color: "#fff",
+      fontSize: "10px",
+      fontWeight: 700,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      fontSize: 11,
-      fontWeight: 700,
       lineHeight: 1,
     }}
   >
