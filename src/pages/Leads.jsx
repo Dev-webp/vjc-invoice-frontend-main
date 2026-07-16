@@ -917,7 +917,14 @@ function LeadManagement() {
     },
   }}
 >
-           <TableHead sx={{ bgcolor: "#f5f5f5" }}>
+           <TableHead
+  sx={{
+    bgcolor: "#f5f5f5",
+    "& th": {
+      borderTop: "none",
+    },
+  }}
+>
   <TableRow>
     <TableCell
       padding="checkbox"
