@@ -24,6 +24,10 @@ const fmtDateTime = (d) =>
       })
     : "";
 
+// Common cell border style used across both tables
+const cellBorderSx = { border: "1px solid #ddd" };
+const headerCellSx = { ...cellBorderSx, color: "#fff", fontWeight: 700 };
+
 // Plain label:value row, matches the "PERSONAL DETAILS" list in screenshot 4
 function DetailRow({ label, value }) {
   return (
@@ -94,11 +98,26 @@ export default function LeadProfileHistory() {
     );
   }
 
+  // If backend hasn't returned any assigned_history rows, fall back to the
+  // lead's own assignment fields so the table is never blank by default.
+  const displayAssignedHistory =
+    assignedHistory.length > 0
+      ? assignedHistory
+      : [
+          {
+            id: "default",
+            assigned_by_name: lead?.assigned_by_name,
+            assigned_date: lead?.created_at,
+            branch: lead?.branch,
+            user_name: lead?.assigned_to_name,
+          },
+        ];
+
   return (
     <Box sx={{ p: 3, bgcolor: "#f4f6f8", minHeight: "100vh" }}>
       <Grid container spacing={3}>
         {/* ── LEFT: Profile card ── */}
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={7}>
           <Paper sx={{ p: 3 }}>
             <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
               <Button
@@ -156,7 +175,7 @@ export default function LeadProfileHistory() {
         </Grid>
 
         {/* ── RIGHT: Assigned History + Notes ── */}
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={5}>
           <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, letterSpacing: 0.5 }}>
             ASSIGNED HISTORY
           </Typography>
@@ -164,19 +183,19 @@ export default function LeadProfileHistory() {
             <Table size="small">
               <TableHead>
                 <TableRow sx={{ bgcolor: "#1a2472" }}>
-                  <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Assigned By</TableCell>
-                  <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Assigned Date</TableCell>
-                  <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Branch</TableCell>
-                  <TableCell sx={{ color: "#fff", fontWeight: 700 }}>User</TableCell>
+                  <TableCell sx={headerCellSx}>Assigned By</TableCell>
+                  <TableCell sx={headerCellSx}>Assigned Date</TableCell>
+                  <TableCell sx={headerCellSx}>Branch</TableCell>
+                  <TableCell sx={headerCellSx}>User</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {assignedHistory.map((h, i) => (
+                {displayAssignedHistory.map((h, i) => (
                   <TableRow key={h.id || i}>
-                    <TableCell>{h.assigned_by_name}</TableCell>
-                    <TableCell>{fmtDate(h.assigned_date)}</TableCell>
-                    <TableCell>{h.branch}</TableCell>
-                    <TableCell>{h.user_name}</TableCell>
+                    <TableCell sx={cellBorderSx}>{h.assigned_by_name}</TableCell>
+                    <TableCell sx={cellBorderSx}>{fmtDate(h.assigned_date)}</TableCell>
+                    <TableCell sx={cellBorderSx}>{h.branch}</TableCell>
+                    <TableCell sx={cellBorderSx}>{h.user_name}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -190,19 +209,19 @@ export default function LeadProfileHistory() {
             <Table size="small">
               <TableHead>
                 <TableRow sx={{ bgcolor: "#1a2472" }}>
-                  <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Created Date</TableCell>
-                  <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Remark</TableCell>
-                  <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Stage</TableCell>
-                  <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Commented By</TableCell>
+                  <TableCell sx={headerCellSx}>Created Date</TableCell>
+                  <TableCell sx={headerCellSx}>Remark</TableCell>
+                  <TableCell sx={headerCellSx}>Stage</TableCell>
+                  <TableCell sx={headerCellSx}>Commented By</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {notes.map((n, i) => (
                   <TableRow key={n.id || i}>
-                    <TableCell sx={{ whiteSpace: "nowrap" }}>{fmtDateTime(n.created_at)}</TableCell>
-                    <TableCell>{n.remark}</TableCell>
-                    <TableCell>{n.stage || "Enquiry"}</TableCell>
-                    <TableCell>{n.commented_by}</TableCell>
+                    <TableCell sx={{ ...cellBorderSx, whiteSpace: "nowrap" }}>{fmtDateTime(n.created_at)}</TableCell>
+                    <TableCell sx={cellBorderSx}>{n.remark}</TableCell>
+                    <TableCell sx={cellBorderSx}>{n.stage || "Enquiry"}</TableCell>
+                    <TableCell sx={cellBorderSx}>{n.commented_by}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
