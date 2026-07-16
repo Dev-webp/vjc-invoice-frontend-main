@@ -660,7 +660,7 @@ function AssignEnquiryDialog({ open, onClose, selectedIds, onAssigned }) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const BRANCHES = ["Hyderabad", "Bengaluru"];
+  const BRANCHES = ["Hyderabad", "Bangalore"];
 
   useEffect(() => {
     if (!open) return;
