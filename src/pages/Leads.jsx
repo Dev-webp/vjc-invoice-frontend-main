@@ -894,21 +894,23 @@ function NotesDialog({ open, onClose, lead, onSaved }) {
         {addToReminder && (
           <Grid container spacing={2} sx={{ mb: 2 }}>
             <Grid item xs={6}>
+              <Typography variant="body2" sx={{ fontWeight: 500, mb: 1 }}>
+                Reminder Date
+              </Typography>
               <TextField
                 fullWidth
                 type="date"
-                label="Reminder Date"
-                InputLabelProps={{ shrink: true }}
                 value={reminderDate}
                 onChange={(e) => setReminderDate(e.target.value)}
               />
             </Grid>
             <Grid item xs={6}>
+              <Typography variant="body2" sx={{ fontWeight: 500, mb: 1 }}>
+                Reminder Time
+              </Typography>
               <TextField
                 fullWidth
                 type="time"
-                label="Reminder Time"
-                InputLabelProps={{ shrink: true }}
                 value={reminderTime}
                 onChange={(e) => setReminderTime(e.target.value)}
               />
@@ -920,7 +922,7 @@ function NotesDialog({ open, onClose, lead, onSaved }) {
           <Table size="small">
             <TableHead>
               <TableRow sx={{ bgcolor: "#f5f5f5" }}>
-                <TableCell sx={{ fontWeight: 700, width: 50 }}>#</TableCell>
+                <TableCell sx={{ fontWeight: 700, width: 60 }}>#</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Remark</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Stage</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Reminder</TableCell>
@@ -1295,21 +1297,38 @@ const [statusFilter, setStatusFilter] = useState("All");
                         variant="outlined"
                         startIcon={<HistoryIcon fontSize="small" />}
                         onClick={() => openHistory(lead)}
+                        sx={{ textTransform: "none" }}
                       >
                         History
                       </Button>
                       {/* Assumption: backend GET /leads should also return
-                          notes_count per lead. Badge falls back to 0 if missing. */}
-                      <Badge badgeContent={lead.notes_count || 0} color="primary">
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          startIcon={<StickyNote2Icon fontSize="small" />}
-                          onClick={() => { setNotesLead(lead); setNotesOpen(true); }}
-                        >
-                          Notes
-                        </Button>
-                      </Badge>
+                          notes_count per lead. Falls back to 0 if missing. */}
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        startIcon={<StickyNote2Icon fontSize="small" />}
+                        endIcon={
+                          <Box
+                            sx={{
+                              bgcolor: "#1a2472",
+                              color: "#fff",
+                              borderRadius: "4px",
+                              px: 0.8,
+                              minWidth: 18,
+                              fontSize: 12,
+                              fontWeight: 700,
+                              textAlign: "center",
+                              lineHeight: "18px",
+                            }}
+                          >
+                            {lead.notes_count || 0}
+                          </Box>
+                        }
+                        onClick={() => { setNotesLead(lead); setNotesOpen(true); }}
+                        sx={{ textTransform: "none" }}
+                      >
+                        Notes
+                      </Button>
                     </Stack>
                   </TableCell>
                   <TableCell>{lead.branch || "—"}</TableCell>
