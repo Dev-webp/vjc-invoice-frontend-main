@@ -19,6 +19,7 @@ import DescriptionIcon from "@mui/icons-material/Description";
 import PublicIcon from "@mui/icons-material/Public";
 import CategoryIcon from "@mui/icons-material/Category";
 import BadgeIcon from "@mui/icons-material/Badge";
+import SearchIcon from "@mui/icons-material/Search";
 
 const API = "https://vjc-invoice-backend-main.vercel.app/api";
 
@@ -649,7 +650,7 @@ function AssignEnquiryDialog({ open, onClose, selectedIds, onAssigned }) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const BRANCHES = ["Hyderabad", "Bengaluru", "Chennai", "Vijayawada"];
+  const BRANCHES = ["Hyderabad", "Bengaluru"];
 
   useEffect(() => {
     if (!open) return;
@@ -761,6 +762,7 @@ function LeadManagement() {
   const [assignOpen, setAssignOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
   const [statusFilter, setStatusFilter] = useState("All");
+  const [search, setSearch] = useState(""); // Name / Email / Mobile search — client-side filter
 
   const fetchLeads = async () => {
     try {
@@ -787,7 +789,7 @@ function LeadManagement() {
   };
 
   const toggleSelectAll = () => {
-    setSelectedIds(selectedIds.length === leads.length ? [] : leads.map((l) => l.id));
+    setSelectedIds(selectedIds.length === filteredLeads.length ? [] : filteredLeads.map((l) => l.id));
   };
 
   const handleStatusChange = async (leadId, newStatus) => {
@@ -804,6 +806,17 @@ function LeadManagement() {
       fetchLeads();
     }
   };
+
+  // Client-side search — filters by Name / Email / Mobile, matches the "Search Customers" bar style
+  const filteredLeads = leads.filter((l) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (
+      l.lead_name?.toLowerCase().includes(q) ||
+      l.email?.toLowerCase().includes(q) ||
+      l.contact_number?.toLowerCase().includes(q)
+    );
+  });
 
   return (
     <Box>
@@ -834,6 +847,21 @@ function LeadManagement() {
       {tab === 1 && (
       <>
       <Box sx={{ display: "flex", gap: 2, mb: 2, flexWrap: "wrap", alignItems: "center" }}>
+        <TextField
+          size="small"
+          placeholder="Search Name / Email / Mobile"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          sx={{ width: 260 }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" color="action" />
+              </InputAdornment>
+            ),
+          }}
+        />
+
         <TextField select label="Status" size="small" value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)} sx={{ width: 180 }}>
           <MenuItem value="All">All</MenuItem>
@@ -851,7 +879,7 @@ function LeadManagement() {
         )}
 
         <Typography variant="body2" color="text.secondary" sx={{ ml: "auto" }}>
-          Total Number of Records - {leads.length}
+          Total Number of Records - {filteredLeads.length}
         </Typography>
       </Box>
 
@@ -864,15 +892,15 @@ function LeadManagement() {
           <Table size="small">
             <TableHead sx={{ bgcolor: "#f5f5f5" }}>
               <TableRow>
-                {isChairman && (
-                  <TableCell padding="checkbox">
-                    <Checkbox
-                      checked={leads.length > 0 && selectedIds.length === leads.length}
-                      onChange={toggleSelectAll}
-                    />
-                  </TableCell>
-                )}
-                <TableCell sx={{ fontWeight: 700 }}>Created</TableCell>
+                {/* Checkbox column — shown to everyone now (UI only for employees;
+                    the Assign Enquiry action itself stays chairman/mis-executive only) */}
+                <TableCell padding="checkbox">
+                  <Checkbox
+                    checked={filteredLeads.length > 0 && selectedIds.length === filteredLeads.length}
+                    onChange={toggleSelectAll}
+                  />
+                </TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Created - Updated</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Name</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Mobile</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Email</TableCell>
@@ -880,31 +908,39 @@ function LeadManagement() {
                 <TableCell sx={{ fontWeight: 700 }}>Service Type</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Source</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-                {isChairman && <TableCell sx={{ fontWeight: 700 }}>Assigned By</TableCell>}
+                {/* Assigned By / Created By — now visible to everyone (each user only
+                    ever sees their own leads anyway, filtered server-side, so there's
+                    no privacy issue showing who created/assigned their own leads) */}
+                <TableCell sx={{ fontWeight: 700 }}>Assigned By</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Assigned To</TableCell>
-                {isChairman && <TableCell sx={{ fontWeight: 700 }}>Created By</TableCell>}
+                <TableCell sx={{ fontWeight: 700 }}>Created By</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Branch</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Last Remark</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {leads.length === 0 && (
+              {filteredLeads.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={11} align="center" sx={{ py: 4, color: "text.secondary" }}>
+                  <TableCell colSpan={13} align="center" sx={{ py: 4, color: "text.secondary" }}>
                     No enquiries found. Click "+ Add Enquiry" to create one.
                   </TableCell>
                 </TableRow>
               )}
-              {leads.map((lead) => (
+              {filteredLeads.map((lead) => (
                 <TableRow key={lead.id} sx={{ bgcolor: statusRowColor(lead.status) }}>
-                  {isChairman && (
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        checked={selectedIds.includes(lead.id)}
-                        onChange={() => toggleSelect(lead.id)}
-                      />
-                    </TableCell>
-                  )}
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      checked={selectedIds.includes(lead.id)}
+                      onChange={() => toggleSelect(lead.id)}
+                    />
+                  </TableCell>
                   <TableCell>
-                    {lead.created_at ? new Date(lead.created_at).toLocaleString("en-IN") : "—"}
+                    <Typography variant="caption" display="block">
+                      {lead.created_at ? new Date(lead.created_at).toLocaleString("en-IN") : "—"}
+                    </Typography>
+                    <Typography variant="caption" display="block" color="text.secondary">
+                      {lead.updated_at ? new Date(lead.updated_at).toLocaleString("en-IN") : "—"}
+                    </Typography>
                   </TableCell>
                   <TableCell>{lead.lead_name}</TableCell>
                   <TableCell>{lead.contact_number}</TableCell>
@@ -925,9 +961,15 @@ function LeadManagement() {
                       {STATUS_OPTIONS.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
                     </TextField>
                   </TableCell>
-                  {isChairman && <TableCell>{lead.assigned_by_name || "—"}</TableCell>}
+                  <TableCell>{lead.assigned_by_name || "—"}</TableCell>
                   <TableCell>{lead.assigned_to_name || "Not Assigned"}</TableCell>
-                  {isChairman && <TableCell>{lead.created_by_name || "—"}</TableCell>}
+                  <TableCell>{lead.created_by_name || "—"}</TableCell>
+                  <TableCell>{lead.branch || "—"}</TableCell>
+                  {/* No remarks/comments system exists in the backend yet — this
+                      column is a placeholder so the layout matches the reference.
+                      Tell me if you want a real "Add Remark" feature built
+                      (needs a small new table + API, not wired up yet). */}
+                  <TableCell>{lead.last_remark || "—"}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
