@@ -5,10 +5,12 @@ import {
   Paper, Dialog, DialogTitle, DialogContent, DialogActions,
   MenuItem, Chip, Checkbox, Stack, CircularProgress, Alert,
   FormGroup, FormControlLabel, Select, InputLabel, FormControl,
-  Tabs, Tab, InputAdornment, Divider,
+  Tabs, Tab, InputAdornment, Divider, IconButton,
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import CallIcon from "@mui/icons-material/Call";
+import BusinessIcon from "@mui/icons-material/Business";
+import CloseIcon from "@mui/icons-material/Close";
 import PhoneAndroidIcon from "@mui/icons-material/PhoneAndroid";
 import EmailIcon from "@mui/icons-material/Email";
 import WcIcon from "@mui/icons-material/Wc";
@@ -701,21 +703,62 @@ function AssignEnquiryDialog({ open, onClose, selectedIds, onAssigned }) {
   return (
     <>
       <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ bgcolor: "#0f9b8e", color: "#fff" }}>Assign Enquiry</DialogTitle>
+        <Box
+          sx={{
+            bgcolor: "#1a2472",
+            color: "#fff",
+            px: 3,
+            py: 2,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <Typography variant="h6" fontWeight={600}>Assign Enquiry</Typography>
+          <IconButton onClick={onClose} sx={{ color: "#fff" }}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
         <DialogContent sx={{ pt: 3 }}>
-          <Grid container spacing={2} sx={{ mt: 0.5 }}>
+          <Grid container spacing={3}>
             <Grid item xs={6}>
+              <Typography variant="body2" sx={{ fontWeight: 500, mb: 1 }}>
+                Branch <span style={{ color: "#d32f2f" }}>*</span>
+              </Typography>
               <FormControl fullWidth size="small">
-                <InputLabel>Branch *</InputLabel>
-                <Select label="Branch *" value={branch} onChange={(e) => setBranch(e.target.value)}>
+                <Select
+                  displayEmpty
+                  value={branch}
+                  onChange={(e) => setBranch(e.target.value)}
+                  startAdornment={
+                    <InputAdornment position="start">
+                      <BusinessIcon fontSize="small" sx={{ color: "#7b8794" }} />
+                    </InputAdornment>
+                  }
+                  renderValue={(v) => v || <em style={{ color: "#9aa4ae" }}>Select Branch</em>}
+                >
                   {BRANCHES.map((b) => <MenuItem key={b} value={b}>{b}</MenuItem>)}
                 </Select>
               </FormControl>
             </Grid>
             <Grid item xs={6}>
+              <Typography variant="body2" sx={{ fontWeight: 500, mb: 1 }}>
+                Staff <span style={{ color: "#d32f2f" }}>*</span>
+              </Typography>
               <FormControl fullWidth size="small">
-                <InputLabel>Staff *</InputLabel>
-                <Select label="Staff *" value={staffId} onChange={(e) => setStaffId(e.target.value)}>
+                <Select
+                  displayEmpty
+                  value={staffId}
+                  onChange={(e) => setStaffId(e.target.value)}
+                  startAdornment={
+                    <InputAdornment position="start">
+                      <PersonIcon fontSize="small" sx={{ color: "#7b8794" }} />
+                    </InputAdornment>
+                  }
+                  renderValue={(v) =>
+                    staffForBranch.find((s) => s.id === v)?.name || <em style={{ color: "#9aa4ae" }}>Select Option</em>
+                  }
+                >
                   {staffForBranch.map((s) => (
                     <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>
                   ))}
@@ -724,11 +767,12 @@ function AssignEnquiryDialog({ open, onClose, selectedIds, onAssigned }) {
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions>
+        <Divider />
+        <DialogActions sx={{ px: 3, py: 2 }}>
           <Button variant="contained" color="error" onClick={onClose}>Close</Button>
           <Button
             variant="contained"
-            sx={{ bgcolor: "#0f9b8e" }}
+            sx={{ bgcolor: "#1a2472", "&:hover": { bgcolor: "#141c5c" } }}
             disabled={!branch || !staffId}
             onClick={() => setConfirmOpen(true)}
           >
@@ -736,7 +780,6 @@ function AssignEnquiryDialog({ open, onClose, selectedIds, onAssigned }) {
           </Button>
         </DialogActions>
       </Dialog>
-
       {/* "Are you sure" confirm popup — matches screenshot 5 */}
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)} maxWidth="xs" fullWidth>
         <DialogContent sx={{ textAlign: "center", py: 4 }}>
