@@ -5,12 +5,14 @@ import {
   Paper, Dialog, DialogTitle, DialogContent, DialogActions,
   MenuItem, Chip, Checkbox, Stack, CircularProgress, Alert,
   FormGroup, FormControlLabel, Select, InputLabel, FormControl,
-  Tabs, Tab, InputAdornment, Divider, IconButton,
+Tabs, Tab, InputAdornment, Divider, IconButton, Badge,
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import CallIcon from "@mui/icons-material/Call";
 import BusinessIcon from "@mui/icons-material/Business";
 import CloseIcon from "@mui/icons-material/Close";
+import HistoryIcon from "@mui/icons-material/History";
+import StickyNote2Icon from "@mui/icons-material/StickyNote2";
 import PhoneAndroidIcon from "@mui/icons-material/PhoneAndroid";
 import EmailIcon from "@mui/icons-material/Email";
 import WcIcon from "@mui/icons-material/Wc";
@@ -800,6 +802,162 @@ function AssignEnquiryDialog({ open, onClose, selectedIds, onAssigned }) {
     </>
   );
 }
+// ── Add Notes Dialog — matches reference screenshot 3 exactly ─────────────
+function NotesDialog({ open, onClose, lead, onSaved }) {
+  const [remark, setRemark] = useState("");
+  const [addToReminder, setAddToReminder] = useState(true);
+  const [reminderDate, setReminderDate] = useState("");
+  const [reminderTime, setReminderTime] = useState("");
+  const [notes, setNotes] = useState([]);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!open || !lead) return;
+    setRemark(""); setAddToReminder(true); setReminderDate(""); setReminderTime("");
+    fetch(`${API}/leads/${lead.id}/notes`, { headers: authHeader() })
+      .then((r) => r.json())
+      .then((d) => { if (d.success) setNotes(d.notes || []); })
+      .catch(() => {});
+  }, [open, lead]);
+
+  const handleSave = async () => {
+    if (!remark.trim()) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`${API}/leads/${lead.id}/notes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeader() },
+        body: JSON.stringify({
+          remark,
+          add_to_reminder: addToReminder,
+          reminder_date: addToReminder ? reminderDate : null,
+          reminder_time: addToReminder ? reminderTime : null,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        onSaved();
+        onClose();
+      } else {
+        alert("❌ " + (data.message || "Failed to save note"));
+      }
+    } catch {
+      alert("❌ Failed to save note");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <Box
+        sx={{
+          bgcolor: "#0f9b8e",
+          color: "#fff",
+          px: 3,
+          py: 2,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <Typography variant="h6" fontWeight={600}>Add Notes</Typography>
+        <IconButton onClick={onClose} sx={{ color: "#fff" }}>
+          <CloseIcon />
+        </IconButton>
+      </Box>
+      <DialogContent sx={{ pt: 3 }}>
+        <Typography variant="body2" sx={{ fontWeight: 500, mb: 1 }}>
+          Remark <span style={{ color: "#d32f2f" }}>*</span>
+        </Typography>
+        <TextField
+          fullWidth
+          multiline
+          rows={2}
+          placeholder="Enter Remark"
+          value={remark}
+          onChange={(e) => setRemark(e.target.value)}
+          sx={{ mb: 2 }}
+        />
+
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={addToReminder}
+              onChange={(e) => setAddToReminder(e.target.checked)}
+            />
+          }
+          label="Add to Reminder"
+          sx={{ mb: 1 }}
+        />
+
+        {addToReminder && (
+          <Grid container spacing={2} sx={{ mb: 2 }}>
+            <Grid item xs={6}>
+              <TextField
+                fullWidth
+                type="date"
+                label="Reminder Date"
+                InputLabelProps={{ shrink: true }}
+                value={reminderDate}
+                onChange={(e) => setReminderDate(e.target.value)}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                fullWidth
+                type="time"
+                label="Reminder Time"
+                InputLabelProps={{ shrink: true }}
+                value={reminderTime}
+                onChange={(e) => setReminderTime(e.target.value)}
+              />
+            </Grid>
+          </Grid>
+        )}
+
+        <TableContainer component={Paper} variant="outlined">
+          <Table size="small">
+            <TableHead>
+              <TableRow sx={{ bgcolor: "#f5f5f5" }}>
+                <TableCell sx={{ fontWeight: 700, width: 50 }}>#</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Remark</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Stage</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Reminder</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Commented By</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {notes.map((n, i) => (
+                <TableRow key={n.id || i}>
+                  <TableCell>{i + 1}</TableCell>
+                  <TableCell>{n.remark}</TableCell>
+                  <TableCell>
+                    <Chip label={n.stage || "Enquiry"} size="small" color="info" variant="outlined" />
+                  </TableCell>
+                  <TableCell>{n.reminder || "—"}</TableCell>
+                  <TableCell>{n.commented_by || "—"}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </DialogContent>
+      <Divider />
+      <DialogActions sx={{ px: 3, py: 2 }}>
+        <Button variant="contained" color="error" onClick={onClose}>Cancel</Button>
+        <Button
+          variant="contained"
+          sx={{ bgcolor: "#0f9b8e", "&:hover": { bgcolor: "#0c7d72" } }}
+          onClick={handleSave}
+          disabled={saving || !remark.trim()}
+        >
+          {saving ? "Saving..." : "Save"}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
 
 // ── Main Lead Management Page ────────────────────────────────────────────
 function LeadManagement() {
@@ -812,8 +970,10 @@ function LeadManagement() {
   const [tab, setTab] = useState(0); // 0 = Add Enquiry, 1 = View Enquiry
   const [assignOpen, setAssignOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
-  const [statusFilter, setStatusFilter] = useState("All");
+const [statusFilter, setStatusFilter] = useState("All");
   const [search, setSearch] = useState(""); // Name / Email / Mobile search — client-side filter
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [notesLead, setNotesLead] = useState(null);
 
   const fetchLeads = async () => {
     try {
@@ -841,6 +1001,14 @@ function LeadManagement() {
 
   const toggleSelectAll = () => {
     setSelectedIds(selectedIds.length === filteredLeads.length ? [] : filteredLeads.map((l) => l.id));
+  };
+
+  // Opens the full profile-history page in a NEW TAB, same layout as
+  // screenshot 4. This points to a route "/lead-history/:id" — you need to
+  // add that route in your router (App.jsx / wherever your <Routes> live)
+  // pointing to the new LeadProfileHistory component given separately below.
+  const openHistory = (lead) => {
+    window.open(`/lead-history/${lead.id}`, "_blank");
   };
 
   const handleStatusChange = async (leadId, newStatus) => {
@@ -1005,7 +1173,7 @@ function LeadManagement() {
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 160 }}>Status</TableCell>
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 120 }}>Assigned By</TableCell>
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 120 }}>Assigned To</TableCell>
-                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 120 }}>Created By</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 190 }}>Review</TableCell>
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 100 }}>Branch</TableCell>
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 160 }}>Last Remark</TableCell>
               </TableRow>
@@ -1120,7 +1288,30 @@ function LeadManagement() {
                   </TableCell>
                   <TableCell>{lead.assigned_by_name || "—"}</TableCell>
                   <TableCell>{lead.assigned_to_name || "Not Assigned"}</TableCell>
-                  <TableCell>{lead.created_by_name || "—"}</TableCell>
+                  <TableCell>
+                    <Stack direction="row" spacing={1}>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        startIcon={<HistoryIcon fontSize="small" />}
+                        onClick={() => openHistory(lead)}
+                      >
+                        History
+                      </Button>
+                      {/* Assumption: backend GET /leads should also return
+                          notes_count per lead. Badge falls back to 0 if missing. */}
+                      <Badge badgeContent={lead.notes_count || 0} color="primary">
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          startIcon={<StickyNote2Icon fontSize="small" />}
+                          onClick={() => { setNotesLead(lead); setNotesOpen(true); }}
+                        >
+                          Notes
+                        </Button>
+                      </Badge>
+                    </Stack>
+                  </TableCell>
                   <TableCell>{lead.branch || "—"}</TableCell>
                   {/* No remarks/comments system exists in the backend yet — this
                       column is a placeholder so the layout matches the reference.
@@ -1141,6 +1332,13 @@ function LeadManagement() {
         onClose={() => setAssignOpen(false)}
         selectedIds={selectedIds}
         onAssigned={() => { setSelectedIds([]); fetchLeads(); }}
+      />
+
+      <NotesDialog
+        open={notesOpen}
+        onClose={() => setNotesOpen(false)}
+        lead={notesLead}
+        onSaved={fetchLeads}
       />
     </Box>
   );
