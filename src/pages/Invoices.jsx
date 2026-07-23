@@ -171,9 +171,18 @@ function Invoices() {
         </TextField>
       </Box>
 
-      {/* Invoice List Table */}
+     {/* Invoice List Table */}
       <TableContainer component={Paper}>
-        <Table>
+        <Table
+          sx={{
+            "& th, & td": {
+              borderRight: "1px solid #e5e7eb",
+            },
+            "& th:last-child, & td:last-child": {
+              borderRight: "none",
+            },
+          }}
+        >
           <TableHead sx={{ bgcolor: "#f5f5f5" }}>
             <TableRow>
               {["Invoice #", "Original Invoice", "Customer", "Date", "Due Date", "Grand Total", "Balance", "Status", "Actions"].map((h) => (
