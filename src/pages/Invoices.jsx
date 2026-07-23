@@ -80,13 +80,15 @@ function Invoices() {
   const normalizedInvoices = invoices.map(normalizeInvoice);
 
   // ── Filter ──
-  const filtered = normalizedInvoices.filter((inv) => {
-    const matchSearch =
-      (inv.customerName || "").toLowerCase().includes(search.toLowerCase()) ||
-      (inv.invoiceNo || "").toLowerCase().includes(search.toLowerCase());
-    const matchStatus = statusFilter === "All" || inv.status === statusFilter;
-    return matchSearch && matchStatus;
-  });
+  const filtered = normalizedInvoices
+    .filter((inv) => {
+      const matchSearch =
+        (inv.customerName || "").toLowerCase().includes(search.toLowerCase()) ||
+        (inv.invoiceNo || "").toLowerCase().includes(search.toLowerCase());
+      const matchStatus = statusFilter === "All" || inv.status === statusFilter;
+      return matchSearch && matchStatus;
+    })
+    .sort((a, b) => (a.invoiceNo || "").localeCompare(b.invoiceNo || ""));
 
   // ── Stats ──
   const totalRevenue = normalizedInvoices.reduce((s, i) => s + (i.grandTotal - i.balanceAmount), 0);
