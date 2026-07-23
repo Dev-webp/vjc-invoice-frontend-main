@@ -23,7 +23,7 @@ const ALL_PERMISSIONS = [
   { key: "leads",     label: "Leads",     icon: "🎯" },
   { key: "customers", label: "Customers",         icon: "👤" },
   { key: "invoices",  label: "Invoices",          icon: "🧾" },
-  { key: "quotes",    label: "Quotes",            icon: "📋" },
+  { key: "quotes",    label: "Proforma Invoice",            icon: "📋" },
   { key: "payments",  label: "Payments Received", icon: "💰" },
   { key: "expenses",  label: "Expenses",          icon: "💸" },
   { key: "reports",   label: "Reports",           icon: "📊" },
