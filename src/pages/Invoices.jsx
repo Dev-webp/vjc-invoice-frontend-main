@@ -89,7 +89,7 @@ function Invoices() {
   });
 
   // ── Stats ──
-  const paidCount    = normalizedInvoices.filter((i) => i.status === "Paid").length;
+  const totalRevenue = normalizedInvoices.reduce((s, i) => s + (i.grandTotal - i.balanceAmount), 0);
   const partialCount = normalizedInvoices.filter(
     (i) => i.status === "Approved" && i.balanceAmount > 0
   ).length;
@@ -134,10 +134,10 @@ function Invoices() {
       {/* Stats */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {[
-          { label: "Total Invoices", value: normalizedInvoices.length, color: "#1976d2" },
-          { label: "Paid",           value: paidCount,                 color: "#2e7d32" },
-          { label: "Partially Paid", value: partialCount,              color: "#0288d1" },
-          { label: "Outstanding",    value: formatPrice(outstanding),  color: "#ed6c02" },
+          { label: "Total Invoices", value: normalizedInvoices.length,    color: "#1976d2" },
+          { label: "Total Revenue",  value: formatPrice(totalRevenue),    color: "#2e7d32" },
+          { label: "Partially Paid", value: partialCount,                 color: "#0288d1" },
+          { label: "Outstanding",    value: formatPrice(outstanding),     color: "#ed6c02" },
         ].map((s) => (
           <Grid item xs={12} md={3} key={s.label}>
             <Card sx={{ borderLeft: `4px solid ${s.color}` }}>
