@@ -404,7 +404,7 @@ console.log("QUOTE PAYLOAD", payload);
         <Table>
           <TableHead sx={{ bgcolor: "#f5f5f5" }}>
             <TableRow>
-              {["Proforma Invoice #", "Customer", "Date", "Expiry", "Salesperson", "Amount", "Status", "Actions"].map((h) => (
+              {["Proforma Invoice #", "Customer", "Date", "Expiry",  "Amount", "Status", "Actions"].map((h) => (
                 <TableCell key={h}><strong>{h}</strong></TableCell>
               ))}
             </TableRow>
@@ -426,7 +426,7 @@ console.log("QUOTE PAYLOAD", payload);
                 >
                   {qt.expiryDate}
                 </TableCell>
-                <TableCell>{qt.salesperson || "—"}</TableCell>
+              
                 <TableCell><strong>{formatPrice(qt.totalAmount)}</strong></TableCell>
                 <TableCell>
                   <Chip
