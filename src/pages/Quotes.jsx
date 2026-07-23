@@ -351,7 +351,7 @@ console.log("QUOTE PAYLOAD", payload);
 
   return (
     <Box>
-      <Typography variant="h4" fontWeight="bold" sx={{ mb: 3 }}>Quotes</Typography>
+      <Typography variant="h4" fontWeight="bold" sx={{ mb: 3 }}> Proforma Invoice</Typography>
 
       {error && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>{error}</Alert>
@@ -360,7 +360,7 @@ console.log("QUOTE PAYLOAD", payload);
       {/* ✅ Stats */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {[
-          { label: "Total Quotes", value: normalizedQuotes.length, color: "#1976d2" },
+          { label: "Total Proforma Invoices", value: normalizedQuotes.length, color: "#1976d2" },
           { label: "Accepted",     value: acceptedCount,           color: "#2e7d32" },
           { label: "Rejected",     value: rejectedCount,           color: "#d32f2f" },
           { label: "Invoiced",     value: invoicedCount,           color: "#7b1fa2" },
@@ -380,7 +380,7 @@ console.log("QUOTE PAYLOAD", payload);
       {/* Search + Filter + New */}
       <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
         <TextField
-          label="Search Quote / Customer"
+          label="Search Proforma Invoice / Customer"
           size="small" value={search}
           onChange={(e) => setSearch(e.target.value)}
           sx={{ width: 280 }}
@@ -395,7 +395,7 @@ console.log("QUOTE PAYLOAD", payload);
         </TextField>
         <Box sx={{ flexGrow: 1 }} />
         <Button variant="contained" startIcon={<AddIcon />} onClick={openNew}>
-          New Quote
+           New Proforma Invoice
         </Button>
       </Box>
 
@@ -404,7 +404,7 @@ console.log("QUOTE PAYLOAD", payload);
         <Table>
           <TableHead sx={{ bgcolor: "#f5f5f5" }}>
             <TableRow>
-              {["Quote #", "Customer", "Date", "Expiry", "Salesperson", "Amount", "Status", "Actions"].map((h) => (
+              {["Proforma Invoice #", "Customer", "Date", "Expiry", "Salesperson", "Amount", "Status", "Actions"].map((h) => (
                 <TableCell key={h}><strong>{h}</strong></TableCell>
               ))}
             </TableRow>
@@ -413,7 +413,7 @@ console.log("QUOTE PAYLOAD", payload);
             {filtered.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} align="center" sx={{ py: 4, color: "text.secondary" }}>
-                  No quotes found
+                  No Proforma Invoices found
                 </TableCell>
               </TableRow>
             ) : filtered.map((qt) => (
@@ -476,7 +476,7 @@ console.log("QUOTE PAYLOAD", payload);
 
       {/* ✅ STATUS CHANGE DIALOG */}
       <Dialog open={statusDialogOpen} onClose={() => setStatusDialogOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>Change Quote Status</DialogTitle>
+        <DialogTitle>Change Proforma Invoice Status</DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Current: <strong>{statusChangeQt?.status}</strong>
@@ -505,7 +505,7 @@ console.log("QUOTE PAYLOAD", payload);
 
       {/* ── CREATE / EDIT DIALOG ── */}
 <Dialog key={form?.id ?? form?.quote_number} open={open} onClose={() => setOpen(false)} maxWidth="lg" fullWidth>        <DialogTitle sx={{ bgcolor: "#1976d2", color: "white" }}>
-          {form?.quote_number} — {form?.id ? "Edit Quote" : "New Quote"}
+          {form?.quote_number} — {form?.id ? "Edit Proforma Invoice" : "New Proforma Invoice"}
         </DialogTitle>
 
         {form && (
@@ -544,7 +544,7 @@ console.log("QUOTE PAYLOAD", payload);
 
               {/* Quote # */}
               <Grid item xs={12} md={3}>
-                <TextField fullWidth label="Quote #" value={form.quote_number} disabled />
+                <TextField fullWidth label="Proforma Invoice #" value={form.quote_number} disabled />
               </Grid>
 
               {/* Reference */}
@@ -557,7 +557,7 @@ console.log("QUOTE PAYLOAD", payload);
 
               {/* Dates */}
               <Grid item xs={12} md={4}>
-                <TextField fullWidth label="Quote Date *" type="date"
+                <TextField fullWidth label="Proforma Invoice Date *" type="date"
                   value={form.quoteDate}
                   onChange={(e) => setForm({ ...form, quoteDate: e.target.value })}
                   InputLabelProps={{ shrink: true }}
@@ -725,7 +725,7 @@ console.log("QUOTE PAYLOAD", payload);
       {/* ── VIEW DIALOG ── */}
       <Dialog open={viewOpen} onClose={() => setViewOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle sx={{ bgcolor: "#1976d2", color: "white" }}>
-          Quote Details — {selected?.quote_number}
+          Proforma Invoice Details — {selected?.quote_number}
         </DialogTitle>
 
         {selected && (

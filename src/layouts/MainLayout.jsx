@@ -45,14 +45,14 @@ const MainLayout = () => {
           }}
         >
           {page === "Dashboard" && <Dashboard />}
-          
+
           {page === "Leads" && <Leads />}
 
           {page === "Customers" && <Customers />}
 
           {page === "Services" && <Items />}
 
-          {page === "Quotes" && <Quotes />}
+        {page === "Proforma Invoice" && <Quotes />}
 
           {page === "Invoices" && <Invoices />}
 
