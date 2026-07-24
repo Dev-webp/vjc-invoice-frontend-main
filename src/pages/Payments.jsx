@@ -362,6 +362,7 @@ function PaymentsReceived() {
   const [snack,        setSnack]        = useState({ open: false, msg: "", severity: "success" });
 
   const [newForm, setNewForm] = useState({
+      paymentType: "Payment Request",
     invoiceId: "", customerId: "", customerName: "",
     email: "", dueDate: "", amountDue: "", notes: "",
   });
@@ -710,6 +711,29 @@ id: inv.invoice_id || inv.invoice_number || inv.invoice_no || inv.id || "",  cus
         <DialogContent sx={{ mt: 2 }}>
           <Grid container spacing={2}>
             <Grid item xs={12}>
+  <TextField
+    select
+    fullWidth
+    label="Payment Type"
+    value={newForm.paymentType}
+    onChange={(e) =>
+      setNewForm({
+        ...newForm,
+        paymentType: e.target.value,
+      })
+    }
+    size="small"
+  >
+    <MenuItem value="Payment Request">
+      Payment Request
+    </MenuItem>
+
+    <MenuItem value="Full Paid">
+      Full Paid
+    </MenuItem>
+  </TextField>
+</Grid>
+            <Grid item xs={12}>
               <TextField select fullWidth label="Customer *"
                 value={newForm.customerId}
                 onChange={(e) => {
@@ -750,11 +774,16 @@ amountDue: inv?.balance?.toString() || newForm.amountDue,
                 size="small" />
             </Grid>
             <Grid item xs={6}>
-              <TextField fullWidth label="Due Date" type="date"
-                value={newForm.dueDate}
-                onChange={(e) => setNewForm({ ...newForm, dueDate: e.target.value })}
-                InputLabelProps={{ shrink: true }} size="small" />
-            </Grid>
+  <TextField
+    fullWidth
+    label="Due Date"
+    type="date"
+    value={newForm.dueDate}
+    onChange={(e) => setNewForm({ ...newForm, dueDate: e.target.value })}
+    InputLabelProps={{ shrink: true }}
+    size="small"
+  />
+</Grid>
             <Grid item xs={12}>
               <TextField fullWidth multiline rows={2} label="Notes"
                 value={newForm.notes}
