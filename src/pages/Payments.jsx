@@ -373,7 +373,7 @@ function PaymentsReceived() {
   amountReceived: "",
   paymentMethod: "Bank",
   paymentDate: today(),
-
+  reference: "",
   notes: "",
 });
 
@@ -461,19 +461,63 @@ const res = await fetch(`${API}/payments`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
-          invoice_id:    newForm.invoiceId || null,
-          customer_id:   newForm.customerId,
-          customer_name: newForm.customerName,
-          email:         newForm.email,
-          due_date:      newForm.dueDate || null,
-          amount_due:    Number(newForm.amountDue),
-          notes:         newForm.notes,
-        }),
+  paymentType: newForm.paymentType,
+
+  invoice_id: newForm.invoiceId || null,
+  customer_id: newForm.customerId,
+  customer_name: newForm.customerName,
+  email: newForm.email,
+
+  due_date:
+    newForm.paymentType === "Payment Request"
+      ? newForm.dueDate || null
+      : null,
+
+  amount_due:
+    newForm.paymentType === "Payment Request"
+      ? Number(newForm.amountDue)
+      : Number(newForm.amountReceived),
+
+  amount_received:
+    newForm.paymentType === "Full Paid"
+      ? Number(newForm.amountReceived)
+      : 0,
+
+  payment_method:
+    newForm.paymentType === "Full Paid"
+      ? newForm.paymentMethod
+      : "",
+
+  payment_date:
+    newForm.paymentType === "Full Paid"
+      ? newForm.paymentDate
+      : null,
+
+  reference:
+    newForm.paymentType === "Full Paid"
+      ? newForm.reference
+      : "",
+
+  notes: newForm.notes,
+}),
       });
       if (!res.ok) throw new Error(await res.text());
       await fetchPayments();
       setNewOpen(false);
-      setNewForm({ invoiceId: "", customerId: "", customerName: "", email: "", dueDate: "", amountDue: "",  reference: "", notes: "" });
+     setNewForm({
+  paymentType: "Payment Request",
+  invoiceId: "",
+  customerId: "",
+  customerName: "",
+  email: "",
+  dueDate: "",
+  amountDue: "",
+  amountReceived: "",
+  paymentMethod: "Bank",
+  paymentDate: today(),
+  reference: "",
+  notes: "",
+});
       showSnack("Payment request created!");
     } catch (err) {
       showSnack("Failed to create payment: " + err.message, "error");
