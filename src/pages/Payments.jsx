@@ -852,6 +852,7 @@ amountDue: inv?.balance?.toString() || newForm.amountDue,
   <Grid item xs={6}>
     <TextField
       fullWidth
+      sx={{ minWidth: 220 }}
       label="Due Date"
       type="date"
       value={newForm.dueDate}
