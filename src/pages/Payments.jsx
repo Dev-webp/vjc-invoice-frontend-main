@@ -767,23 +767,41 @@ amountDue: inv?.balance?.toString() || newForm.amountDue,
                 ))}
               </TextField>
             </Grid>
-            <Grid item xs={6}>
-              <TextField fullWidth label="Amount Due (₹) *" type="number"
-                value={newForm.amountDue}
-                onChange={(e) => setNewForm({ ...newForm, amountDue: e.target.value })}
-                size="small" />
-            </Grid>
-            <Grid item xs={6}>
-  <TextField
-    fullWidth
-    label="Due Date"
-    type="date"
-    value={newForm.dueDate}
-    onChange={(e) => setNewForm({ ...newForm, dueDate: e.target.value })}
-    InputLabelProps={{ shrink: true }}
-    size="small"
-  />
-</Grid>
+            {newForm.paymentType === "Payment Request" && (
+  <Grid item xs={6}>
+    <TextField
+      fullWidth
+      label="Amount Due (₹) *"
+      type="number"
+      value={newForm.amountDue}
+      onChange={(e) =>
+        setNewForm({
+          ...newForm,
+          amountDue: e.target.value,
+        })
+      }
+      size="small"
+    />
+  </Grid>
+)}
+            {newForm.paymentType === "Payment Request" && (
+  <Grid item xs={6}>
+    <TextField
+      fullWidth
+      label="Due Date"
+      type="date"
+      value={newForm.dueDate}
+      onChange={(e) =>
+        setNewForm({
+          ...newForm,
+          dueDate: e.target.value,
+        })
+      }
+      InputLabelProps={{ shrink: true }}
+      size="small"
+    />
+  </Grid>
+)}
             <Grid item xs={12}>
               <TextField fullWidth multiline rows={2} label="Notes"
                 value={newForm.notes}
