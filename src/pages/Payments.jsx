@@ -144,7 +144,7 @@ function SendReminderDialog({ open, onClose, payment, onSend }) {
 function RecordPaymentDialog({ open, onClose, payment, onRecord }) {
   const [form, setForm] = useState({
     paymentDate: today(), paymentMethod: "Bank",
-    amountReceived: "", reference: "", notes: "",
+    amountReceived: "", reference: "", reference: "", notes: "",
   });
   const [loading, setLoading] = useState(false);
 
@@ -361,11 +361,21 @@ function PaymentsReceived() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [snack,        setSnack]        = useState({ open: false, msg: "", severity: "success" });
 
-  const [newForm, setNewForm] = useState({
-      paymentType: "Payment Request",
-    invoiceId: "", customerId: "", customerName: "",
-    email: "", dueDate: "", amountDue: "", notes: "",
-  });
+ const [newForm, setNewForm] = useState({
+  paymentType: "Payment Request",
+  invoiceId: "",
+  customerId: "",
+  customerName: "",
+  email: "",
+  dueDate: "",
+  amountDue: "",
+
+  amountReceived: "",
+  paymentMethod: "Bank",
+  paymentDate: today(),
+
+  notes: "",
+});
 
   // ── Fetch payments from backend ──
   const fetchPayments = useCallback(async () => {
@@ -434,7 +444,17 @@ setInvoices(list);
 
   // ── Create Payment ──
   const handleCreatePayment = async () => {
-    if (!newForm.customerId || !newForm.amountDue) return;
+  if (
+  newForm.paymentType === "Payment Request" &&
+  (!newForm.customerId || !newForm.amountDue)
+)
+  return;
+
+if (
+  newForm.paymentType === "Full Paid" &&
+  (!newForm.customerId || !newForm.amountReceived)
+)
+  return;
     try {
      const token = localStorage.getItem("vjc_invoice_auth");
 const res = await fetch(`${API}/payments`, {
@@ -453,7 +473,7 @@ const res = await fetch(`${API}/payments`, {
       if (!res.ok) throw new Error(await res.text());
       await fetchPayments();
       setNewOpen(false);
-      setNewForm({ invoiceId: "", customerId: "", customerName: "", email: "", dueDate: "", amountDue: "", notes: "" });
+      setNewForm({ invoiceId: "", customerId: "", customerName: "", email: "", dueDate: "", amountDue: "",  reference: "", notes: "" });
       showSnack("Payment request created!");
     } catch (err) {
       showSnack("Failed to create payment: " + err.message, "error");
@@ -802,6 +822,79 @@ amountDue: inv?.balance?.toString() || newForm.amountDue,
     />
   </Grid>
 )}
+{newForm.paymentType === "Full Paid" && (
+  <>
+    <Grid item xs={6}>
+      <TextField
+        fullWidth
+        label="Amount Received (₹) *"
+        type="number"
+        value={newForm.amountReceived}
+        onChange={(e) =>
+          setNewForm({
+            ...newForm,
+            amountReceived: e.target.value,
+          })
+        }
+        size="small"
+      />
+    </Grid>
+
+    <Grid item xs={6}>
+      <TextField
+        select
+        fullWidth
+        label="Payment Method"
+        value={newForm.paymentMethod}
+        onChange={(e) =>
+          setNewForm({
+            ...newForm,
+            paymentMethod: e.target.value,
+          })
+        }
+        size="small"
+      >
+        {PAYMENT_METHODS.map((m) => (
+          <MenuItem key={m.key} value={m.key}>
+            {m.label}
+          </MenuItem>
+        ))}
+      </TextField>
+    </Grid>
+
+    <Grid item xs={6}>
+      <TextField
+        fullWidth
+        label="Payment Date"
+        type="date"
+        value={newForm.paymentDate}
+        onChange={(e) =>
+          setNewForm({
+            ...newForm,
+            paymentDate: e.target.value,
+          })
+        }
+        InputLabelProps={{ shrink: true }}
+        size="small"
+      />
+    </Grid>
+
+    <Grid item xs={6}>
+      <TextField
+        fullWidth
+        label="Transaction Reference"
+        value={newForm.reference || ""}
+        onChange={(e) =>
+          setNewForm({
+            ...newForm,
+            reference: e.target.value,
+          })
+        }
+        size="small"
+      />
+    </Grid>
+  </>
+)}
             <Grid item xs={12}>
               <TextField fullWidth multiline rows={2} label="Notes"
                 value={newForm.notes}
@@ -813,10 +906,19 @@ amountDue: inv?.balance?.toString() || newForm.amountDue,
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={() => setNewOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleCreatePayment}
-            disabled={!newForm.customerId || !newForm.amountDue}>
-            Create Payment Request
-          </Button>
+          <Button
+  variant="contained"
+  onClick={handleCreatePayment}
+  disabled={
+    newForm.paymentType === "Payment Request"
+      ? !newForm.customerId || !newForm.amountDue
+      : !newForm.customerId || !newForm.amountReceived
+  }
+>
+  {newForm.paymentType === "Payment Request"
+    ? "Create Payment Request"
+    : "Record Full Payment"}
+</Button>
         </DialogActions>
       </Dialog>
 
