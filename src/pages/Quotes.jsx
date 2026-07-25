@@ -310,7 +310,7 @@ console.log("QUOTE PAYLOAD", payload);
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Quote-${quoteNumber || id}.pdf`;
+      a.download = `Proforma Invoice-${quoteNumber || id}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
