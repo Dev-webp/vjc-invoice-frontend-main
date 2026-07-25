@@ -303,6 +303,8 @@ const [loading, setLoading] = useState(false);
 const [invoiceErrors, setInvoiceErrors] = useState({});
 
 const [services, setServices] = useState([]);
+  const [paxList, setPaxList] = useState([]);           // ✅ NEW
+  const [extraServices, setExtraServices] = useState([]); // ✅ NEW
   const [customerSearch, setCustomerSearch] = useState("");
   const [customerOptions, setCustomerOptions] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -326,10 +328,14 @@ const [services, setServices] = useState([]);
     setCustomerSearch(
       `[${customer.customer_id}] ${customer.name}`
     );
+    setPaxList([{ name: customer.name }]);      // ✅ NEW — default pax = customer himself
+    setExtraServices([]);                        // ✅ NEW
   } else {
     setForm({ ...EMPTY_INVOICE_FORM });
     setCustomerSearch("");
     setSelectedCustomer(null);
+    setPaxList([]);          // ✅ NEW
+    setExtraServices([]);    // ✅ NEW
   }
 
   setSearchOpen(false);
@@ -382,7 +388,9 @@ const taxType =
     ? (activeCustomer?.state === form.stateBy ? "CGST_SGST" : "IGST")
     : form.taxType;
 
-const taxPercent = 18;  const totalAmountNum = Number(form.totalAmount || 0);
+const taxPercent = 18;
+  const extraServicesTotal = extraServices.reduce((s, x) => s + Number(x.amount || 0), 0); // ✅ NEW
+  const totalAmountNum = Number(form.totalAmount || 0) + extraServicesTotal; // extraServicesTotal=0 by default, unchanged behaviour
   const discountNum = Number(form.discount || 0);
   const paidAmountNum = Number(form.paidAmount || 0);
   const invoiceAmount = Math.max(totalAmountNum - discountNum, 0);
@@ -443,7 +451,13 @@ const res = await fetch(`${API}/invoices`, {
           invoice_date: form.invoiceDate,
           payment_mode: form.paymentMode,
           reference_no: form.referenceNo || null,
-          items: [{ description: form.description, amount: invoiceAmount }],
+          items: [
+            { description: form.description, amount: Number(form.totalAmount || 0) - discountNum },
+            ...extraServices
+              .filter((s) => s.description || s.amount)
+              .map((s) => ({ description: s.description || "Additional Service", amount: Number(s.amount || 0) })),
+          ],
+          pax: paxList.filter((p) => p.name && p.name.trim() !== ""), // ✅ NEW
           total_amount: totalAmountNum,
           discount: discountNum,
           subtotal: invoiceAmount,
@@ -668,6 +682,71 @@ setSearchOpen(false);
               onChange={set("invoiceDate")}
             />
           </Box>
+        </Box>
+
+        {/* ✅ NEW: Travelers (Pax) — additive only, doesn't touch anything above */}
+        <Box sx={{ mt: 2 }}>
+          <Typography sx={{ fontSize: 12, fontWeight: 600, color: "#555", mb: 0.5 }}>
+            Travelers (Pax)
+          </Typography>
+          <Stack spacing={1}>
+            {paxList.map((p, idx) => (
+              <Box key={idx} sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                <TextField
+                  size="small" fullWidth placeholder={`Passenger ${idx + 1} name`}
+                  value={p.name || ""}
+                  onChange={(e) => {
+                    const next = [...paxList];
+                    next[idx] = { ...next[idx], name: e.target.value };
+                    setPaxList(next);
+                  }}
+                />
+                <IconButton size="small" onClick={() => setPaxList(paxList.filter((_, i) => i !== idx))}>
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </Box>
+            ))}
+            <Button size="small" onClick={() => setPaxList([...paxList, { name: "" }])}>
+              + Add Passenger
+            </Button>
+          </Stack>
+        </Box>
+
+        {/* ✅ NEW: Additional Services — additive only */}
+        <Box sx={{ mt: 2 }}>
+          <Typography sx={{ fontSize: 12, fontWeight: 600, color: "#555", mb: 0.5 }}>
+            Additional Services
+          </Typography>
+          <Stack spacing={1}>
+            {extraServices.map((s, idx) => (
+              <Box key={idx} sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                <TextField
+                  size="small" placeholder="Service description" sx={{ flex: 2 }}
+                  value={s.description || ""}
+                  onChange={(e) => {
+                    const next = [...extraServices];
+                    next[idx] = { ...next[idx], description: e.target.value };
+                    setExtraServices(next);
+                  }}
+                />
+                <TextField
+                  size="small" placeholder="Amount" sx={{ flex: 1 }}
+                  value={s.amount || ""}
+                  onChange={(e) => {
+                    const next = [...extraServices];
+                    next[idx] = { ...next[idx], amount: e.target.value.replace(/[^0-9.]/g, "") };
+                    setExtraServices(next);
+                  }}
+                />
+                <IconButton size="small" onClick={() => setExtraServices(extraServices.filter((_, i) => i !== idx))}>
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </Box>
+            ))}
+            <Button size="small" onClick={() => setExtraServices([...extraServices, { description: "", amount: "" }])}>
+              + Add Service
+            </Button>
+          </Stack>
         </Box>
 
         <Divider sx={{ my: 2 }} />
