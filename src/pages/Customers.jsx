@@ -425,8 +425,11 @@ const set = (field) => (e) =>
     if (!activeCustomer) errs.clientName = "Client is required";
     if (!form.totalAmount) errs.totalAmount = "Total Amount is required";
     if (!form.paymentMode) errs.paymentMode = "Payment Mode is required";
-    if (needsRef && !form.referenceNo?.trim()) errs.referenceNo = `${refLabel} is required`;
+if (needsRef && !form.referenceNo?.trim()) errs.referenceNo = `${refLabel} is required`;
     if (balanceAmount > 0 && !form.dueDate) errs.dueDate = "Due Date is required";
+    if (form.paymentMode && form.paymentMode !== "Cash" && !form.attachment) {
+      errs.attachment = "Payment screenshot/attachment is required for this payment mode";
+    }
     if (!form.serviceType) errs.serviceType = "Service Type is required";
     if (!form.stateBy) errs.stateBy = "State By is required";
     if (Object.keys(errs).length > 0) { setInvoiceErrors(errs); return; }
@@ -994,15 +997,22 @@ onBlur={(e) => setForm(prev => ({ ...prev, discount: e.target.value.replace(/[^0
   </FieldRow>
 )}
 
-            {/* Attachment — appears only after paid amount has been entered */}
-            {showAttachment && (
+            {/* Attachment — mandatory for all payment modes except Cash */}
+            {form.paymentMode && form.paymentMode !== "Cash" && (
               <FieldRow label="Attachment" required>
-                <input
-                  type="file"
-                  accept="image/*,application/pdf"
-                  style={{ fontSize: 13 }}
-                  onChange={(e) => setForm({ ...form, attachment: e.target.files[0] || null })}
-                />
+                <Box>
+                  <input
+                    type="file"
+                    accept="image/*,application/pdf"
+                    style={{ fontSize: 13 }}
+                    onChange={(e) => setForm({ ...form, attachment: e.target.files[0] || null })}
+                  />
+                  {invoiceErrors.attachment && (
+                    <Typography variant="caption" color="error" sx={{ display: "block", mt: 0.5 }}>
+                      {invoiceErrors.attachment}
+                    </Typography>
+                  )}
+                </Box>
               </FieldRow>
             )}
 
