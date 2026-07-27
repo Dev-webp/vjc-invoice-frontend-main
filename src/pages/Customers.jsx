@@ -305,6 +305,7 @@ const [invoiceErrors, setInvoiceErrors] = useState({});
 const [services, setServices] = useState([]);
   const [paxList, setPaxList] = useState([]);           // ✅ NEW
   const [extraServices, setExtraServices] = useState([]); // ✅ NEW
+    const [passThroughExpenses, setPassThroughExpenses] = useState([]);
   const [customerSearch, setCustomerSearch] = useState("");
   const [customerOptions, setCustomerOptions] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -329,13 +330,15 @@ const [services, setServices] = useState([]);
       `[${customer.customer_id}] ${customer.name}`
     );
     setPaxList([{ name: customer.name }]);      // ✅ NEW — default pax = customer himself
-    setExtraServices([]);                        // ✅ NEW
+    setExtraServices([]);  
+     setPassThroughExpenses([]);                       // ✅ NEW
   } else {
     setForm({ ...EMPTY_INVOICE_FORM });
     setCustomerSearch("");
     setSelectedCustomer(null);
     setPaxList([]);          // ✅ NEW
     setExtraServices([]);    // ✅ NEW
+     setPassThroughExpenses([]); 
   }
 
   setSearchOpen(false);
@@ -389,8 +392,10 @@ const taxType =
     : form.taxType;
 
 const taxPercent = 18;
-  const extraServicesTotal = extraServices.reduce((s, x) => s + Number(x.amount || 0), 0); // ✅ NEW
-  const totalAmountNum = Number(form.totalAmount || 0) + extraServicesTotal; // extraServicesTotal=0 by default, unchanged behaviour
+  const extraServicesTotal = extraServices.reduce((s, x) => s + Number(x.amount || 0), 0);
+  const passThroughTotal = passThroughExpenses.reduce((s, x) => s + Number(x.amount || 0), 0); // NEW
+  const totalAmountNum = Number(form.totalAmount || 0) + extraServicesTotal;
+  // passThroughTotal ఇక్కడ కలవదు — GST calculation తర్వాత, direct గా Grand Total లో కలుస్తుంది
   const discountNum = Number(form.discount || 0);
   const paidAmountNum = Number(form.paidAmount || 0);
   const invoiceAmount = Math.max(totalAmountNum - discountNum, 0);
@@ -404,7 +409,8 @@ const taxPercent = 18;
     taxAmount = (invoiceAmount * taxPercent) / 100;
     grandTotal = invoiceAmount + taxAmount;
   }
-  const balanceAmount = Math.max(grandTotal - paidAmountNum, 0);
+const grandTotalWithPassThrough = grandTotal + passThroughTotal; // NEW
+  const balanceAmount = Math.max(grandTotalWithPassThrough - paidAmountNum, 0);
 
   // Show attachment field once paid amount has at least 1 digit
   const showAttachment = form.paidAmount && form.paidAmount.length > 0;
@@ -451,13 +457,18 @@ const res = await fetch(`${API}/invoices`, {
           invoice_date: form.invoiceDate,
           payment_mode: form.paymentMode,
           reference_no: form.referenceNo || null,
-          items: [
-            { description: form.description, amount: Number(form.totalAmount || 0) - discountNum },
+items: [
+            { description: form.description, amount: Number(form.totalAmount || 0) - discountNum, taxable: true },
             ...extraServices
               .filter((s) => s.description || s.amount)
-              .map((s) => ({ description: s.description || "Additional Service", amount: Number(s.amount || 0) })),
+              .map((s) => ({ description: s.description || "Additional Service", amount: Number(s.amount || 0), taxable: true })),
+            ...passThroughExpenses   // NEW
+              .filter((s) => s.description || s.amount)
+              .map((s) => ({ description: s.description || "Expense", amount: Number(s.amount || 0), taxable: false })),
           ],
-          pax: paxList.filter((p) => p.name && p.name.trim() !== ""), // ✅ NEW
+          pax: paxList.filter((p) => p.name && p.name.trim() !== ""),
+          grand_total: grandTotalWithPassThrough,   // CHANGED (grandTotal బదులు)
+          balance_amount: balanceAmount,
           total_amount: totalAmountNum,
           discount: discountNum,
           subtotal: invoiceAmount,
@@ -745,6 +756,43 @@ setSearchOpen(false);
             ))}
             <Button size="small" onClick={() => setExtraServices([...extraServices, { description: "", amount: "" }])}>
               + Add Service
+            </Button>
+          </Stack>
+        </Box>
+
+        {/* NEW: Pass-Through Expenses — GST లేకుండా */}
+        <Box sx={{ mt: 2 }}>
+          <Typography sx={{ fontSize: 12, fontWeight: 600, color: "#555", mb: 0.5 }}>
+            Pass-Through Expenses (VFS / Flight / Hotel / Insurance — No GST)
+          </Typography>
+          <Stack spacing={1}>
+            {passThroughExpenses.map((s, idx) => (
+              <Box key={idx} sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                <TextField
+                  size="small" placeholder="e.g. VFS Fee" sx={{ flex: 2 }}
+                  value={s.description || ""}
+                  onChange={(e) => {
+                    const next = [...passThroughExpenses];
+                    next[idx] = { ...next[idx], description: e.target.value };
+                    setPassThroughExpenses(next);
+                  }}
+                />
+                <TextField
+                  size="small" placeholder="Amount" sx={{ flex: 1 }}
+                  value={s.amount || ""}
+                  onChange={(e) => {
+                    const next = [...passThroughExpenses];
+                    next[idx] = { ...next[idx], amount: e.target.value.replace(/[^0-9.]/g, "") };
+                    setPassThroughExpenses(next);
+                  }}
+                />
+                <IconButton size="small" onClick={() => setPassThroughExpenses(passThroughExpenses.filter((_, i) => i !== idx))}>
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </Box>
+            ))}
+            <Button size="small" onClick={() => setPassThroughExpenses([...passThroughExpenses, { description: "", amount: "" }])}>
+              + Add Pass-Through Expense
             </Button>
           </Stack>
         </Box>
