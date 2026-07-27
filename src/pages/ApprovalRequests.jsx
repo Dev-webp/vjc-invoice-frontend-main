@@ -93,7 +93,16 @@ function ApprovalRequests() {
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
       <TableContainer component={Paper}>
-        <Table>
+        <Table
+          sx={{
+            "& th, & td": {
+              borderRight: "1px solid #e5e7eb",
+            },
+            "& th:last-child, & td:last-child": {
+              borderRight: "none",
+            },
+          }}
+        >
           <TableHead sx={{ bgcolor: "#f5f5f5" }}>
             <TableRow>
               <TableCell><strong>Invoice #</strong></TableCell>
