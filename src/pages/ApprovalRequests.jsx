@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import {
   Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, Paper, Button, Chip, CircularProgress, Alert, Dialog,
-  DialogTitle, DialogContent, DialogActions, Divider, Grid,
+  DialogTitle, DialogContent, DialogActions, Divider, Grid, Pagination,
 } from "@mui/material";
 
 const API = "https://vjc-invoice-backend-main.vercel.app/api";
@@ -16,6 +16,8 @@ function ApprovalRequests() {
 
   const [viewInvoice, setViewInvoice] = useState(null);   // NEW — full detail dialog
   const [confirmDialog, setConfirmDialog] = useState(null);
+  const [page, setPage] = useState(1);        // NEW — pagination
+  const PAGE_SIZE = 25;                        // NEW
 
   const fetchPending = async () => {
     setLoading(true);
@@ -120,7 +122,7 @@ function ApprovalRequests() {
                   No pending invoices for approval.
                 </TableCell>
               </TableRow>
-            ) : invoices.map((inv) => (
+            ) : invoices.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((inv) => (
               <TableRow key={inv.id} hover>
                 <TableCell sx={{ color: "#1976d2", fontWeight: "bold" }}>{inv.invoice_number}</TableCell>
                 <TableCell>{inv.customer_name}</TableCell>
@@ -161,6 +163,17 @@ function ApprovalRequests() {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {invoices.length > PAGE_SIZE && (
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+          <Pagination
+            count={Math.ceil(invoices.length / PAGE_SIZE)}
+            page={page}
+            onChange={(e, value) => setPage(value)}
+            color="primary"
+          />
+        </Box>
+      )}
 
       {/* NEW — Full detail view, same info as chairman mail */}
       <Dialog open={!!viewInvoice} onClose={() => setViewInvoice(null)} maxWidth="sm" fullWidth>
