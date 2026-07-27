@@ -8,6 +8,7 @@ import Customers from "../pages/Customers";
 import Leads from "../pages/Leads";
 import Items from "../pages/Items";
 import Quotes from "../pages/Quotes";
+import ApprovalRequests from "../pages/ApprovalRequests";
 import Invoices from "../pages/Invoices";
 import Payments from "../pages/Payments";
 
@@ -53,6 +54,8 @@ const MainLayout = () => {
           {page === "Services" && <Items />}
 
         {page === "Proforma Invoice" && <Quotes />}
+        
+        {page === "Approval Requests" && <ApprovalRequests />}
 
           {page === "Approved Invoices" && <Invoices />}
 

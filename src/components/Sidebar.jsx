@@ -13,6 +13,7 @@ import AssessmentIcon from "@mui/icons-material/Assessment";
 import BadgeIcon from "@mui/icons-material/Badge";
 import LogoutIcon from "@mui/icons-material/Logout";
 import vjcLogo from "../assets/vjc-logo-badge.png";
+import FactCheckIcon from "@mui/icons-material/FactCheck";
 
 const Sidebar = ({ setPage, activePage }) => {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ console.log("Logged User =", user);
         { name: "Customers", icon: <PeopleIcon /> },
         { name: "Services", icon: <InventoryIcon /> },
         { name: "Proforma Invoice", icon: <RequestQuoteIcon /> },
+       { name: "Approval Requests", icon: <FactCheckIcon /> },
         { name: "Approved Invoices", icon: <ReceiptLongIcon /> },
         { name: "Payments Received", icon: <PaymentsIcon /> },
         { name: "Expenses", icon: <AccountBalanceWalletIcon /> },
@@ -51,6 +53,7 @@ console.log("Logged User =", user);
     "Customers": "customers",
     "Services": "services",
     "Proforma Invoice": "quotes",
+      "Approval Requests": "invoices",
     "Approved Invoices": "invoices",
     "Payments Received": "payments",
     "Reports": "reports",
