@@ -54,7 +54,7 @@ const MainLayout = () => {
 
         {page === "Proforma Invoice" && <Quotes />}
 
-          {page === "Invoices" && <Invoices />}
+          {page === "Approved Invoices" && <Invoices />}
 
           {page === "Payments Received" && <Payments />}
 

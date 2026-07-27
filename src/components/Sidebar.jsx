@@ -28,7 +28,7 @@ console.log("Logged User =", user);
         { name: "Customers", icon: <PeopleIcon /> },
         { name: "Services", icon: <InventoryIcon /> },
         { name: "Proforma Invoice", icon: <RequestQuoteIcon /> },
-        { name: "Invoices", icon: <ReceiptLongIcon /> },
+        { name: "Approved Invoices", icon: <ReceiptLongIcon /> },
         { name: "Payments Received", icon: <PaymentsIcon /> },
         { name: "Expenses", icon: <AccountBalanceWalletIcon /> },
 { name: "Reports", icon: <AssessmentIcon /> },
@@ -41,7 +41,7 @@ console.log("Logged User =", user);
         { name: "Customers", icon: <PeopleIcon /> },
         { name: "Services", icon: <InventoryIcon /> },
         { name: "Proforma Invoice", icon: <RequestQuoteIcon /> },
-        { name: "Invoices", icon: <ReceiptLongIcon /> },
+        { name: "Approved Invoices", icon: <ReceiptLongIcon /> },
         { name: "Payments Received", icon: <PaymentsIcon /> },
         { name: "Reports", icon: <AssessmentIcon /> },
       ];
@@ -51,7 +51,7 @@ console.log("Logged User =", user);
     "Customers": "customers",
     "Services": "services",
     "Proforma Invoice": "quotes",
-    "Invoices": "invoices",
+    "Approved Invoices": "invoices",
     "Payments Received": "payments",
     "Reports": "reports",
   };

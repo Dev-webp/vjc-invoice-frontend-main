@@ -127,7 +127,7 @@ function Invoices() {
 
   return (
     <Box>
-      <Typography variant="h4" fontWeight="bold" sx={{ mb: 3 }}>Invoices</Typography>
+      <Typography variant="h4" fontWeight="bold" sx={{ mb: 3 }}>Approved Invoices</Typography>
 
       {error && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>{error}</Alert>
@@ -136,7 +136,7 @@ function Invoices() {
       {/* Stats */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {[
-          { label: "Total Invoices", value: normalizedInvoices.length,    color: "#1976d2" },
+          { label: "Total Approved Invoices", value: normalizedInvoices.length,    color: "#1976d2" },
           { label: "Total Revenue",  value: formatPrice(totalRevenue),    color: "#2e7d32" },
           { label: "Partially Paid", value: partialCount,                 color: "#0288d1" },
           { label: "Outstanding",    value: formatPrice(outstanding),     color: "#ed6c02" },
@@ -155,7 +155,7 @@ function Invoices() {
       {/* Search + Filter */}
       <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
         <TextField
-          label="Search Invoice / Customer"
+          label="Search ApprovedInvoice / Customer"
           size="small"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -194,7 +194,7 @@ function Invoices() {
             {filtered.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={9} align="center" sx={{ py: 4, color: "text.secondary" }}>
-                  No invoices found
+                  No Approved invoices found
                 </TableCell>
               </TableRow>
             ) : filtered.map((inv) => (
