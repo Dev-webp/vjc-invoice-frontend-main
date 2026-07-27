@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import {
   Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, Paper, Button, Chip, CircularProgress, Alert, Dialog,
-  DialogTitle, DialogContent, DialogActions,
+  DialogTitle, DialogContent, DialogActions, Divider, Grid,
 } from "@mui/material";
 
 const API = "https://vjc-invoice-backend-main.vercel.app/api";
@@ -13,6 +13,8 @@ function ApprovalRequests() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState(null);
+
+  const [viewInvoice, setViewInvoice] = useState(null);   // NEW — full detail dialog
   const [confirmDialog, setConfirmDialog] = useState(null);
 
   const fetchPending = async () => {
@@ -60,6 +62,7 @@ function ApprovalRequests() {
     } finally {
       setActionLoading(null);
       setConfirmDialog(null);
+      setViewInvoice(null);
     }
   };
 
@@ -70,6 +73,16 @@ function ApprovalRequests() {
       </Box>
     );
   }
+
+  // NEW — parse pax safely (jsonb comes back as array already, but just in case)
+  const getPax = (inv) => {
+    try {
+      const p = typeof inv.pax === "string" ? JSON.parse(inv.pax) : inv.pax;
+      return Array.isArray(p) ? p : [];
+    } catch {
+      return [];
+    }
+  };
 
   return (
     <Box>
@@ -106,6 +119,9 @@ function ApprovalRequests() {
                 <TableCell><strong>{fmt(inv.grand_total)}</strong></TableCell>
                 <TableCell><Chip label="Pending" color="warning" size="small" /></TableCell>
                 <TableCell>
+                  <Button size="small" sx={{ mr: 1 }} onClick={() => setViewInvoice(inv)}>
+                    View
+                  </Button>
                   <Button
                     size="small" color="success" variant="contained" sx={{ mr: 1 }}
                     disabled={actionLoading === inv.id}
@@ -127,6 +143,105 @@ function ApprovalRequests() {
         </Table>
       </TableContainer>
 
+      {/* NEW — Full detail view, same info as chairman mail */}
+      <Dialog open={!!viewInvoice} onClose={() => setViewInvoice(null)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ bgcolor: "#0f9d94", color: "#fff" }}>
+          Invoice Details — {viewInvoice?.invoice_number}
+        </DialogTitle>
+        {viewInvoice && (
+          <DialogContent sx={{ pt: 3 }}>
+            <Grid container spacing={2}>
+              <Grid item xs={6}>
+                <Typography variant="caption" color="text.secondary">Client Name</Typography>
+                <Typography fontWeight={600}>{viewInvoice.customer_name}</Typography>
+              </Grid>
+              <Grid item xs={6}>
+                <Typography variant="caption" color="text.secondary">Invoice Number</Typography>
+                <Typography fontWeight={600}>{viewInvoice.invoice_number}</Typography>
+              </Grid>
+              <Grid item xs={6}>
+                <Typography variant="caption" color="text.secondary">Subtotal</Typography>
+                <Typography>{fmt(viewInvoice.subtotal)}</Typography>
+              </Grid>
+              <Grid item xs={6}>
+                <Typography variant="caption" color="text.secondary">Paid Amount</Typography>
+                <Typography color="success.main" fontWeight={600}>{fmt(viewInvoice.paid_amount)}</Typography>
+              </Grid>
+              <Grid item xs={6}>
+                <Typography variant="caption" color="text.secondary">Tax %</Typography>
+                <Typography>{viewInvoice.tax_percent || 0}%</Typography>
+              </Grid>
+              <Grid item xs={6}>
+                <Typography variant="caption" color="text.secondary">Tax Amount</Typography>
+                <Typography>{fmt(viewInvoice.tax_amount)}</Typography>
+              </Grid>
+              <Grid item xs={6}>
+                <Typography variant="caption" color="text.secondary">Balance Amount</Typography>
+                <Typography color="error.main" fontWeight={600}>{fmt(viewInvoice.balance_amount)}</Typography>
+              </Grid>
+              <Grid item xs={6}>
+                <Typography variant="caption" color="text.secondary">Due Date</Typography>
+                <Typography>
+                  {viewInvoice.due_date
+                    ? new Date(viewInvoice.due_date).toLocaleDateString("en-GB")
+                    : "—"}
+                </Typography>
+              </Grid>
+            </Grid>
+
+            {getPax(viewInvoice).length > 0 && (
+              <>
+                <Divider sx={{ my: 2 }} />
+                <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>Travelers</Typography>
+                {getPax(viewInvoice).map((p, i) => (
+                  <Typography key={i} variant="body2">{i + 1}. {p.name}</Typography>
+                ))}
+              </>
+            )}
+
+            {viewInvoice.notes && (
+              <>
+                <Divider sx={{ my: 2 }} />
+                <Typography variant="caption" color="text.secondary">Description</Typography>
+                <Typography variant="body2">{viewInvoice.notes}</Typography>
+              </>
+            )}
+
+            {viewInvoice.screenshot_base64 && (
+              <>
+                <Divider sx={{ my: 2 }} />
+                <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>Payment Screenshot</Typography>
+                <img
+                  src={viewInvoice.screenshot_base64}
+                  alt="Payment proof"
+                  style={{ width: "100%", borderRadius: 8, border: "1px solid #ddd" }}
+                />
+              </>
+            )}
+          </DialogContent>
+        )}
+        <DialogActions>
+          <Button onClick={() => setViewInvoice(null)}>Close</Button>
+          {viewInvoice && (
+            <>
+              <Button
+                color="success" variant="contained"
+                onClick={() => setConfirmDialog({ id: viewInvoice.id, action: "approve", invoiceNo: viewInvoice.invoice_number })}
+              >
+                Approve
+              </Button>
+              <Button
+                color="error" variant="outlined"
+                onClick={() => setConfirmDialog({ id: viewInvoice.id, action: "reject", invoiceNo: viewInvoice.invoice_number })}
+              >
+                Reject
+              </Button>
+            </>
+          )}
+        </DialogActions>
+      </Dialog>
+
+      {/* Confirm dialog — unchanged */}
       <Dialog open={!!confirmDialog} onClose={() => setConfirmDialog(null)}>
         <DialogTitle>
           {confirmDialog?.action === "approve" ? "Approve Invoice?" : "Reject Invoice?"}
