@@ -99,11 +99,9 @@ const filtered = normalizedInvoices
     })
     .sort((a, b) => (a.invoiceNo || "").localeCompare(b.invoiceNo || ""));
 
-  // NEW — build available years list from actual invoice data
-  const availableYears = [...new Set(
-    normalizedInvoices.map((inv) => inv.invoiceDate?.slice(0, 4)).filter(Boolean)
-  )].sort((a, b) => b.localeCompare(a));
-
+  const currentYear = new Date().getFullYear();
+  const availableYears = Array.from({ length: 10 }, (_, i) => String(currentYear + 9 - i));
+  // e.g. if currentYear = 2026 → ["2035","2034","2033","2032","2031","2030","2029","2028","2027","2026"]
   const MONTHS = [
     { value: "01", label: "January" }, { value: "02", label: "February" },
     { value: "03", label: "March" },   { value: "04", label: "April" },
