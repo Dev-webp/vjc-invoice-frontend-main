@@ -10,7 +10,9 @@ import {
   Typography,
   Box,
   CircularProgress,
-} from "@mui/material";
+  TextField,
+  MenuItem,
+} from "@mui/material";sssss
 
 const API = axios.create({
   baseURL: "https://vjc-invoice-backend-main.vercel.app/api"
@@ -29,6 +31,7 @@ function Dashboard() {
   const [chartData, setChartData] = useState(null);
   const [recentInvoices, setRecentInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());   // NEW
   const user = JSON.parse(
   localStorage.getItem("vjc_invoice_user")
 );
@@ -45,7 +48,7 @@ if (hour < 12) {
 }
   useEffect(() => {
     fetchAll();
-  }, []);
+  }, [selectedYear]);   // CHANGED — refetch when year changes
 
 const fetchAll = async () => {
   setLoading(true);
@@ -60,12 +63,11 @@ const fetchAll = async () => {
   }
 
   try {
-    const chartRes = await API.get("/dashboard/sales-overview", config);
+    const chartRes = await API.get(`/dashboard/sales-overview?year=${selectedYear}`, config);   // CHANGED — pass year
     setChartData(chartRes.data.data);
   } catch (err) {
     console.log("Chart Error", err);
   }
-
   try {
     const invRes = await API.get("/dashboard/recent-invoices", config);
     setRecentInvoices(invRes.data.data || []);
@@ -236,7 +238,19 @@ const fetchAll = async () => {
 
       {/* Sales Chart */}
 
-     <Box sx={{ mt: 5 }}>
+     <Box sx={{ mt: 5, display: "flex", justifyContent: "flex-end", mb: 1 }}>
+        <TextField
+          select size="small" label="Year"
+          value={selectedYear}
+          onChange={(e) => setSelectedYear(e.target.value)}
+          sx={{ width: 130 }}
+        >
+          {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() + 9 - i).map((y) => (
+            <MenuItem key={y} value={y}>{y}</MenuItem>
+          ))}
+        </TextField>
+      </Box>
+     <Box sx={{ mt: 1 }}>
   <SalesChart data={chartData} />
 </Box>
 
