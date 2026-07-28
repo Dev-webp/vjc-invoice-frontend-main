@@ -24,7 +24,7 @@ function ApprovalRequests() {
     setError("");
     try {
       const token = localStorage.getItem("vjc_invoice_auth");
-      const res = await fetch(`${API}/invoices/history`, {
+      const res = await fetch(`${API}/invoices/pending`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -128,35 +128,25 @@ function ApprovalRequests() {
                 <TableCell>{inv.customer_name}</TableCell>
                 <TableCell>{inv.service_type || "—"}</TableCell>
                 <TableCell><strong>{fmt(inv.grand_total)}</strong></TableCell>
-                <TableCell>
-                  <Chip
-                    label={inv.status}
-                    color={inv.status === "Approved" ? "success" : inv.status === "Rejected" ? "error" : "warning"}
-                    size="small"
-                  />
-                </TableCell>
+                <TableCell><Chip label="Pending" color="warning" size="small" /></TableCell>
                 <TableCell>
                   <Button size="small" sx={{ mr: 1 }} onClick={() => setViewInvoice(inv)}>
                     View
                   </Button>
-                  {inv.status === "Pending" && (
-                    <>
-                      <Button
-                        size="small" color="success" variant="contained" sx={{ mr: 1 }}
-                        disabled={actionLoading === inv.id}
-                        onClick={() => setConfirmDialog({ id: inv.id, action: "approve", invoiceNo: inv.invoice_number })}
-                      >
-                        Approve
-                      </Button>
-                      <Button
-                        size="small" color="error" variant="outlined"
-                        disabled={actionLoading === inv.id}
-                        onClick={() => setConfirmDialog({ id: inv.id, action: "reject", invoiceNo: inv.invoice_number })}
-                      >
-                        Reject
-                      </Button>
-                    </>
-                  )}
+                  <Button
+                    size="small" color="success" variant="contained" sx={{ mr: 1 }}
+                    disabled={actionLoading === inv.id}
+                    onClick={() => setConfirmDialog({ id: inv.id, action: "approve", invoiceNo: inv.invoice_number })}
+                  >
+                    Approve
+                  </Button>
+                  <Button
+                    size="small" color="error" variant="outlined"
+                    disabled={actionLoading === inv.id}
+                    onClick={() => setConfirmDialog({ id: inv.id, action: "reject", invoiceNo: inv.invoice_number })}
+                  >
+                    Reject
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -254,7 +244,7 @@ function ApprovalRequests() {
         )}
 <DialogActions>
           <Button onClick={() => setViewInvoice(null)}>Close</Button>
-          {viewInvoice && viewInvoice.status === "Pending" && (
+          {viewInvoice && (
             <>
               <Button
                 color="success" variant="contained"
