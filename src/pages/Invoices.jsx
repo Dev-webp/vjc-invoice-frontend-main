@@ -4,7 +4,7 @@ import {
   Box, Typography, Grid, Card, CardContent, Button, TextField,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, Dialog, DialogTitle, DialogContent, DialogActions,
-  MenuItem, Chip, Divider, CircularProgress, Alert,
+  MenuItem, Chip, Divider, CircularProgress, Alert, Pagination,
 } from "@mui/material";
 
 // ─── API Base — same backend used across the app ─────────────
@@ -41,6 +41,8 @@ function Invoices() {
   const [selected, setSelected] = useState(null);
   const [search, setSearch]     = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [page, setPage] = useState(1);        // NEW — pagination
+  const PAGE_SIZE = 25;                        // NEW
   const [yearFilter, setYearFilter] = useState("All");     // NEW
   const [monthFilter, setMonthFilter] = useState("All");   // NEW
 
@@ -235,7 +237,7 @@ const filtered = normalizedInvoices
                   No Approved invoices found
                 </TableCell>
               </TableRow>
-            ) : filtered.map((inv) => (
+           ) : filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((inv) => (
               <TableRow key={inv.id} hover>
                 <TableCell sx={{ color: "#1976d2", fontWeight: "bold" }}>{inv.invoiceNo}</TableCell>
                 <TableCell>{inv.originalInvoiceNo}</TableCell>
@@ -264,6 +266,17 @@ const filtered = normalizedInvoices
           </TableBody>
         </Table>
       </TableContainer>
+
+      {filtered.length > PAGE_SIZE && (
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+          <Pagination
+            count={Math.ceil(filtered.length / PAGE_SIZE)}
+            page={page}
+            onChange={(e, value) => setPage(value)}
+            color="primary"
+          />
+        </Box>
+      )}
 
       {/* ── VIEW DIALOG ── */}
       <Dialog open={viewOpen} onClose={() => setViewOpen(false)} maxWidth="sm" fullWidth>
