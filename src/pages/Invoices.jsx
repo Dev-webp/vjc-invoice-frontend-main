@@ -41,6 +41,8 @@ function Invoices() {
   const [selected, setSelected] = useState(null);
   const [search, setSearch]     = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [yearFilter, setYearFilter] = useState("All");     // NEW
+  const [monthFilter, setMonthFilter] = useState("All");   // NEW
 
   useEffect(() => {
     fetchAll();
@@ -80,16 +82,36 @@ function Invoices() {
   const normalizedInvoices = invoices.map(normalizeInvoice);
 
   // ── Filter ──
-  const filtered = normalizedInvoices
+const filtered = normalizedInvoices
     .filter((inv) => {
       const matchSearch =
         (inv.customerName || "").toLowerCase().includes(search.toLowerCase()) ||
         (inv.invoiceNo || "").toLowerCase().includes(search.toLowerCase());
       const matchStatus = statusFilter === "All" || inv.status === statusFilter;
-      return matchSearch && matchStatus;
+
+      // NEW — Year / Month filter (based on invoiceDate, format YYYY-MM-DD)
+      const invYear = inv.invoiceDate ? inv.invoiceDate.slice(0, 4) : "";
+      const invMonth = inv.invoiceDate ? inv.invoiceDate.slice(5, 7) : "";
+      const matchYear = yearFilter === "All" || invYear === yearFilter;
+      const matchMonth = monthFilter === "All" || invMonth === monthFilter;
+
+      return matchSearch && matchStatus && matchYear && matchMonth;
     })
     .sort((a, b) => (a.invoiceNo || "").localeCompare(b.invoiceNo || ""));
 
+  // NEW — build available years list from actual invoice data
+  const availableYears = [...new Set(
+    normalizedInvoices.map((inv) => inv.invoiceDate?.slice(0, 4)).filter(Boolean)
+  )].sort((a, b) => b.localeCompare(a));
+
+  const MONTHS = [
+    { value: "01", label: "January" }, { value: "02", label: "February" },
+    { value: "03", label: "March" },   { value: "04", label: "April" },
+    { value: "05", label: "May" },     { value: "06", label: "June" },
+    { value: "07", label: "July" },    { value: "08", label: "August" },
+    { value: "09", label: "September" }, { value: "10", label: "October" },
+    { value: "11", label: "November" }, { value: "12", label: "December" },
+  ];
   // ── Stats ──
   const totalRevenue = normalizedInvoices.reduce((s, i) => s + (i.grandTotal - i.balanceAmount), 0);
   const partialCount = normalizedInvoices.filter(
@@ -167,6 +189,24 @@ function Invoices() {
         >
           {["All", "Approved", "Paid"].map((s) => (
             <MenuItem key={s} value={s}>{s}</MenuItem>
+          ))}
+        </TextField>
+        <TextField
+          select size="small" label="Year" value={yearFilter}
+          onChange={(e) => setYearFilter(e.target.value)} sx={{ width: 130 }}
+        >
+          <MenuItem value="All">All</MenuItem>
+          {availableYears.map((y) => (
+            <MenuItem key={y} value={y}>{y}</MenuItem>
+          ))}
+        </TextField>
+        <TextField
+          select size="small" label="Month" value={monthFilter}
+          onChange={(e) => setMonthFilter(e.target.value)} sx={{ width: 160 }}
+        >
+          <MenuItem value="All">All</MenuItem>
+          {MONTHS.map((m) => (
+            <MenuItem key={m.value} value={m.value}>{m.label}</MenuItem>
           ))}
         </TextField>
       </Box>
