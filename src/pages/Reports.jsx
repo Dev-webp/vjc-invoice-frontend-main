@@ -207,19 +207,27 @@ function ReportView({ reportId, onBack }) {
   const [error, setError]       = useState("");
   const [dateRange, setDateRange] = useState("thisMonth");
 
+  const [spYear, setSpYear]   = useState(String(new Date().getFullYear()));
+  const [spMonth, setSpMonth] = useState("all");
+  const [spDay, setSpDay]     = useState("all");
+
   const apiPath = API_REPORT_MAP[reportId];
+  const isSalesPersonReport = reportId === "salesBySalesPerson";
 
   useEffect(() => {
     if (!apiPath) return;
     let active = true;
     setLoading(true);
     setError("");
-    API.get(apiPath, { params: { dateRange } })
+    const params = isSalesPersonReport
+      ? { year: spYear, month: spMonth !== "all" ? spMonth : undefined, day: spDay !== "all" ? spDay : undefined }
+      : { dateRange };
+    API.get(apiPath, { params })
       .then((res) => { if (active) setLiveData(res.data.data || []); })
       .catch(() => { if (active) setError("Failed to load report data.please check whether the backend is running."); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [reportId, dateRange]);
+  }, [reportId, dateRange, spYear, spMonth, spDay]);
   const views = {
     // ✅ CONNECTED TO BACKEND
     salesByCustomer: () => (
@@ -350,8 +358,25 @@ function ReportView({ reportId, onBack }) {
     r.person?.toLowerCase().includes(spSearch.toLowerCase()) ||
     r.email?.toLowerCase().includes(spSearch.toLowerCase())
   );
+  const totalSale = liveData.reduce((s, r) => s + r.amount, 0);
+  const totalPaid = liveData.reduce((s, r) => s + r.paid, 0);
+  const totalPending = liveData.reduce((s, r) => s + r.pending, 0);
+  const totalInvoices = liveData.reduce((s, r) => s + r.invoices, 0);
   return (
     <>
+      <div style={{ display: "flex", gap: 14, marginBottom: 20, flexWrap: "wrap" }}>
+        {[
+          { label: "Total Sale (Approved)", val: fmt(totalSale), color: "#1a73e8" },
+          { label: "Received", val: fmt(totalPaid), color: "#34a853" },
+          { label: "Pending", val: fmt(totalPending), color: "#ea4335" },
+          { label: "Approved Invoices", val: totalInvoices },
+        ].map(s => (
+          <div key={s.label} style={{ flex: 1, minWidth: 160, background: "#f7f8fc", borderRadius: 8, padding: "14px 18px" }}>
+            <div style={{ fontSize: 12, color: "#888" }}>{s.label}</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: s.color || "#1a1a2e" }}>{s.val}</div>
+          </div>
+        ))}
+      </div>
       <div style={{ marginBottom: 14 }}>
         <input
           placeholder="Search by name or email..."
@@ -511,16 +536,37 @@ function ReportView({ reportId, onBack }) {
         background: "#fff", borderRadius: 10, padding: "12px 18px",
         boxShadow: "0 1px 4px rgba(0,0,0,0.06)", flexWrap: "wrap"
       }}>
-        <span style={{ fontSize: 13, color: "#888", fontWeight: 600 }}>Date Range:</span>
-<select value={dateRange} onChange={e => setDateRange(e.target.value)} style={{ padding: "6px 12px", borderRadius: 7, border: "1px solid #ddd", fontSize: 13 }}>
-  <option value="today">Today</option>
-  <option value="thisWeek">This Week</option>
-  <option value="thisMonth">This Month</option>
-  <option value="lastMonth">Last Month</option>
-  <option value="thisQuarter">This Quarter</option>
-  <option value="thisYear">This Year</option>
-  <option value="custom">Custom Range</option>
-</select>
+       {isSalesPersonReport ? (
+          <>
+            <span style={{ fontSize: 13, color: "#888", fontWeight: 600 }}>Year:</span>
+            <select value={spYear} onChange={e => setSpYear(e.target.value)} style={{ padding: "6px 12px", borderRadius: 7, border: "1px solid #ddd", fontSize: 13 }}>
+              {Array.from({ length: 10 }, (_, i) => 2026 + i).map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+            <span style={{ fontSize: 13, color: "#888", fontWeight: 600 }}>Month:</span>
+            <select value={spMonth} onChange={e => { setSpMonth(e.target.value); setSpDay("all"); }} style={{ padding: "6px 12px", borderRadius: 7, border: "1px solid #ddd", fontSize: 13 }}>
+              <option value="all">All Months</option>
+              {["January","February","March","April","May","June","July","August","September","October","November","December"].map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+            </select>
+            <span style={{ fontSize: 13, color: "#888", fontWeight: 600 }}>Day:</span>
+            <select value={spDay} onChange={e => setSpDay(e.target.value)} style={{ padding: "6px 12px", borderRadius: 7, border: "1px solid #ddd", fontSize: 13 }}>
+              <option value="all">All Days</option>
+              {Array.from({ length: 31 }, (_, i) => i + 1).map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </>
+        ) : (
+          <>
+            <span style={{ fontSize: 13, color: "#888", fontWeight: 600 }}>Date Range:</span>
+            <select value={dateRange} onChange={e => setDateRange(e.target.value)} style={{ padding: "6px 12px", borderRadius: 7, border: "1px solid #ddd", fontSize: 13 }}>
+              <option value="today">Today</option>
+              <option value="thisWeek">This Week</option>
+              <option value="thisMonth">This Month</option>
+              <option value="lastMonth">Last Month</option>
+              <option value="thisQuarter">This Quarter</option>
+              <option value="thisYear">This Year</option>
+              <option value="custom">Custom Range</option>
+            </select>
+          </>
+        )}
         <div style={{ flex: 1 }} />
         <button style={{
           padding: "7px 18px", borderRadius: 7, border: "1px solid #34a853",
