@@ -94,6 +94,15 @@ function ApprovalRequests() {
     );
   }
 
+  // NEW — detect duplicates: same customer + same grand_total, both still Pending
+  const getDuplicateCount = (inv) => {
+    return invoices.filter(
+      (x) =>
+        x.customer_name === inv.customer_name &&
+        Number(x.grand_total) === Number(inv.grand_total)
+    ).length;
+  };
+
   // NEW — parse pax safely (jsonb comes back as array already, but just in case)
   const getPax = (inv) => {
     try {
@@ -146,7 +155,17 @@ function ApprovalRequests() {
                 <TableCell>{inv.customer_name}</TableCell>
                 <TableCell>{inv.service_type || "—"}</TableCell>
                 <TableCell><strong>{fmt(inv.grand_total)}</strong></TableCell>
-                <TableCell><Chip label="Pending" color="warning" size="small" /></TableCell>
+                <TableCell>
+                  <Chip label="Pending" color="warning" size="small" />
+                  {getDuplicateCount(inv) > 1 && (
+                    <Chip
+                      label="⚠️ Possible Duplicate"
+                      color="error"
+                      size="small"
+                      sx={{ ml: 0.5 }}
+                    />
+                  )}
+                </TableCell>
 <TableCell>
                   <Button size="small" sx={{ mr: 1 }} onClick={() => setViewInvoice(inv)}>
                     View
