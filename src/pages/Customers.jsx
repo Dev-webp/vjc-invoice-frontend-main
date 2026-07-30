@@ -1529,7 +1529,7 @@ const displayCustomers = sortedCustomers.filter((customer) => {
     ? "Remaining Invoice"
     : "Invoice"}
 </Button>
-                      {customer.invoice_status === "Approved" && (
+{customer.last_invoice_id && (
                         <Button
                           size="small"
                           color="primary"
