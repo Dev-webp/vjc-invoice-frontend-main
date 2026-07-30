@@ -133,9 +133,10 @@ function ApprovalRequests() {
           }}
         >
           <TableHead sx={{ bgcolor: "#f5f5f5" }}>
-            <TableRow>
+           <TableRow>
               <TableCell><strong>Invoice #</strong></TableCell>
               <TableCell><strong>Customer</strong></TableCell>
+              <TableCell sx={{ whiteSpace: "nowrap" }}><strong>Sales Consultant</strong></TableCell>
               <TableCell><strong>Service Type</strong></TableCell>
               <TableCell><strong>Grand Total</strong></TableCell>
               <TableCell><strong>Status</strong></TableCell>
@@ -145,7 +146,7 @@ function ApprovalRequests() {
           <TableBody>
             {invoices.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 4, color: "text.secondary" }}>
+                <TableCell colSpan={7} align="center" sx={{ py: 4, color: "text.secondary" }}>
                   No pending invoices for approval.
                 </TableCell>
               </TableRow>
@@ -153,6 +154,7 @@ function ApprovalRequests() {
               <TableRow key={inv.id} hover>
                 <TableCell sx={{ color: "#1976d2", fontWeight: "bold" }}>{inv.invoice_number}</TableCell>
                 <TableCell>{inv.customer_name}</TableCell>
+                <TableCell>{inv.sales_consultant || "—"}</TableCell>
                 <TableCell>{inv.service_type || "—"}</TableCell>
                 <TableCell><strong>{fmt(inv.grand_total)}</strong></TableCell>
                 <TableCell>
