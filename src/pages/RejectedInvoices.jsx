@@ -66,7 +66,7 @@ function RejectedInvoices() {
   const normalizeInvoice = (inv) => ({
     id:                     inv.id,
     invoiceNo:              inv.invoice_number,
-    originalInvoiceNo:      inv.original_invoice_id || "-",
+    salesConsultant:        inv.sales_consultant || "-",
     customerName:           inv.customer_name || "",
     invoiceDate:            (inv.invoice_date || "").slice(0, 10),
     dueDate:                (inv.due_date || "").slice(0, 10),
@@ -222,8 +222,7 @@ const filtered = normalizedInvoices
           }}
         >
           <TableHead sx={{ bgcolor: "#f5f5f5" }}>
-            <TableRow>
-              {["Invoice #", "Original Invoice", "Customer", "Date", "Due Date", "Grand Total", "Balance", "Status", "Actions"].map((h) => (
+            <TableRow>              {["Invoice #", "Sales Consultant", "Customer", "Date", "Due Date", "Grand Total", "Balance", "Status", "Actions"].map((h) => (
                 <TableCell key={h}><strong>{h}</strong></TableCell>
               ))}
             </TableRow>
@@ -238,7 +237,7 @@ const filtered = normalizedInvoices
            ) : filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((inv) => (
               <TableRow key={inv.id} hover>
                 <TableCell sx={{ color: "#1976d2", fontWeight: "bold" }}>{inv.invoiceNo}</TableCell>
-                <TableCell>{inv.originalInvoiceNo}</TableCell>
+               <TableCell sx={{ whiteSpace: "nowrap" }}>{inv.salesConsultant}</TableCell>
                 <TableCell>{inv.customerName}</TableCell>
                 <TableCell>{inv.invoiceDate}</TableCell>
                 <TableCell>{inv.dueDate}</TableCell>
