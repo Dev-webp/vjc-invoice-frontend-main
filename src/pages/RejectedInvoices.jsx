@@ -133,6 +133,20 @@ const filtered = normalizedInvoices
     }
   };
 
+  // NEW — opens PDF inline in a new browser tab
+  const handleViewPdf = async (invoiceId) => {
+    if (!invoiceId) return;
+    try {
+      const res = await API.get(`/invoices/${invoiceId}/view-pdf`, {
+        responseType: "blob",
+      });
+      const blob = new Blob([res.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, "_blank");
+    } catch (err) {
+      setError("Failed to open PDF.");
+    }
+  };
   if (loading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
@@ -241,6 +255,7 @@ const filtered = normalizedInvoices
                 </TableCell>
                 <TableCell>
                   <Button size="small" onClick={() => { setSelected(inv); setViewOpen(true); }}>View</Button>
+                  <Button size="small" onClick={() => handleViewPdf(inv.id)}>View PDF</Button>
                   <Button size="small" onClick={() => handleDownloadPdf(inv.id, inv.customerName)}>
                     Download PDF
                   </Button>
