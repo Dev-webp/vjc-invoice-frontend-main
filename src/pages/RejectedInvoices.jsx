@@ -223,7 +223,7 @@ const filtered = normalizedInvoices
         >
           <TableHead sx={{ bgcolor: "#f5f5f5" }}>
             <TableRow>              {["Invoice #", "Sales Consultant", "Customer", "Date", "Due Date", "Grand Total", "Balance", "Status", "Actions"].map((h) => (
-                <TableCell key={h}><strong>{h}</strong></TableCell>
+                <TableCell key={h} sx={{ whiteSpace: "nowrap" }}><strong>{h}</strong></TableCell>
               ))}
             </TableRow>
           </TableHead>
