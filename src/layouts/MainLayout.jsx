@@ -10,6 +10,7 @@ import Items from "../pages/Items";
 import Quotes from "../pages/Quotes";
 import ApprovalRequests from "../pages/ApprovalRequests";
 import Invoices from "../pages/Invoices";
+import RejectedInvoices from "../pages/RejectedInvoices";
 import Payments from "../pages/Payments";
 
 import Expenses from "../pages/Expenses";
@@ -54,10 +55,12 @@ const MainLayout = () => {
           {page === "Services" && <Items />}
 
         {page === "Proforma Invoice" && <Quotes />}
-        
+
         {page === "Approval Requests" && <ApprovalRequests />}
 
           {page === "Approved Invoices" && <Invoices />}
+
+          {page === "Rejected Invoices" && <RejectedInvoices />}
 
           {page === "Payments Received" && <Payments />}
 

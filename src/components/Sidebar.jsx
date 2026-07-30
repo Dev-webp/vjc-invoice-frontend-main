@@ -5,6 +5,7 @@ import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import RequestQuoteIcon from "@mui/icons-material/RequestQuote";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
+import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
@@ -31,6 +32,7 @@ console.log("Logged User =", user);
         { name: "Proforma Invoice", icon: <RequestQuoteIcon /> },
        { name: "Approval Requests", icon: <FactCheckIcon /> },
         { name: "Approved Invoices", icon: <ReceiptLongIcon /> },
+        { name: "Rejected Invoices", icon: <HighlightOffIcon /> },
         { name: "Payments Received", icon: <PaymentsIcon /> },
         { name: "Expenses", icon: <AccountBalanceWalletIcon /> },
 { name: "Reports", icon: <AssessmentIcon /> },
@@ -55,6 +57,7 @@ console.log("Logged User =", user);
     "Proforma Invoice": "quotes",
       "Approval Requests": "invoices",
     "Approved Invoices": "invoices",
+      "Rejected Invoices": "invoices",
     "Payments Received": "payments",
     "Reports": "reports",
   };
