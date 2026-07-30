@@ -44,6 +44,24 @@ function ApprovalRequests() {
     fetchPending();
   }, []);
 
+  const handleViewPdf = async (invoiceId) => {
+    try {
+      const token = localStorage.getItem("vjc_invoice_auth");
+      const res = await fetch(`${API}/invoices/${invoiceId}/download-pdf`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        alert("❌ Failed to load PDF preview");
+        return;
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, "_blank");   // opens PDF inline in a new tab, same as client's PDF
+    } catch (err) {
+      alert("❌ Failed to load PDF preview");
+    }
+  };
+
   const handleAction = async (id, action) => {
     setActionLoading(id);
     try {
@@ -129,9 +147,12 @@ function ApprovalRequests() {
                 <TableCell>{inv.service_type || "—"}</TableCell>
                 <TableCell><strong>{fmt(inv.grand_total)}</strong></TableCell>
                 <TableCell><Chip label="Pending" color="warning" size="small" /></TableCell>
-                <TableCell>
+<TableCell>
                   <Button size="small" sx={{ mr: 1 }} onClick={() => setViewInvoice(inv)}>
                     View
+                  </Button>
+                  <Button size="small" sx={{ mr: 1 }} onClick={() => handleViewPdf(inv.id)}>
+                    View PDF
                   </Button>
                   <Button
                     size="small" color="success" variant="contained" sx={{ mr: 1 }}
