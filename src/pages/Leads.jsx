@@ -249,7 +249,7 @@ const COUNTRIES = [
   "Zimbabwe",
 ];
 
-const STATUS_OPTIONS = ["New", "Warm", "Cold", "Prospect", "HOLD", "Pending Agreement", "Dead"];
+const STATUS_OPTIONS = ["New", "Warm", "Cold", "Prospect", "HOLD", "Pending Agreement", "Closed", "Dead"];
 // Sticky-column layout for the View Enquiry table — Checkbox / Created-Updated /
 // Name / Mobile stay pinned on the left while the remaining columns scroll.
 const STICKY_COL = {
