@@ -47,9 +47,12 @@ const SOURCES = [
   "Reference", "Walk-in", "Google Ad", "WhatsApp",
 ];
 
-const SERVICE_TYPES = [
-  "Study", "Visit", "PR Visas", "Jobseeker Visa",
-  "Opportunity Card", "Resume Marketing",
+const DEPARTMENTS = [
+  { label: "Study Visas", subOptions: ["UK", "USA", "Canada", "Australia", "Europe"] },
+  { label: "Immigration / PR", subOptions: ["Canada PR", "Australia PR", "Germany Opportunity Card"] },
+  { label: "Visitor Visas / Tourism Packages", subOptions: [] },
+  { label: "Air Tickets Enquiries", subOptions: [] },
+  { label: "Forex Enquiries", subOptions: [] },
 ];
 
 const COUNTRIES = [
@@ -364,6 +367,62 @@ function BoxedField({ icon, label, required, error, helperText, children }) {
 
 // Underlying input, styled to sit borderless inside BoxedField's own box.
 // No label-related CSS needed anymore — we only ever show a placeholder now.
+// ── Department picker — replaces the old Service Type dropdown + the
+// separate Interested Country dropdown. Selecting a department shows its
+// country/program chips inline, so one field now captures both values.
+function DepartmentPicker({ value, subValue, onSelect, error }) {
+  const selectedDept = DEPARTMENTS.find((d) => d.label === value);
+  return (
+    <Box>
+      <Typography variant="caption" sx={{ fontWeight: 600, color: "#555", mb: 0.5, display: "block" }}>
+        Service Type <span style={{ color: "#d32f2f" }}> *</span>
+      </Typography>
+      <Grid container spacing={1.5}>
+        {DEPARTMENTS.map((d) => (
+          <Grid item xs={6} sm={4} md={2.4} key={d.label}>
+            <Box
+              onClick={() => onSelect(d.label, "")}
+              sx={{
+                cursor: "pointer",
+                border: "1px solid",
+                borderColor: value === d.label ? "#0f9b8e" : "#d9dee3",
+                borderWidth: value === d.label ? 2 : 1,
+                borderRadius: 2,
+                px: 1.5,
+                py: 1.25,
+                textAlign: "center",
+                bgcolor: value === d.label ? "#e6f3f2" : "#fff",
+                "&:hover": { borderColor: "#0f9b8e" },
+              }}
+            >
+              <Typography variant="caption" sx={{ fontWeight: 600 }}>{d.label}</Typography>
+            </Box>
+          </Grid>
+        ))}
+      </Grid>
+      {error && (
+        <Typography variant="caption" color="error" sx={{ display: "block", mt: 0.5 }}>
+          {error}
+        </Typography>
+      )}
+      {selectedDept && selectedDept.subOptions.length > 0 && (
+        <Box sx={{ mt: 1.5, display: "flex", gap: 1, flexWrap: "wrap" }}>
+          {selectedDept.subOptions.map((opt) => (
+            <Chip
+              key={opt}
+              label={opt}
+              clickable
+              onClick={() => onSelect(value, opt)}
+              color={subValue === opt ? "primary" : "default"}
+              variant={subValue === opt ? "filled" : "outlined"}
+              size="small"
+            />
+          ))}
+        </Box>
+      )}
+    </Box>
+  );
+}
 const boxedFieldSx = {
   width: "100%",
 
@@ -566,30 +625,20 @@ function AddEnquiryForm({ onSaved }) {
             </BoxedField>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={4}>
-            <BoxedField
-              icon={<CategoryIcon fontSize="small" />}
-              label="Service Type"
-              required
-              error={!!errors.service_type}
-              helperText={errors.service_type}
-            >
-              <TextField
-                select
-                variant="standard"
-                fullWidth
-                sx={boxedFieldSx}
-                value={form.service_type}
-                onChange={set("service_type")}
-                SelectProps={{ displayEmpty: true }}
-                InputProps={{ disableUnderline: true }}
-              >
-                <MenuItem value="" disabled><em>Select Service Type</em></MenuItem>
-                {SERVICE_TYPES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
-              </TextField>
-            </BoxedField>
+          <Grid item xs={12}>
+            <DepartmentPicker
+              value={form.service_type}
+              subValue={form.interested_countries[0] || ""}
+              error={errors.service_type}
+              onSelect={(dept, subOpt) =>
+                setForm({
+                  ...form,
+                  service_type: dept,
+                  interested_countries: subOpt ? [subOpt] : [],
+                })
+              }
+            />
           </Grid>
-
           {/* Work Description — wider box, own row */}
           <Grid item xs={12} md={8}>
             <BoxedField icon={<DescriptionIcon fontSize="small" sx={{ mt: 1 }} />} label="Work Description">
@@ -602,38 +651,7 @@ function AddEnquiryForm({ onSaved }) {
           </Grid>
 
           {/* Interested Country — full width row, own box, matches reference */}
-         <Grid item xs={12}>
-  <BoxedField
-    icon={<PublicIcon fontSize="small" />}
-    label="Interested Country"
-  >
-    <TextField
-      select
-      variant="standard"
-      fullWidth
-      sx={boxedFieldSx}
-      value={form.interested_countries[0] || ""}
-      onChange={(e) =>
-        setForm({
-          ...form,
-          interested_countries: [e.target.value],
-        })
-      }
-      SelectProps={{ displayEmpty: true }}
-      InputProps={{ disableUnderline: true }}
-    >
-      <MenuItem value="" disabled>
-        <em>Select Country</em>
-      </MenuItem>
-
-      {COUNTRIES.map((country) => (
-        <MenuItem key={country} value={country}>
-          {country}
-        </MenuItem>
-      ))}
-    </TextField>
-  </BoxedField>
-</Grid>
+         
         </Grid>
 
         <Divider sx={{ my: 3 }} />
