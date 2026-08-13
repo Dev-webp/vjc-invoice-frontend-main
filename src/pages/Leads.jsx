@@ -1145,6 +1145,35 @@ function DepartmentsTab() {
     </Grid>
   );
 }
+// ── Live SLA Countdown badge — updates every second ─────────────────────
+function SlaCountdown({ deadline }) {
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    if (!deadline) return;
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, [deadline]);
+
+  if (!deadline) {
+    return <Typography variant="body2" color="text.secondary">—</Typography>;
+  }
+
+  const diffMs = new Date(deadline).getTime() - now;
+
+  if (diffMs <= 0) {
+    return <Chip label="Overdue" size="small" color="error" />;
+  }
+
+  const totalSeconds = Math.floor(diffMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  const display = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+
+  const color = minutes < 5 ? "error" : minutes < 15 ? "warning" : "success";
+
+  return <Chip label={display} size="small" color={color} variant="outlined" sx={{ fontFamily: "monospace" }} />;
+}
 // ── Main Lead Management Page ────────────────────────────────────────────
 function LeadManagement() {
   const currentUser = getCurrentUser();
@@ -1367,6 +1396,7 @@ const [statusFilter, setStatusFilter] = useState("All");
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 160 }}>Status</TableCell>
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 120 }}>Assigned By</TableCell>
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 120 }}>Assigned To</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 110 }}>SLA Timer</TableCell>
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 230 }}>Review</TableCell>
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 100 }}>Branch</TableCell>
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 160 }}>Last Remark</TableCell>
@@ -1375,7 +1405,7 @@ const [statusFilter, setStatusFilter] = useState("All");
             <TableBody>
               {filteredLeads.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={13} align="center" sx={{ py: 4, color: "text.secondary" }}>
+                  <TableCell colSpan={14} align="center" sx={{ py: 4, color: "text.secondary" }}>
                     No enquiries found. Click "+ Add Enquiry" to create one.
                   </TableCell>
                 </TableRow>
@@ -1482,6 +1512,9 @@ const [statusFilter, setStatusFilter] = useState("All");
                   </TableCell>
                   <TableCell>{lead.assigned_by_name || "—"}</TableCell>
                   <TableCell>{lead.assigned_to_name || "Not Assigned"}</TableCell>
+                  <TableCell>
+                    <SlaCountdown deadline={lead.sla_deadline} />
+                  </TableCell>
                   <TableCell>
                     <Stack
   direction="row"
