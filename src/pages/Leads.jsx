@@ -490,6 +490,7 @@ const boxedFieldSx = {
 // ── Add Enquiry Form — inline (lives inside the "Add Enquiry" tab, not a popup) ──
 function AddEnquiryForm({ onSaved }) {
   const [form, setForm] = useState(EMPTY_LEAD_FORM);
+  const [departments, setDepartments] = useState(DEPARTMENTS);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
 
