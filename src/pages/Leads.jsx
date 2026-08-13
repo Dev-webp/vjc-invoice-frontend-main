@@ -370,8 +370,10 @@ function BoxedField({ icon, label, required, error, helperText, children }) {
 // ── Department picker — replaces the old Service Type dropdown + the
 // separate Interested Country dropdown. Selecting a department shows its
 // country/program chips inline, so one field now captures both values.
-function DepartmentPicker({ value, subValue, onSelect, error }) {
-  const selectedDept = DEPARTMENTS.find((d) => d.label === value);
+function DepartmentPicker({ value, subValue, onSelect, error, departments, onAddOption }) {
+  const selectedDept = departments.find((d) => d.label === value);
+  const [addingOption, setAddingOption] = useState(false);
+  const [newOption, setNewOption] = useState("");
   return (
     <Box>
       <Typography variant="caption" sx={{ fontWeight: 600, color: "#555", mb: 0.5, display: "block" }}>
@@ -405,8 +407,8 @@ function DepartmentPicker({ value, subValue, onSelect, error }) {
           {error}
         </Typography>
       )}
-      {selectedDept && selectedDept.subOptions.length > 0 && (
-        <Box sx={{ mt: 1.5, display: "flex", gap: 1, flexWrap: "wrap" }}>
+      {selectedDept && (
+        <Box sx={{ mt: 1.5, display: "flex", gap: 1, flexWrap: "wrap", alignItems: "center" }}>
           {selectedDept.subOptions.map((opt) => (
             <Chip
               key={opt}
@@ -418,6 +420,43 @@ function DepartmentPicker({ value, subValue, onSelect, error }) {
               size="small"
             />
           ))}
+
+          {!addingOption && (
+            <Chip
+              label="+ Add"
+              size="small"
+              variant="outlined"
+              onClick={() => setAddingOption(true)}
+              sx={{ borderStyle: "dashed", color: "#0f9b8e", borderColor: "#0f9b8e" }}
+            />
+          )}
+
+          {addingOption && (
+            <Box sx={{ display: "flex", gap: 0.5, alignItems: "center" }}>
+              <TextField
+                size="small"
+                autoFocus
+                placeholder="e.g. Ireland"
+                value={newOption}
+                onChange={(e) => setNewOption(e.target.value)}
+                sx={{ width: 130 }}
+              />
+              <Button
+                size="small"
+                variant="contained"
+                sx={{ minWidth: 32, px: 1 }}
+                onClick={() => {
+                  if (!newOption.trim()) return;
+                  onAddOption(value, newOption.trim());
+                  onSelect(value, newOption.trim());
+                  setNewOption("");
+                  setAddingOption(false);
+                }}
+              >
+                ✓
+              </Button>
+            </Box>
+          )}
         </Box>
       )}
     </Box>
@@ -630,6 +669,16 @@ function AddEnquiryForm({ onSaved }) {
               value={form.service_type}
               subValue={form.interested_countries[0] || ""}
               error={errors.service_type}
+              departments={departments}
+              onAddOption={(deptLabel, newOpt) =>
+                setDepartments((prev) =>
+                  prev.map((d) =>
+                    d.label === deptLabel
+                      ? { ...d, subOptions: [...d.subOptions, newOpt] }
+                      : d
+                  )
+                )
+              }
               onSelect={(dept, subOpt) =>
                 setForm({
                   ...form,
