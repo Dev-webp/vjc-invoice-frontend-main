@@ -24,6 +24,8 @@ import PublicIcon from "@mui/icons-material/Public";
 import CategoryIcon from "@mui/icons-material/Category";
 import BadgeIcon from "@mui/icons-material/Badge";
 import SearchIcon from "@mui/icons-material/Search";
+import GroupsIcon from "@mui/icons-material/Groups";
+import AddIcon from "@mui/icons-material/Add";
 
 const API = "https://vjc-invoice-backend-main.vercel.app/api";
 
@@ -1028,7 +1030,121 @@ function NotesDialog({ open, onClose, lead, onSaved }) {
     </Dialog>
   );
 }
+// ── Departments tab — chairman assigns staff to each of the 5 departments ──
+function DepartmentsTab() {
+  const [deptList, setDeptList] = useState([]);
+  const [staffList, setStaffList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [addingFor, setAddingFor] = useState(null);
+  const [pickedStaff, setPickedStaff] = useState("");
 
+  const fetchDepartments = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API}/departments`, { headers: authHeader() });
+      const data = await res.json();
+      if (data.success) setDeptList(data.departments);
+    } catch {
+      // silent — page still usable
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStaff = async () => {
+    try {
+      const res = await fetch(`${API}/auth/employees`, { headers: authHeader() });
+      const data = await res.json();
+      if (data.success) setStaffList(data.employees || []);
+    } catch {
+      // silent
+    }
+  };
+
+  useEffect(() => { fetchDepartments(); fetchStaff(); }, []);
+
+  const addStaff = async (departmentId) => {
+    if (!pickedStaff) return;
+    await fetch(`${API}/departments/${departmentId}/staff`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeader() },
+      body: JSON.stringify({ staff_id: pickedStaff }),
+    });
+    setAddingFor(null);
+    setPickedStaff("");
+    fetchDepartments();
+  };
+
+  const removeStaff = async (departmentId, staffId) => {
+    await fetch(`${API}/departments/${departmentId}/staff/${staffId}`, {
+      method: "DELETE",
+      headers: authHeader(),
+    });
+    fetchDepartments();
+  };
+
+  if (loading) {
+    return <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}><CircularProgress /></Box>;
+  }
+
+  return (
+    <Grid container spacing={2.5}>
+      {deptList.map((dept) => {
+        const assignedIds = (dept.staff || []).map((s) => s.staff_id);
+        const availableStaff = staffList.filter((s) => !assignedIds.includes(s.id));
+        return (
+          <Grid item xs={12} md={6} key={dept.id}>
+            <Card sx={{ borderRadius: 2, boxShadow: 2 }}>
+              <Box sx={{ bgcolor: "#0f9b8e", color: "#fff", px: 2.5, py: 1.5, display: "flex", alignItems: "center", gap: 1 }}>
+                <GroupsIcon fontSize="small" />
+                <Typography variant="subtitle1" fontWeight={700}>{dept.name}</Typography>
+              </Box>
+              <CardContent>
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: 1.5 }}>
+                  {(dept.staff || []).length === 0 && (
+                    <Typography variant="body2" color="text.secondary">No staff assigned yet.</Typography>
+                  )}
+                  {(dept.staff || []).map((s) => (
+                    <Chip
+                      key={s.staff_id}
+                      label={s.name || `Staff #${s.staff_id}`}
+                      onDelete={() => removeStaff(dept.id, s.staff_id)}
+                      sx={{ mb: 1 }}
+                    />
+                  ))}
+                </Stack>
+
+                {addingFor === dept.id ? (
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <TextField
+                      select
+                      size="small"
+                      value={pickedStaff}
+                      onChange={(e) => setPickedStaff(e.target.value)}
+                      sx={{ minWidth: 180 }}
+                      SelectProps={{ displayEmpty: true }}
+                    >
+                      <MenuItem value="" disabled><em>Select staff</em></MenuItem>
+                      {availableStaff.map((s) => (
+                        <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>
+                      ))}
+                    </TextField>
+                    <Button size="small" variant="contained" sx={{ bgcolor: "#0f9b8e" }} onClick={() => addStaff(dept.id)}>Add</Button>
+                    <Button size="small" onClick={() => { setAddingFor(null); setPickedStaff(""); }}>Cancel</Button>
+                  </Stack>
+                ) : (
+                  <Button size="small" startIcon={<AddIcon />} onClick={() => setAddingFor(dept.id)} sx={{ textTransform: "none" }}>
+                    Add Staff
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+        );
+      })}
+    </Grid>
+  );
+}
 // ── Main Lead Management Page ────────────────────────────────────────────
 function LeadManagement() {
   const currentUser = getCurrentUser();
@@ -1118,8 +1234,8 @@ const [statusFilter, setStatusFilter] = useState("All");
       >
         <Tab label="Add Enquiry" />
         <Tab label="View Enquiry" />
+        {isChairman && <Tab label="Departments" />}
       </Tabs>
-
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
       {/* ── Tab 0: Add Enquiry ── */}
@@ -1131,6 +1247,9 @@ const [statusFilter, setStatusFilter] = useState("All");
           }}
         />
       )}
+
+      {/* ── Tab 2: Departments (chairman only) ── */}
+      {tab === 2 && isChairman && <DepartmentsTab />}
 
       {/* ── Tab 1: View Enquiry ── */}
       {tab === 1 && (
