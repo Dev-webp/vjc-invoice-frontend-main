@@ -1146,17 +1146,22 @@ function DepartmentsTab() {
   );
 }
 // ── Live SLA Countdown badge — updates every second ─────────────────────
-function SlaCountdown({ deadline }) {
+function SlaCountdown({ deadline, status }) {
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
-    if (!deadline) return;
+    if (!deadline || status !== "New") return;
     const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
-  }, [deadline]);
+  }, [deadline, status]);
 
   if (!deadline) {
     return <Typography variant="body2" color="text.secondary">—</Typography>;
+  }
+
+  // Agent already acted (status changed away from "New") — timer no longer matters
+  if (status && status !== "New") {
+    return <Chip label="✅ Responded" size="small" color="success" variant="outlined" />;
   }
 
   const diffMs = new Date(deadline).getTime() - now;
@@ -1513,7 +1518,7 @@ const [statusFilter, setStatusFilter] = useState("All");
                   <TableCell>{lead.assigned_by_name || "—"}</TableCell>
                   <TableCell>{lead.assigned_to_name || "Not Assigned"}</TableCell>
                   <TableCell>
-                    <SlaCountdown deadline={lead.sla_deadline} />
+                    <SlaCountdown deadline={lead.sla_deadline} status={lead.status} />
                   </TableCell>
                   <TableCell>
                     <Stack
