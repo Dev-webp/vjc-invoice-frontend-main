@@ -1179,6 +1179,80 @@ function SlaCountdown({ deadline, status }) {
 
   return <Chip label={display} size="small" color={color} variant="outlined" sx={{ fontFamily: "monospace" }} />;
 }
+// ── Follow-up Reminder Bell — polls every 45s for due reminders ──────────
+function ReminderBell() {
+  const [reminders, setReminders] = useState([]);
+  const [open, setOpen] = useState(false);
+
+  const fetchDue = async () => {
+    try {
+      const res = await fetch(`${API}/leads/reminders/due`, { headers: authHeader() });
+      const data = await res.json();
+      if (data.success) setReminders(data.reminders || []);
+    } catch {
+      // silent — don't disrupt the page if this fails
+    }
+  };
+
+  useEffect(() => {
+    fetchDue();
+    const interval = setInterval(fetchDue, 45000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const dismiss = async (noteId) => {
+    try {
+      await fetch(`${API}/leads/reminders/${noteId}/dismiss`, {
+        method: "PUT",
+        headers: authHeader(),
+      });
+      setReminders((prev) => prev.filter((r) => r.note_id !== noteId));
+    } catch {
+      alert("❌ Failed to dismiss reminder");
+    }
+  };
+
+  return (
+    <Box sx={{ position: "relative" }}>
+      <IconButton onClick={() => setOpen(!open)}>
+        <Badge badgeContent={reminders.length} color="error">
+          <i className="ti ti-bell" style={{ fontSize: 22 }} />
+        </Badge>
+      </IconButton>
+
+      {open && (
+        <Paper
+          elevation={4}
+          sx={{
+            position: "absolute", right: 0, top: 44, width: 320, zIndex: 10,
+            maxHeight: 360, overflowY: "auto", borderRadius: 2,
+          }}
+        >
+          <Box sx={{ px: 2, py: 1.5, borderBottom: "1px solid #eee" }}>
+            <Typography variant="subtitle2" fontWeight={700}>Follow-up Reminders</Typography>
+          </Box>
+          {reminders.length === 0 && (
+            <Box sx={{ p: 2 }}>
+              <Typography variant="body2" color="text.secondary">No due reminders.</Typography>
+            </Box>
+          )}
+          {reminders.map((r) => (
+            <Box key={r.note_id} sx={{ px: 2, py: 1.5, borderBottom: "1px solid #f0f0f0" }}>
+              <Typography variant="body2" fontWeight={600}>{r.lead_name}</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>{r.remark}</Typography>
+              <Stack direction="row" justifyContent="space-between" alignItems="center">
+                <Typography variant="caption" color="text.secondary">
+                  Due {r.reminder_date ? new Date(r.reminder_date).toLocaleDateString("en-GB") : ""} {r.reminder_time || ""}
+                </Typography>
+                <Button size="small" onClick={() => dismiss(r.note_id)}>Dismiss</Button>
+              </Stack>
+            </Box>
+          ))}
+        </Paper>
+      )}
+    </Box>
+  );
+}
 // ── Main Lead Management Page ────────────────────────────────────────────
 function LeadManagement() {
   const currentUser = getCurrentUser();
@@ -1261,15 +1335,18 @@ const [statusFilter, setStatusFilter] = useState("All");
     <Box>
       <Typography variant="h4" fontWeight="bold" sx={{ mb: 2 }}>Lead Management</Typography>
 
-      <Tabs
-        value={tab}
-        onChange={(_, v) => setTab(v)}
-        sx={{ mb: 3, borderBottom: "1px solid #e0e0e0" }}
-      >
-        <Tab label="Add Enquiry" />
-        <Tab label="View Enquiry" />
-        {isChairman && <Tab label="Departments" />}
-      </Tabs>
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3, borderBottom: "1px solid #e0e0e0" }}>
+        <Tabs
+          value={tab}
+          onChange={(_, v) => setTab(v)}
+          sx={{ borderBottom: "none" }}
+        >
+          <Tab label="Add Enquiry" />
+          <Tab label="View Enquiry" />
+          {isChairman && <Tab label="Departments" />}
+        </Tabs>
+        <ReminderBell />
+      </Box>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
       {/* ── Tab 0: Add Enquiry ── */}
