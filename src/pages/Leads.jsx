@@ -258,10 +258,10 @@ const STATUS_OPTIONS = ["New", "Warm", "Cold", "Prospect", "HOLD", "Pending Agre
 // Sticky-column layout for the View Enquiry table — Checkbox / Created-Updated /
 // Name / Mobile stay pinned on the left while the remaining columns scroll.
 const STICKY_COL = {
-  checkbox: { width: 48, left: 0 },
-  created: { width: 190, left: 48 },
-  name: { width: 130, left: 238 },
-  mobile: { width: 130, left: 368 },
+  checkbox: { width: 100, left: 0 },
+  created: { width: 190, left: 100 },
+  name: { width: 130, left: 290 },
+  mobile: { width: 130, left: 420 },
 };
 
 // Row background color per status — matches the reference screenshots
