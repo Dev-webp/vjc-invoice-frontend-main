@@ -1447,6 +1447,7 @@ const [statusFilter, setStatusFilter] = useState("All");
       sx={{
         position: "sticky",
         left: STICKY_COL.checkbox.left,
+        width: STICKY_COL.checkbox.width,
         zIndex: 3,
         bgcolor: "#f5f5f5",
         borderBottom: "none",
@@ -1496,7 +1497,7 @@ const [statusFilter, setStatusFilter] = useState("All");
                 <TableRow key={lead.id} sx={{ bgcolor: statusRowColor(lead.status) }}>
                   <TableCell
                     padding="checkbox"
-                    sx={{ position: "sticky", left: STICKY_COL.checkbox.left, zIndex: 1, bgcolor: statusRowColor(lead.status) }}
+                    sx={{ position: "sticky", left: STICKY_COL.checkbox.left, width: STICKY_COL.checkbox.width, zIndex: 1, bgcolor: statusRowColor(lead.status) }}
                   >
                     <Checkbox
                       checked={selectedIds.includes(lead.id)}
