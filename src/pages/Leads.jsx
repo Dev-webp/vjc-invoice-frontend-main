@@ -26,7 +26,7 @@ import BadgeIcon from "@mui/icons-material/Badge";
 import SearchIcon from "@mui/icons-material/Search";
 import GroupsIcon from "@mui/icons-material/Groups";
 import AddIcon from "@mui/icons-material/Add";
-
+import NotificationsIcon from "@mui/icons-material/Notifications";
 const API = "https://vjc-invoice-backend-main.vercel.app/api";
 
 // ── Assumption: after login you store the logged-in user's basic info here.
@@ -1214,9 +1214,9 @@ function ReminderBell() {
 
   return (
     <Box sx={{ position: "relative" }}>
-      <IconButton onClick={() => setOpen(!open)}>
+<IconButton onClick={() => setOpen(!open)}>
         <Badge badgeContent={reminders.length} color="error">
-          <i className="ti ti-bell" style={{ fontSize: 22 }} />
+          <NotificationsIcon />
         </Badge>
       </IconButton>
 
