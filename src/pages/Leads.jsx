@@ -1481,7 +1481,7 @@ const [statusFilter, setStatusFilter] = useState("All");
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 120 }}>Assigned To</TableCell>
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 110 }}>SLA Timer</TableCell>
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 230 }}>Review</TableCell>
-                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 100 }}>Branch</TableCell>
+                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 180 }}>Branch</TableCell>
                 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 400 }}>Last Remark</TableCell>
               </TableRow>
             </TableHead>
