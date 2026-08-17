@@ -260,8 +260,8 @@ const STATUS_OPTIONS = ["New", "Warm", "Cold", "Prospect", "HOLD", "Pending Agre
 const STICKY_COL = {
   checkbox: { width: 48, left: 0 },
   created: { width: 190, left: 48 },
-  name: { width: 130, left: 238 },
-  mobile: { width: 130, left: 368 },
+  name: { width: 200, left: 238 },
+  mobile: { width: 130, left: 438 },
 };
 
 // Row background color per status — matches the reference screenshots
