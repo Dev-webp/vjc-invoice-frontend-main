@@ -1463,7 +1463,7 @@ const [statusFilter, setStatusFilter] = useState("All");
 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.name.left, width: STICKY_COL.name.width, zIndex: 3, bgcolor: "#f5f5f5", borderRight: "1px solid #c4c4c4" }}>Name</TableCell>
 
 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.mobile.left, width: STICKY_COL.mobile.width, zIndex: 3, bgcolor: "#f5f5f5", borderRight: "1px solid #c4c4c4" }}>Mobile</TableCell>
-                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 260, pl: 3 }}>Email</TableCell>
+<TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 320, pl: 3 }}>Email</TableCell>
                 <TableCell
   sx={{
     fontWeight: 700,
@@ -1568,10 +1568,10 @@ const [statusFilter, setStatusFilter] = useState("All");
 >
   {lead.contact_number}
 </TableCell>
-                  <TableCell
+<TableCell
   sx={{
     pl: 3,
-    width: 260,
+    width: 320,
     whiteSpace: "nowrap",
   }}
 >
