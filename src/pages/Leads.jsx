@@ -258,10 +258,10 @@ const STATUS_OPTIONS = ["New", "Warm", "Cold", "Prospect", "HOLD", "Pending Agre
 // Sticky-column layout for the View Enquiry table — Checkbox / Created-Updated /
 // Name / Mobile stay pinned on the left while the remaining columns scroll.
 const STICKY_COL = {
-  checkbox: { width: 48, left: 0 },
-  created: { width: 190, left: 48 },
-  name: { width: 200, left: 238 },
-  mobile: { width: 130, left: 438 },
+  checkbox: { width: 56, left: 0 },
+  created: { width: 190, left: 56 },
+  name: { width: 200, left: 246 },
+  mobile: { width: 130, left: 446 },
 };
 
 // Row background color per status — matches the reference screenshots
@@ -1442,18 +1442,18 @@ const [statusFilter, setStatusFilter] = useState("All");
   }}
 >
   <TableRow>
-    <TableCell
-      padding="checkbox"
+<TableCell
+      padding="none"
       sx={{
         position: "sticky",
         left: STICKY_COL.checkbox.left,
         width: STICKY_COL.checkbox.width,
+        textAlign: "center",
         zIndex: 3,
         bgcolor: "#f5f5f5",
         borderBottom: "none",
       }}
-    >
-                  <Checkbox
+    >    <Checkbox
                     checked={filteredLeads.length > 0 && selectedIds.length === filteredLeads.length}
                     onChange={toggleSelectAll}
                   />
@@ -1495,9 +1495,9 @@ const [statusFilter, setStatusFilter] = useState("All");
               )}
               {filteredLeads.map((lead) => (
                 <TableRow key={lead.id} sx={{ bgcolor: statusRowColor(lead.status) }}>
-                  <TableCell
-                    padding="checkbox"
-                    sx={{ position: "sticky", left: STICKY_COL.checkbox.left, width: STICKY_COL.checkbox.width, zIndex: 1, bgcolor: statusRowColor(lead.status) }}
+<TableCell
+                    padding="none"
+                    sx={{ position: "sticky", left: STICKY_COL.checkbox.left, width: STICKY_COL.checkbox.width, textAlign: "center", zIndex: 1, bgcolor: statusRowColor(lead.status) }}
                   >
                     <Checkbox
                       checked={selectedIds.includes(lead.id)}
