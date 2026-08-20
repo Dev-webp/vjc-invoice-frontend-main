@@ -1410,15 +1410,19 @@ function ReminderBell() {
 const playNotificationSound = () => {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const oscillator = ctx.createOscillator();
-    const gain = ctx.createGain();
-    oscillator.connect(gain);
-    gain.connect(ctx.destination);
-    oscillator.frequency.value = 880;
-    gain.gain.setValueAtTime(0.15, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-    oscillator.start();
-    oscillator.stop(ctx.currentTime + 0.4);
+    const beepTimes = [0, 0.3, 0.6]; // 3 beeps, 0.3s apart
+    beepTimes.forEach((startOffset) => {
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      oscillator.connect(gain);
+      gain.connect(ctx.destination);
+      oscillator.frequency.value = 880;
+      const startTime = ctx.currentTime + startOffset;
+      gain.gain.setValueAtTime(0.15, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
+      oscillator.start(startTime);
+      oscillator.stop(startTime + 0.25);
+    });
   } catch {
     // silent — some browsers block audio without a prior user gesture
   }
