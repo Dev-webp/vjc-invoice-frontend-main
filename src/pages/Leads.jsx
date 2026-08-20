@@ -1258,6 +1258,7 @@ function ReminderBell() {
 // ── Lead Assignment Notifier — polls every 5s, shows OS browser popup ────
 function AssignmentNotifier() {
   const [assignments, setAssignments] = useState([]);
+  const [unseenCount, setUnseenCount] = useState(0);
   const [open, setOpen] = useState(false);
   const [permissionState, setPermissionState] = useState(
     typeof Notification !== "undefined" ? Notification.permission : "unsupported"
@@ -1289,8 +1290,9 @@ function AssignmentNotifier() {
         }).catch(() => {});
       });
 
-      if (newOnes.length > 0) {
+            if (newOnes.length > 0) {
         setAssignments((prev) => [...newOnes, ...prev].slice(0, 20));
+        setUnseenCount((prev) => prev + newOnes.length);
       }
     } catch {
       // silent
@@ -1310,8 +1312,13 @@ function AssignmentNotifier() {
           🔔 Enable Notifications
         </Button>
       )}
-      <IconButton onClick={() => setOpen(!open)}>
-        <Badge badgeContent={assignments.length} color="primary">
+            <IconButton
+        onClick={() => {
+          setOpen(!open);
+          if (!open) setUnseenCount(0); // opening the dropdown clears the badge
+        }}
+      >
+        <Badge badgeContent={unseenCount} color="primary">
           <AssignmentIndIcon />
         </Badge>
       </IconButton>
