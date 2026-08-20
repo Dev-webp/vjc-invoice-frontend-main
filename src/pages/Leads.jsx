@@ -1258,12 +1258,16 @@ function ReminderBell() {
 function AssignmentNotifier() {
   const [assignments, setAssignments] = useState([]);
   const [open, setOpen] = useState(false);
+  const [permissionState, setPermissionState] = useState(
+    typeof Notification !== "undefined" ? Notification.permission : "unsupported"
+  );
 
-  useEffect(() => {
-    if (typeof Notification !== "undefined" && Notification.permission === "default") {
-      Notification.requestPermission();
-    }
-  }, []);
+  const enableNotifications = () => {
+    if (typeof Notification === "undefined") return;
+    Notification.requestPermission().then((result) => {
+      setPermissionState(result);
+    });
+  };
 
   const fetchNew = async () => {
     try {
@@ -1298,8 +1302,13 @@ function AssignmentNotifier() {
     return () => clearInterval(interval);
   }, []);
 
-  return (
-    <Box sx={{ position: "relative" }}>
+    return (
+    <Box sx={{ position: "relative", display: "flex", alignItems: "center", gap: 1 }}>
+      {permissionState === "default" && (
+        <Button size="small" variant="outlined" onClick={enableNotifications} sx={{ textTransform: "none" }}>
+          🔔 Enable Notifications
+        </Button>
+      )}
       <IconButton onClick={() => setOpen(!open)}>
         <Badge badgeContent={assignments.length} color="primary">
           <AssignmentIndIcon />
