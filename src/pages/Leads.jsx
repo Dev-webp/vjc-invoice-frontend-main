@@ -1151,6 +1151,8 @@ function DepartmentsTab() {
 function PendingAssignmentTab() {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [notesLead, setNotesLead] = useState(null);
 
   const fetchPending = async () => {
     setLoading(true);
@@ -1171,51 +1173,129 @@ function PendingAssignmentTab() {
     return () => clearInterval(interval);
   }, []);
 
+  const openHistory = (lead) => {
+    window.open(`/lead-history/${lead.id}`, "_blank");
+  };
+
   if (loading) {
     return <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}><CircularProgress /></Box>;
   }
 
   return (
-    <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 2, border: "1px solid #e0e0e0" }}>
-      <Table size="small">
+    <>
+    <TableContainer
+      component={Paper}
+      elevation={0}
+      sx={{ borderRadius: 2, boxShadow: "none", border: "1px solid #e0e0e0" }}
+    >
+      <Table
+        size="small"
+        sx={{
+          tableLayout: "fixed",
+          borderCollapse: "separate",
+          borderSpacing: 0,
+          "& .MuiTableCell-root": {
+            borderRight: "1px solid #c4c4c4",
+            borderBottom: "1px solid #c4c4c4",
+          },
+          "& .MuiTableHead-root .MuiTableCell-root": { borderBottom: "none" },
+        }}
+      >
         <TableHead sx={{ bgcolor: "#f5f5f5" }}>
           <TableRow>
-            <TableCell sx={{ fontWeight: 700 }}>Created</TableCell>
-            <TableCell sx={{ fontWeight: 700 }}>Name</TableCell>
-            <TableCell sx={{ fontWeight: 700 }}>Mobile</TableCell>
-            <TableCell sx={{ fontWeight: 700 }}>Source</TableCell>
-            <TableCell sx={{ fontWeight: 700 }}>Department</TableCell>
+            <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 190 }}>Created - Updated</TableCell>
+            <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 200 }}>Name</TableCell>
+            <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 130 }}>Mobile</TableCell>
+            <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 320 }}>Email</TableCell>
+            <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 160 }}>Interested Country</TableCell>
+            <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 140 }}>Service Type</TableCell>
+            <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 120 }}>Source</TableCell>
+            <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 160 }}>Status</TableCell>
+            <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 160 }}>Department</TableCell>
+            <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 230 }}>Review</TableCell>
+            <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 180 }}>Branch</TableCell>
+            <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 400 }}>Last Remark</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {leads.length === 0 && (
             <TableRow>
-              <TableCell colSpan={5} align="center" sx={{ py: 4, color: "text.secondary" }}>
+              <TableCell colSpan={12} align="center" sx={{ py: 4, color: "text.secondary" }}>
                 No pending leads — everything got assigned.
               </TableCell>
             </TableRow>
           )}
           {leads.map((lead) => (
             <TableRow key={lead.id}>
-              <TableCell>
-                {lead.created_at
-                  ? new Date(lead.created_at).toLocaleString("en-GB", {
-                      day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true,
-                    })
-                  : "—"}
+              <TableCell sx={{ lineHeight: 1.8 }}>
+                <Typography variant="body2">
+                  {lead.created_at
+                    ? new Date(lead.created_at).toLocaleString("en-GB", {
+                        day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true,
+                      })
+                    : "—"}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {lead.updated_at
+                    ? new Date(lead.updated_at).toLocaleString("en-GB", {
+                        day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true,
+                      })
+                    : "—"}
+                </Typography>
               </TableCell>
-              <TableCell>{lead.lead_name}</TableCell>
-              <TableCell>{lead.contact_number}</TableCell>
+              <TableCell sx={{ whiteSpace: "nowrap" }}>{lead.lead_name}</TableCell>
+              <TableCell sx={{ whiteSpace: "nowrap" }}>{lead.contact_number}</TableCell>
+              <TableCell sx={{ whiteSpace: "nowrap" }}>{lead.email || "—"}</TableCell>
+              <TableCell>
+                {(lead.interested_countries || []).map((c) => (
+                  <Chip key={c} label={c} size="small" sx={{ mr: 0.5, mb: 0.5 }} />
+                ))}
+              </TableCell>
+              <TableCell>{lead.service_type || "—"}</TableCell>
               <TableCell>{lead.source}</TableCell>
+              <TableCell>
+                <Chip label={lead.status || "New"} size="small" variant="outlined" />
+              </TableCell>
               <TableCell>{lead.department_name || "—"}</TableCell>
+              <TableCell>
+                <Stack direction="row" spacing={0.5} alignItems="center">
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<HistoryIcon fontSize="small" />}
+                    onClick={() => openHistory(lead)}
+                    sx={{ textTransform: "none", height: 32, minWidth: "auto", px: 1, borderRadius: 1 }}
+                  >
+                    History
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<StickyNote2Icon fontSize="small" />}
+                    onClick={() => { setNotesLead(lead); setNotesOpen(true); }}
+                    sx={{ textTransform: "none", minWidth: "auto", px: 1, height: 32, borderRadius: 1 }}
+                  >
+                    Notes
+                  </Button>
+                </Stack>
+              </TableCell>
+              <TableCell>{lead.branch || "—"}</TableCell>
+              <TableCell>{lead.last_remark || "—"}</TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
     </TableContainer>
+
+    <NotesDialog
+      open={notesOpen}
+      onClose={() => setNotesOpen(false)}
+      lead={notesLead}
+      onSaved={fetchPending}
+    />
+    </>
   );
 }
-
 // ── Live SLA Countdown badge — updates every second ─────────────────────
 function SlaCountdown({ deadline, status }) {
   const [now, setNow] = useState(Date.now());
