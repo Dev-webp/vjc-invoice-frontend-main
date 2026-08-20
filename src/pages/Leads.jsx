@@ -1255,6 +1255,27 @@ function ReminderBell() {
     </Box>
   );
 }
+
+// ▼▼▼ NEW — paste this block right here ▼▼▼
+// Plays a short beep using the Web Audio API (no external audio file needed)
+const playNotificationSound = () => {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
+    oscillator.connect(gain);
+    gain.connect(ctx.destination);
+    oscillator.frequency.value = 880;
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    oscillator.start();
+    oscillator.stop(ctx.currentTime + 0.4);
+  } catch {
+    // silent — some browsers block audio without a prior user gesture
+  }
+};
+// ▲▲▲ NEW block ends here ▲▲▲
+
 // ── Lead Assignment Notifier — polls every 5s, shows OS browser popup ────
 function AssignmentNotifier() {
   const [assignments, setAssignments] = useState([]);
@@ -1278,11 +1299,12 @@ function AssignmentNotifier() {
       if (!data.success) return;
       const newOnes = data.assignments || [];
 
-      newOnes.forEach((a) => {
+            newOnes.forEach((a) => {
         if (typeof Notification !== "undefined" && Notification.permission === "granted") {
           new Notification("New Lead Assigned", {
             body: `${a.lead_name} has been assigned to you.`,
           });
+          playNotificationSound();
         }
         fetch(`${API}/leads/assignments/${a.history_id}/notified`, {
           method: "PUT",
