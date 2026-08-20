@@ -1147,6 +1147,75 @@ function DepartmentsTab() {
     </Grid>
   );
 }
+// ── Pending Assignment tab — leads nobody was online to receive (chairman only) ──
+function PendingAssignmentTab() {
+  const [leads, setLeads] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchPending = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API}/leads/pending-assignment`, { headers: authHeader() });
+      const data = await res.json();
+      if (data.success) setLeads(data.leads || []);
+    } catch {
+      // silent
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPending();
+    const interval = setInterval(fetchPending, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (loading) {
+    return <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}><CircularProgress /></Box>;
+  }
+
+  return (
+    <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 2, border: "1px solid #e0e0e0" }}>
+      <Table size="small">
+        <TableHead sx={{ bgcolor: "#f5f5f5" }}>
+          <TableRow>
+            <TableCell sx={{ fontWeight: 700 }}>Created</TableCell>
+            <TableCell sx={{ fontWeight: 700 }}>Name</TableCell>
+            <TableCell sx={{ fontWeight: 700 }}>Mobile</TableCell>
+            <TableCell sx={{ fontWeight: 700 }}>Source</TableCell>
+            <TableCell sx={{ fontWeight: 700 }}>Department</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {leads.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={5} align="center" sx={{ py: 4, color: "text.secondary" }}>
+                No pending leads — everything got assigned.
+              </TableCell>
+            </TableRow>
+          )}
+          {leads.map((lead) => (
+            <TableRow key={lead.id}>
+              <TableCell>
+                {lead.created_at
+                  ? new Date(lead.created_at).toLocaleString("en-GB", {
+                      day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true,
+                    })
+                  : "—"}
+              </TableCell>
+              <TableCell>{lead.lead_name}</TableCell>
+              <TableCell>{lead.contact_number}</TableCell>
+              <TableCell>{lead.source}</TableCell>
+              <TableCell>{lead.department_name || "—"}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+}
+
 // ── Live SLA Countdown badge — updates every second ─────────────────────
 function SlaCountdown({ deadline, status }) {
   const [now, setNow] = useState(Date.now());
@@ -1518,7 +1587,7 @@ const [statusFilter, setStatusFilter] = useState("All");
       <Typography variant="h4" fontWeight="bold" sx={{ mb: 2 }}>Lead Management</Typography>
 
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3, borderBottom: "1px solid #e0e0e0" }}>
-        <Tabs
+                <Tabs
           value={tab}
           onChange={(_, v) => setTab(v)}
           sx={{ borderBottom: "none" }}
@@ -1526,6 +1595,7 @@ const [statusFilter, setStatusFilter] = useState("All");
           <Tab label="Add Enquiry" />
           <Tab label="View Enquiry" />
           {isChairman && <Tab label="Departments" />}
+          {isChairman && <Tab label="Pending Assignment" />}
         </Tabs>
                 <Stack direction="row" spacing={1} alignItems="center">
           {isChairman && <ChairmanAssignmentFeed />}
@@ -1545,8 +1615,11 @@ const [statusFilter, setStatusFilter] = useState("All");
         />
       )}
 
-      {/* ── Tab 2: Departments (chairman only) ── */}
+            {/* ── Tab 2: Departments (chairman only) ── */}
       {tab === 2 && isChairman && <DepartmentsTab />}
+
+      {/* ── Tab 3: Pending Assignment (chairman only) ── */}
+      {tab === 3 && isChairman && <PendingAssignmentTab />}
 
       {/* ── Tab 1: View Enquiry ── */}
       {tab === 1 && (
