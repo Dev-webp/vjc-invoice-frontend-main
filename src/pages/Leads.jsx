@@ -28,6 +28,7 @@ import GroupsIcon from "@mui/icons-material/Groups";
 import AddIcon from "@mui/icons-material/Add";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
+import ListAltIcon from "@mui/icons-material/ListAlt";
 const API = "https://vjc-invoice-backend-main.vercel.app/api";
 
 // ── Assumption: after login you store the logged-in user's basic info here.
@@ -1344,6 +1345,67 @@ function AssignmentNotifier() {
     </Box>
   );
 }
+// ── Chairman-only: Today's Assignments feed (no popup, silent poll) ──────
+function ChairmanAssignmentFeed() {
+  const [assignments, setAssignments] = useState([]);
+  const [open, setOpen] = useState(false);
+
+  const fetchAll = async () => {
+    try {
+      const res = await fetch(`${API}/leads/assignments/today`, { headers: authHeader() });
+      const data = await res.json();
+      if (data.success) setAssignments(data.assignments || []);
+    } catch {
+      // silent
+    }
+  };
+
+  useEffect(() => {
+    fetchAll();
+    const interval = setInterval(fetchAll, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <Box sx={{ position: "relative" }}>
+      <IconButton onClick={() => setOpen(!open)}>
+        <Badge badgeContent={assignments.length} color="secondary">
+          <ListAltIcon />
+        </Badge>
+      </IconButton>
+
+      {open && (
+        <Paper
+          elevation={4}
+          sx={{
+            position: "absolute", right: 0, top: 44, width: 340, zIndex: 10,
+            maxHeight: 400, overflowY: "auto", borderRadius: 2,
+          }}
+        >
+          <Box sx={{ px: 2, py: 1.5, borderBottom: "1px solid #eee" }}>
+            <Typography variant="subtitle2" fontWeight={700}>Today's Assignments</Typography>
+          </Box>
+          {assignments.length === 0 && (
+            <Box sx={{ p: 2 }}>
+              <Typography variant="body2" color="text.secondary">No assignments today yet.</Typography>
+            </Box>
+          )}
+          {assignments.map((a) => (
+            <Box key={a.history_id} sx={{ px: 2, py: 1.5, borderBottom: "1px solid #f0f0f0" }}>
+              <Typography variant="body2" fontWeight={600}>{a.lead_name}</Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                → {a.assigned_to_name || "Unassigned"} ({a.reason || "manual"})
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {a.assigned_date ? new Date(a.assigned_date).toLocaleTimeString("en-GB") : ""}
+              </Typography>
+            </Box>
+          ))}
+        </Paper>
+      )}
+    </Box>
+  );
+}
 // ── Main Lead Management Page ────────────────────────────────────────────
 function LeadManagement() {
   const currentUser = getCurrentUser();
@@ -1436,7 +1498,8 @@ const [statusFilter, setStatusFilter] = useState("All");
           <Tab label="View Enquiry" />
           {isChairman && <Tab label="Departments" />}
         </Tabs>
-        <Stack direction="row" spacing={1} alignItems="center">
+                <Stack direction="row" spacing={1} alignItems="center">
+          {isChairman && <ChairmanAssignmentFeed />}
           <AssignmentNotifier />
           <ReminderBell />
         </Stack>
