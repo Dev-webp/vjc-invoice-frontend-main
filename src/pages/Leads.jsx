@@ -27,6 +27,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import GroupsIcon from "@mui/icons-material/Groups";
 import AddIcon from "@mui/icons-material/Add";
 import NotificationsIcon from "@mui/icons-material/Notifications";
+import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
 const API = "https://vjc-invoice-backend-main.vercel.app/api";
 
 // ── Assumption: after login you store the logged-in user's basic info here.
@@ -1253,6 +1254,87 @@ function ReminderBell() {
     </Box>
   );
 }
+// ── Lead Assignment Notifier — polls every 5s, shows OS browser popup ────
+function AssignmentNotifier() {
+  const [assignments, setAssignments] = useState([]);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof Notification !== "undefined" && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  const fetchNew = async () => {
+    try {
+      const res = await fetch(`${API}/leads/assignments/new`, { headers: authHeader() });
+      const data = await res.json();
+      if (!data.success) return;
+      const newOnes = data.assignments || [];
+
+      newOnes.forEach((a) => {
+        if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+          new Notification("New Lead Assigned", {
+            body: `${a.lead_name} has been assigned to you.`,
+          });
+        }
+        fetch(`${API}/leads/assignments/${a.history_id}/notified`, {
+          method: "PUT",
+          headers: authHeader(),
+        }).catch(() => {});
+      });
+
+      if (newOnes.length > 0) {
+        setAssignments((prev) => [...newOnes, ...prev].slice(0, 20));
+      }
+    } catch {
+      // silent
+    }
+  };
+
+  useEffect(() => {
+    fetchNew();
+    const interval = setInterval(fetchNew, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <Box sx={{ position: "relative" }}>
+      <IconButton onClick={() => setOpen(!open)}>
+        <Badge badgeContent={assignments.length} color="primary">
+          <AssignmentIndIcon />
+        </Badge>
+      </IconButton>
+
+      {open && (
+        <Paper
+          elevation={4}
+          sx={{
+            position: "absolute", right: 0, top: 44, width: 320, zIndex: 10,
+            maxHeight: 360, overflowY: "auto", borderRadius: 2,
+          }}
+        >
+          <Box sx={{ px: 2, py: 1.5, borderBottom: "1px solid #eee" }}>
+            <Typography variant="subtitle2" fontWeight={700}>Lead Assignments</Typography>
+          </Box>
+          {assignments.length === 0 && (
+            <Box sx={{ p: 2 }}>
+              <Typography variant="body2" color="text.secondary">No new assignments.</Typography>
+            </Box>
+          )}
+          {assignments.map((a) => (
+            <Box key={a.history_id} sx={{ px: 2, py: 1.5, borderBottom: "1px solid #f0f0f0" }}>
+              <Typography variant="body2" fontWeight={600}>{a.lead_name}</Typography>
+              <Typography variant="caption" color="text.secondary">
+                Assigned {a.assigned_date ? new Date(a.assigned_date).toLocaleString("en-GB") : ""}
+              </Typography>
+            </Box>
+          ))}
+        </Paper>
+      )}
+    </Box>
+  );
+}
 // ── Main Lead Management Page ────────────────────────────────────────────
 function LeadManagement() {
   const currentUser = getCurrentUser();
@@ -1335,7 +1417,7 @@ const [statusFilter, setStatusFilter] = useState("All");
     <Box>
       <Typography variant="h4" fontWeight="bold" sx={{ mb: 2 }}>Lead Management</Typography>
 
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3, borderBottom: "1px solid #e0e0e0" }}>
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3, borderBottom: "1px solid #e0e0e0" }}>
         <Tabs
           value={tab}
           onChange={(_, v) => setTab(v)}
@@ -1345,7 +1427,10 @@ const [statusFilter, setStatusFilter] = useState("All");
           <Tab label="View Enquiry" />
           {isChairman && <Tab label="Departments" />}
         </Tabs>
-        <ReminderBell />
+        <Stack direction="row" spacing={1} alignItems="center">
+          <AssignmentNotifier />
+          <ReminderBell />
+        </Stack>
       </Box>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
