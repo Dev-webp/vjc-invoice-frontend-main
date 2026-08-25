@@ -9,32 +9,30 @@ const API = "https://vjc-invoice-backend-main.vercel.app/api";
 
 const CATEGORIES = [
   "Travel", "Meals", "Office Supplies", "Software", "Hardware",
-  "Marketing", "Electricity & Water",
+  "Marketing", "Electricity ", "Water" ,
 "Internet / Mobile", "Rent", "Entertainment", "Others"
 ];
 
-const emptyForm = { date: "", category: "", customer: "", amount: "", billable: "true", notes: "" };
+const emptyForm = { date: "", category: "", customer: "", amount: "", billable: "true",   paymentStatus: "Unpaid", notes: "" };
 
 const STATUS_BADGE = {
-  "Billable":     { bg: "#E6F1FB", color: "#0C447C" },
-  "Non Billable": { bg: "#FAEEDA", color: "#633806" },
-  "Invoiced":     { bg: "#EAF3DE", color: "#27500A" },
-  "Reimbursed":   { bg: "#EEEDFE", color: "#3C3489" },
+  "Paid":   { bg: "#EAF3DE", color: "#27500A" },
+  "Unpaid": { bg: "#FCE8E6", color: "#B42318" },
 };
 
 // ── Map DB row (snake_case) → frontend (camelCase) ────────────
 const mapRow = (r) => ({
-  id:        r.id,
-  expenseNo: r.expense_no,
-  date:      r.date?.slice(0, 10) || "",
-  category:  r.category,
-  customer:  r.customer || "-",
-  amount:    Number(r.amount),
-  billable:  r.billable,
-  status:    r.status,
-  notes:     r.notes || "",
+  id:            r.id,
+  expenseNo:     r.expense_no,
+  date:          r.date?.slice(0, 10) || "",
+  category:      r.category,
+  customer:      r.customer || "-",
+  amount:        Number(r.amount),
+  billable:      r.billable,
+  status:        r.status,
+  paymentStatus: r.payment_status || "Unpaid",
+  notes:         r.notes || "",
 });
-
 // ─── Badge ───────────────────────────────────────────────────
 function Badge({ status }) {
   const s = STATUS_BADGE[status] || { bg: "#F1EFE8", color: "#444441" };
@@ -142,7 +140,7 @@ const res = await fetch(`${API}/expenses`, {
         e.expenseNo.toLowerCase().includes(q) ||
         e.category.toLowerCase().includes(q)  ||
         (e.customer || "").toLowerCase().includes(q);
-      const matchS = !filterStatus   || e.status   === filterStatus;
+      const matchS = !filterStatus || e.paymentStatus === filterStatus;
       const matchC = !filterCategory || e.category === filterCategory;
       return matchQ && matchS && matchC;
     });
@@ -164,13 +162,14 @@ const res = await fetch(`${API}/expenses`, {
     if (!e) return;
     setEditId(id);
     setForm({
-      date:     e.date,
-      category: e.category,
-      customer: e.customer === "-" ? "" : e.customer,
-      amount:   String(e.amount),
-      billable: e.billable ? "true" : "false",
-      notes:    e.notes || "",
-    });
+  date:          e.date,
+  category:      e.category,
+  customer:      e.customer === "-" ? "" : e.customer,
+  amount:        String(e.amount),
+  billable:      e.billable ? "true" : "false",
+  paymentStatus: e.paymentStatus || "Unpaid",
+  notes:         e.notes || "",
+});
     setFormErrors({});
     setShowAdd(true);
   };
@@ -189,15 +188,17 @@ const res = await fetch(`${API}/expenses`, {
   // ── Save (Create / Update) ──
   const saveExpense = async () => {
     if (!validate()) return;
-    const billable = form.billable === "true";
-    const payload  = {
-      date:     form.date,
-      category: form.category,
-      customer: form.customer.trim() || "-",
-      amount:   Number(form.amount),
-      billable,
-      notes:    form.notes,
-    };
+const billable = form.billable === "true";
+
+const payload = {
+  date:          form.date,
+  category:      form.category,
+  customer:      form.customer.trim() || "-",
+  amount:        Number(form.amount),
+  billable,
+  payment_status: form.paymentStatus,
+  notes:         form.notes,
+};
 
     try {
       if (editId) {
@@ -327,14 +328,23 @@ const res = await fetch(`${API}/expenses`, {
               value={search} onChange={e => setSearch(e.target.value)}
               style={{ padding: "7px 12px", border: "1px solid #ddd", borderRadius: 8, fontSize: 13, outline: "none", width: 240, background: "#fafafa" }}
             />
-            <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-              style={{ padding: "7px 11px", border: "1px solid #ddd", borderRadius: 8, fontSize: 13, background: "#fafafa", outline: "none", color: "#1a1a1a" }}>
-              <option value="">All Status</option>
-              <option>Billable</option>
-              <option>Non Billable</option>
-              <option>Invoiced</option>
-              <option>Reimbursed</option>
-            </select>
+<select
+  value={filterStatus}
+  onChange={e => setFilterStatus(e.target.value)}
+  style={{
+    padding: "7px 11px",
+    border: "1px solid #ddd",
+    borderRadius: 8,
+    fontSize: 13,
+    background: "#fafafa",
+    outline: "none",
+    color: "#1a1a1a"
+  }}
+>
+  <option value="">All Payment Status</option>
+  <option value="Paid">Paid</option>
+  <option value="Unpaid">Unpaid</option>
+</select>
             <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)}
               style={{ padding: "7px 11px", border: "1px solid #ddd", borderRadius: 8, fontSize: 13, background: "#fafafa", outline: "none", color: "#1a1a1a" }}>
               <option value="">All Categories</option>
@@ -383,7 +393,9 @@ const res = await fetch(`${API}/expenses`, {
                     <td style={{ padding: "12px 16px", fontWeight: 600, color: "#1a1a2e" }}>
                       ₹{Number(e.amount).toLocaleString("en-IN")}
                     </td>
-                    <td style={{ padding: "12px 16px" }}><Badge status={e.status} /></td>
+<td style={{ padding: "12px 16px" }}>
+  <Badge status={e.paymentStatus} />
+</td>
                     <td style={{ padding: "12px 16px" }}>
                       {e.status === "Billable" && (
                         <button onClick={() => convertToInvoice(e.id)} style={{
@@ -455,13 +467,21 @@ const res = await fetch(`${API}/expenses`, {
             <input type="number" {...inp("amount")} placeholder="0.00" min="0" />
             {formErrors.amount && <div style={errStyle}>{formErrors.amount}</div>}
           </div>
-          <div style={{ ...fieldStyle, gridColumn: "1 / -1" }}>
-            <label style={labelStyle}>Type</label>
-            <select {...inp("billable")}>
-              <option value="true">Billable</option>
-              <option value="false">Non Billable</option>
-            </select>
-          </div>
+          <div style={{ ...fieldStyle }}>
+  <label style={labelStyle}>Type</label>
+  <select {...inp("billable")}>
+    <option value="true">Billable</option>
+    <option value="false">Non Billable</option>
+  </select>
+</div>
+
+<div style={fieldStyle}>
+  <label style={labelStyle}>Payment Status</label>
+  <select {...inp("paymentStatus")}>
+    <option value="Unpaid">Unpaid</option>
+    <option value="Paid">Paid</option>
+  </select>
+</div>
           <div style={{ ...fieldStyle, gridColumn: "1 / -1" }}>
             <label style={labelStyle}>Notes</label>
             <textarea {...inp("notes")} placeholder="Optional notes..." rows={2}
