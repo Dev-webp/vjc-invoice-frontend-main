@@ -146,7 +146,7 @@ const res = await fetch(`${API}/expenses`, {
     });
   }, [expenses, search, filterStatus, filterCategory]);
 
-  const cats = useMemo(() => [...new Set(expenses.map(e => e.category))], [expenses]);
+  const cats = CATEGORIES;
 
   // ── Open Add ──
   const openAdd = () => {
