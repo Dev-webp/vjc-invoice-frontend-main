@@ -29,7 +29,6 @@ import AddIcon from "@mui/icons-material/Add";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
 import ListAltIcon from "@mui/icons-material/ListAlt";
-import ListAltIcon from "@mui/icons-material/ListAlt";
 const API = "https://vjc-invoice-backend-main.vercel.app/api";
 
 // ── Assumption: after login you store the logged-in user's basic info here.
