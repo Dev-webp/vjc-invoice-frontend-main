@@ -3,7 +3,7 @@ import {
   Box, Typography, Grid, Card, CardContent, Button, TextField,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, Dialog, DialogTitle, DialogContent, DialogActions,
-  MenuItem, Chip, Avatar, Tabs, Tab, Divider,
+  MenuItem, Menu, Chip, Avatar, Tabs, Tab, Divider,
   Stack, CircularProgress, Alert, IconButton, InputAdornment, Pagination
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
@@ -1201,7 +1201,7 @@ function Customers() {
   // Tracks customer ids that already have an invoice created in this session,
   // as a safety net on top of whatever the backend reports (invoice_created /
   // has_invoice / invoice_count / last_invoice_id on the customer record).
-  const [invoicedIds, setInvoicedIds] = useState(() => {
+    const [invoicedIds, setInvoicedIds] = useState(() => {
     try {
       const raw = window.localStorage?.getItem("vjc_invoiced_customer_ids");
       return raw ? new Set(JSON.parse(raw)) : new Set();
@@ -1209,6 +1209,9 @@ function Customers() {
       return new Set();
     }
   });
+
+  // NEW — PDFs dropdown (Invoice PDF / Agreement PDF)
+  const [pdfMenuAnchor, setPdfMenuAnchor] = useState({ el: null, customerId: null });
 
   const persistInvoicedIds = (nextSet) => {
     try {
@@ -1315,7 +1318,7 @@ const res = await fetch(`${API}/customers/${selected.id}`, {
     persistInvoicedIds(next);
     fetchCustomers();
   };
-  const handleDownloadPdf = async (invoiceId, customerName) => {
+    const handleDownloadPdf = async (invoiceId, customerName) => {
     if (!invoiceId) {
       alert("❌ Invoice ID not found for this customer");
       return;
@@ -1340,6 +1343,35 @@ const res = await fetch(`${API}/customers/${selected.id}`, {
       window.URL.revokeObjectURL(url);
     } catch (err) {
       alert("❌ Failed to download PDF");
+    }
+  };
+
+  // NEW — Agreement PDF download (backend endpoint pending, see note below)
+  const handleDownloadAgreementPdf = async (invoiceId, customerName) => {
+    if (!invoiceId) {
+      alert("❌ Invoice ID not found for this customer");
+      return;
+    }
+    try {
+      const token = localStorage.getItem("vjc_invoice_auth");
+      const res = await fetch(`${API}/invoices/${invoiceId}/download-agreement-pdf`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        alert("❌ Agreement not yet generated for this invoice");
+        return;
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Agreement-${customerName || "invoice"}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert("❌ Failed to download Agreement PDF");
     }
   };
   const sortedCustomers = [...customers];
@@ -1431,7 +1463,7 @@ const displayCustomers = sortedCustomers.filter((customer) => {
             }}
           >
             <TableHead sx={{ bgcolor: "#f5f5f5" }}>
-              <TableRow>
+                            <TableRow>
                 <TableCell sx={{ fontWeight: 700 }}>Customer ID</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Customer Name</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Service Type</TableCell>
@@ -1440,13 +1472,15 @@ const displayCustomers = sortedCustomers.filter((customer) => {
                 <TableCell sx={{ fontWeight: 700 }}>Payment </TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Outstanding</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Last Transaction</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Actions</TableCell>
+                <TableCell sx={{ fontWeight: 700, minWidth: 230 }}>Actions</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>PDFs</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {customers.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} align="center" sx={{ py: 4, color: "text.secondary" }}>
+                                    <TableCell colSpan={11} align="center" sx={{ py: 4, color: "text.secondary" }}>
                     No customers found. Click "+ ADD CUSTOMER" to create a customer.
                   </TableCell>
                 </TableRow>
@@ -1510,8 +1544,8 @@ const displayCustomers = sortedCustomers.filter((customer) => {
                         : "—"}
                     </Typography>
                   </TableCell>
-                  <TableCell>
-                    <Stack direction="row" spacing={0.5}>
+                                    <TableCell sx={{ minWidth: 230 }}>
+                    <Stack direction="row" spacing={0.5} sx={{ flexWrap: "nowrap" }}>
                       <Button size="small"
                         onClick={() => { setSelected(customer); setViewOpen(true); }}>
                         View
@@ -1523,21 +1557,47 @@ const displayCustomers = sortedCustomers.filter((customer) => {
                      <Button
   size="small"
   color="success"
+  sx={{ whiteSpace: "nowrap", minWidth: 120 }}
   onClick={() => handleInvoiceButtonClick(customer)}
 >
   {Number(customer.outstanding || 0) > 0
     ? "Remaining Invoice"
     : "Invoice"}
 </Button>
-{customer.last_invoice_id && (
+                    </Stack>
+                  </TableCell>
+                  <TableCell>
+                    {customer.last_invoice_id && (
+                      <>
                         <Button
                           size="small"
                           color="primary"
-                          onClick={() => handleDownloadPdf(customer.last_invoice_id, customer.name)}
+                          onClick={(e) => setPdfMenuAnchor({ el: e.currentTarget, customerId: customer.id })}
                         >
-                          Download PDF
+                          Download PDF ▾
                         </Button>
-                      )}
+                        <Menu
+                          anchorEl={pdfMenuAnchor.customerId === customer.id ? pdfMenuAnchor.el : null}
+                          open={pdfMenuAnchor.customerId === customer.id}
+                          onClose={() => setPdfMenuAnchor({ el: null, customerId: null })}
+                        >
+                          <MenuItem onClick={() => {
+                            handleDownloadPdf(customer.last_invoice_id, customer.name);
+                            setPdfMenuAnchor({ el: null, customerId: null });
+                          }}>
+                            Invoice PDF
+                          </MenuItem>
+                          <MenuItem onClick={() => {
+                            handleDownloadAgreementPdf(customer.last_invoice_id, customer.name);
+                            setPdfMenuAnchor({ el: null, customerId: null });
+                          }}>
+                            Agreement PDF
+                          </MenuItem>
+                        </Menu>
+                      </>
+                    )}
+                  </TableCell>
+                  <TableCell>
                     <Chip
   label={customer.invoice_status || "Pending"}
   color={
@@ -1549,7 +1609,6 @@ const displayCustomers = sortedCustomers.filter((customer) => {
   }
   size="small"
 />
-                    </Stack>
                   </TableCell>
                 </TableRow>
               ))}

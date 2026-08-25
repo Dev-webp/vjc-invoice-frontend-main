@@ -1,4 +1,6 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Box, IconButton, Badge, Paper, Typography, Button } from "@mui/material";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import PeopleIcon from "@mui/icons-material/People";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
@@ -15,7 +17,139 @@ import BadgeIcon from "@mui/icons-material/Badge";
 import LogoutIcon from "@mui/icons-material/Logout";
 import vjcLogo from "../assets/vjc-logo-badge.png";
 import FactCheckIcon from "@mui/icons-material/FactCheck";
+import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
 
+const API = "https://vjc-invoice-backend-main.vercel.app/api";
+const authHeader = () => ({
+  Authorization: `Bearer ${localStorage.getItem("vjc_invoice_auth")}`,
+});
+
+// Plays a short beep using the Web Audio API (no external audio file needed)
+const playNotificationSound = () => {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const beepTimes = [0, 0.3, 0.6];
+    beepTimes.forEach((startOffset) => {
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      oscillator.connect(gain);
+      gain.connect(ctx.destination);
+      oscillator.frequency.value = 880;
+      const startTime = ctx.currentTime + startOffset;
+      gain.gain.setValueAtTime(0.15, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
+      oscillator.start(startTime);
+      oscillator.stop(startTime + 0.25);
+    });
+  } catch {
+    // silent — some browsers block audio without a prior user gesture
+  }
+};
+
+// ── App-wide Lead Assignment Notifier — polls every 5s from ANY page ─────
+function AssignmentNotifier() {
+  const [assignments, setAssignments] = useState([]);
+  const [unseenCount, setUnseenCount] = useState(0);
+  const [open, setOpen] = useState(false);
+  const [permissionState, setPermissionState] = useState(
+    typeof Notification !== "undefined" ? Notification.permission : "unsupported"
+  );
+
+  const enableNotifications = () => {
+    if (typeof Notification === "undefined") return;
+    Notification.requestPermission().then((result) => {
+      setPermissionState(result);
+    });
+  };
+
+  const fetchNew = async () => {
+    try {
+      const res = await fetch(`${API}/leads/assignments/new`, { headers: authHeader() });
+      const data = await res.json();
+      if (!data.success) return;
+      const newOnes = data.assignments || [];
+
+      newOnes.forEach((a) => {
+        if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+          new Notification("New Lead Assigned", {
+            body: `${a.lead_name} has been assigned to you.`,
+          });
+          playNotificationSound();
+        }
+        fetch(`${API}/leads/assignments/${a.history_id}/notified`, {
+          method: "PUT",
+          headers: authHeader(),
+        }).catch(() => {});
+      });
+
+      if (newOnes.length > 0) {
+        setAssignments((prev) => [...newOnes, ...prev].slice(0, 20));
+        setUnseenCount((prev) => prev + newOnes.length);
+      }
+    } catch {
+      // silent
+    }
+  };
+
+  useEffect(() => {
+    fetchNew();
+    const interval = setInterval(fetchNew, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <Box sx={{ position: "relative", display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+      {permissionState === "default" && (
+        <Button
+          size="small"
+          variant="outlined"
+          onClick={enableNotifications}
+          sx={{ textTransform: "none", color: "#fff", borderColor: "rgba(255,255,255,0.3)", fontSize: 12 }}
+        >
+          🔔 Enable Notifications
+        </Button>
+      )}
+      <IconButton
+        onClick={() => {
+          setOpen(!open);
+          if (!open) setUnseenCount(0);
+        }}
+        sx={{ color: "#fff" }}
+      >
+        <Badge badgeContent={unseenCount} color="primary">
+          <AssignmentIndIcon />
+        </Badge>
+      </IconButton>
+
+      {open && (
+        <Paper
+          elevation={4}
+          sx={{
+            position: "absolute", left: 0, top: 44, width: 300, zIndex: 2000,
+            maxHeight: 360, overflowY: "auto", borderRadius: 2,
+          }}
+        >
+          <Box sx={{ px: 2, py: 1.5, borderBottom: "1px solid #eee" }}>
+            <Typography variant="subtitle2" fontWeight={700}>Lead Assignments</Typography>
+          </Box>
+          {assignments.length === 0 && (
+            <Box sx={{ p: 2 }}>
+              <Typography variant="body2" color="text.secondary">No new assignments.</Typography>
+            </Box>
+          )}
+          {assignments.map((a) => (
+            <Box key={a.history_id} sx={{ px: 2, py: 1.5, borderBottom: "1px solid #f0f0f0" }}>
+              <Typography variant="body2" fontWeight={600}>{a.lead_name}</Typography>
+              <Typography variant="caption" color="text.secondary">
+                Assigned {a.assigned_date ? new Date(a.assigned_date).toLocaleString("en-GB") : ""}
+              </Typography>
+            </Box>
+          ))}
+        </Paper>
+      )}
+    </Box>
+  );
+}
 const Sidebar = ({ setPage, activePage }) => {
   const navigate = useNavigate();
    const user = JSON.parse(
@@ -109,6 +243,8 @@ const finalMenuItems =
           </span>
         </div>
       </div>
+
+      <AssignmentNotifier />
 
       <div style={{ flex: 1 }}>
         {finalMenuItems.map((item, index) => (
