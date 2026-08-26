@@ -1448,6 +1448,48 @@ function ReminderBell() {
   );
 }
 
+// ── Desktop Notification — pops up when a lead gets assigned to YOU,
+// whether via round-robin auto-assign or manual "Assign Enquiry" ──────────
+function AssignmentDesktopNotifier() {
+  useEffect(() => {
+    // Ask for browser permission once (no-op if already granted/denied)
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  useEffect(() => {
+    const checkNew = async () => {
+      if (!("Notification" in window) || Notification.permission !== "granted") return;
+      try {
+        const res = await fetch(`${API}/leads/assignments/new`, { headers: authHeader() });
+        const data = await res.json();
+        if (!data.success) return;
+
+        for (const a of data.assignments || []) {
+          new Notification("New Lead Assigned", {
+            body: `${a.lead_name} has been assigned to you (${a.reason === "manual" ? "manual" : "auto"})`,
+            icon: "/vjc-overseas-logo.png",
+          });
+          // mark as notified so it doesn't pop up again on next poll
+          fetch(`${API}/leads/assignments/${a.history_id}/notified`, {
+            method: "PUT",
+            headers: authHeader(),
+          }).catch(() => {});
+        }
+      } catch {
+        // silent — don't disrupt the page if this fails
+      }
+    };
+
+    checkNew();
+    const interval = setInterval(checkNew, 20000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return null; // no visible UI — purely a background notifier
+}
+
 // ── Chairman-only: Today's Assignments feed (no popup, silent poll) ──────
 function ChairmanAssignmentFeed() {
   const [assignments, setAssignments] = useState([]);
@@ -1591,7 +1633,8 @@ const [statusFilter, setStatusFilter] = useState("All");
     <Box>
       <Typography variant="h4" fontWeight="bold" sx={{ mb: 2 }}>Lead Management</Typography>
 
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3, borderBottom: "1px solid #e0e0e0" }}>
+      <AssignmentDesktopNotifier />
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3, borderBottom: "1px solid #e0e0e0" }}>
                 <Tabs
           value={tab}
           onChange={(_, v) => setTab(v)}
