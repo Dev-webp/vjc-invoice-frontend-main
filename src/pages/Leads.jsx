@@ -1153,6 +1153,8 @@ function PendingAssignmentTab() {
   const [loading, setLoading] = useState(true);
   const [notesOpen, setNotesOpen] = useState(false);
   const [notesLead, setNotesLead] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);   // NEW
+  const [assignOpen, setAssignOpen] = useState(false);  // NEW
 
   const fetchPending = async () => {
     setLoading(true);
@@ -1173,6 +1175,16 @@ function PendingAssignmentTab() {
     return () => clearInterval(interval);
   }, []);
 
+  // NEW — checkbox select helpers (same pattern as View Enquiry tab)
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+  const toggleSelectAll = () => {
+    setSelectedIds(selectedIds.length === leads.length ? [] : leads.map((l) => l.id));
+  };
+
   const openHistory = (lead) => {
     window.open(`/lead-history/${lead.id}`, "_blank");
   };
@@ -1183,6 +1195,16 @@ function PendingAssignmentTab() {
 
   return (
     <>
+    {/* NEW — manual Assign Enquiry action bar, same as View Enquiry tab */}
+    <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+      <Button
+        variant="outlined"
+        disabled={selectedIds.length === 0}
+        onClick={() => setAssignOpen(true)}
+      >
+        Assign Enquiry {selectedIds.length > 0 && `(${selectedIds.length})`}
+      </Button>
+    </Box>
     <TableContainer
       component={Paper}
       elevation={0}
@@ -1201,8 +1223,14 @@ function PendingAssignmentTab() {
           "& .MuiTableHead-root .MuiTableCell-root": { borderBottom: "none" },
         }}
       >
-        <TableHead sx={{ bgcolor: "#f5f5f5" }}>
+                <TableHead sx={{ bgcolor: "#f5f5f5" }}>
           <TableRow>
+            <TableCell padding="none" sx={{ width: 56, textAlign: "center" }}>
+              <Checkbox
+                checked={leads.length > 0 && selectedIds.length === leads.length}
+                onChange={toggleSelectAll}
+              />
+            </TableCell>
             <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 190 }}>Created - Updated</TableCell>
             <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 200 }}>Name</TableCell>
             <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 130 }}>Mobile</TableCell>
@@ -1220,13 +1248,19 @@ function PendingAssignmentTab() {
         <TableBody>
           {leads.length === 0 && (
             <TableRow>
-              <TableCell colSpan={12} align="center" sx={{ py: 4, color: "text.secondary" }}>
+              <TableCell colSpan={13} align="center" sx={{ py: 4, color: "text.secondary" }}>
                 No pending leads — everything got assigned.
               </TableCell>
             </TableRow>
           )}
-          {leads.map((lead) => (
+                    {leads.map((lead) => (
             <TableRow key={lead.id}>
+              <TableCell padding="none" sx={{ textAlign: "center" }}>
+                <Checkbox
+                  checked={selectedIds.includes(lead.id)}
+                  onChange={() => toggleSelect(lead.id)}
+                />
+              </TableCell>
               <TableCell sx={{ lineHeight: 1.8 }}>
                 <Typography variant="body2">
                   {lead.created_at
@@ -1287,15 +1321,24 @@ function PendingAssignmentTab() {
       </Table>
     </TableContainer>
 
-    <NotesDialog
+        <NotesDialog
       open={notesOpen}
       onClose={() => setNotesOpen(false)}
       lead={notesLead}
       onSaved={fetchPending}
     />
+
+    {/* NEW — manual assignment, moves lead out of Pending once assigned */}
+    <AssignEnquiryDialog
+      open={assignOpen}
+      onClose={() => setAssignOpen(false)}
+      selectedIds={selectedIds}
+      onAssigned={() => { setSelectedIds([]); fetchPending(); }}
+    />
     </>
   );
 }
+
 // ── Live SLA Countdown badge — updates every second ─────────────────────
 function SlaCountdown({ deadline, status }) {
   const [now, setNow] = useState(Date.now());
