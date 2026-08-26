@@ -20,6 +20,8 @@ const API_REPORT_MAP = {
   paymentsReceived:       "/reports/payments-received",
   arAgingSummary:         "/reports/ar-aging-summary",
   customerBalanceSummary: "/reports/customer-balance-summary",
+  leadSourceReport:       "/reports/lead-source",         // NEW
+  agentPerformanceReport: "/reports/agent-performance",   // NEW
 };
 
 // ─── Mock Data (for reports not yet connected — Expenses/Taxes/Projects/Activity) ──
@@ -75,6 +77,15 @@ const REPORT_CATEGORIES = [
       { id: "salesByCustomer", label: "Sales by Customer", desc: "Revenue breakdown per customer" },
       { id: "salesByItem", label: "Sales by Item", desc: "Top selling products/services" },
       { id: "salesBySalesPerson", label: "Sales by Sales Person", desc: "Performance by sales rep" },
+    ],
+  },
+  {
+    id: "leads",
+    icon: "👥",
+    label: "Leads",
+    reports: [
+      { id: "leadSourceReport", label: "Lead Source Report", desc: "Leads received per source (Google Ads, Facebook, Organic, Walk-ins)" },
+      { id: "agentPerformanceReport", label: "Agent Performance Report", desc: "Leads closed and Red Flags per agent" },
     ],
   },
   {
@@ -212,8 +223,10 @@ function ReportView({ reportId, onBack }) {
   const [spDay, setSpDay]     = useState("all");
 
   const apiPath = API_REPORT_MAP[reportId];
-  const isSalesPersonReport = reportId === "salesBySalesPerson";
-
+  const isSalesPersonReport =
+    reportId === "salesBySalesPerson" ||
+    reportId === "leadSourceReport" ||
+    reportId === "agentPerformanceReport";
   useEffect(() => {
     if (!apiPath) return;
     let active = true;
@@ -402,6 +415,40 @@ function ReportView({ reportId, onBack }) {
     </>
   );
 },
+        // NEW — Lead Source Report
+    leadSourceReport: () => {
+      const totalLeads = liveData.reduce((s, r) => s + Number(r.count || 0), 0);
+      return (
+        <>
+          <div style={{ marginBottom: 14, padding: "12px 16px", background: "#f7f8fc", borderRadius: 8, fontSize: 14, fontWeight: 600, color: "#333" }}>
+            Total Leads: {totalLeads}
+          </div>
+          <Table
+            columns={[
+              { key: "source", label: "Source", mono: true },
+              { key: "count", label: "No. of Leads", bold: true },
+              { key: "closed", label: "Closed" },
+              { key: "conversionRate", label: "Conversion %" },
+            ]}
+            rows={liveData}
+          />
+        </>
+      );
+    },
+
+    // NEW — Agent Performance Report
+    agentPerformanceReport: () => (
+      <Table
+        columns={[
+          { key: "agent", label: "Agent", mono: true },
+          { key: "totalLeads", label: "Total Leads Assigned", bold: true },
+          { key: "closed", label: "Leads Closed" },
+          { key: "redFlags", label: "Red Flags", badge: false },
+        ]}
+        rows={liveData}
+      />
+    ),
+
     expenseDetails: () => (
       <Table
         columns={[
