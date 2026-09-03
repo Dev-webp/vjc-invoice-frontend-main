@@ -290,6 +290,7 @@ const chipColor = (status) => {
   }
 };
 
+// AFTER
 const EMPTY_LEAD_FORM = {
   lead_name: "",
   contact_number: "",
@@ -302,6 +303,7 @@ const EMPTY_LEAD_FORM = {
   work_description: "",
   interested_countries: [],
   service_type: "",
+  direct_assign_staff_id: "",   // NEW — optional, skips round-robin if set
 };
 
 // Small reusable section header — light teal bar, matches reference screenshot
@@ -492,11 +494,22 @@ const boxedFieldSx = {
 };
 
 // ── Add Enquiry Form — inline (lives inside the "Add Enquiry" tab, not a popup) ──
-function AddEnquiryForm({ onSaved }) {
+// AFTER
+function AddEnquiryForm({ onSaved, isChairman }) {
   const [form, setForm] = useState(EMPTY_LEAD_FORM);
   const [departments, setDepartments] = useState(DEPARTMENTS);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
+  const [staffList, setStaffList] = useState([]);   // NEW — for direct-assign dropdown
+
+  // NEW — only chairman/mis-executive can fetch the employee list
+  useEffect(() => {
+    if (!isChairman) return;
+    fetch(`${API}/auth/employees`, { headers: authHeader() })
+      .then((r) => r.json())
+      .then((d) => { if (d.success) setStaffList(d.employees || []); })
+      .catch(() => {});
+  }, [isChairman]);
 
   const set = (field) => (e) => setForm({ ...form, [field]: e.target.value });
 
@@ -621,6 +634,7 @@ function AddEnquiryForm({ onSaved }) {
             </BoxedField>
           </Grid>
 
+          // AFTER
           <Grid item xs={12} sm={6} md={4}>
             <BoxedField
               icon={<CampaignIcon fontSize="small" />}
@@ -644,6 +658,30 @@ function AddEnquiryForm({ onSaved }) {
               </TextField>
             </BoxedField>
           </Grid>
+
+          {/* NEW — Direct Assign, chairman/mis-executive only. Leave blank
+              for normal round-robin behaviour (unchanged for everyone else). */}
+          {isChairman && (
+            <Grid item xs={12} sm={6} md={4}>
+              <BoxedField icon={<PersonIcon fontSize="small" />} label="Assign Directly To (Optional)">
+                <TextField
+                  select
+                  variant="standard"
+                  fullWidth
+                  sx={boxedFieldSx}
+                  value={form.direct_assign_staff_id}
+                  onChange={set("direct_assign_staff_id")}
+                  SelectProps={{ displayEmpty: true }}
+                  InputProps={{ disableUnderline: true }}
+                >
+                  <MenuItem value=""><em>Auto (Round Robin)</em></MenuItem>
+                  {staffList.map((s) => (
+                    <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>
+                  ))}
+                </TextField>
+              </BoxedField>
+            </Grid>
+          )}
         </Grid>
 
         {/* ── SECTION 2: Other Details — 3 fields per row, side by side ── */}
@@ -1653,8 +1691,10 @@ const [statusFilter, setStatusFilter] = useState("All");
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
       {/* ── Tab 0: Add Enquiry ── */}
+// AFTER
       {tab === 0 && (
         <AddEnquiryForm
+          isChairman={isChairman}
           onSaved={() => {
             fetchLeads();   // refresh the list so the new lead is already there
             setTab(1);      // jump straight to "View Enquiry" to show it
