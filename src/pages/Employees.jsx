@@ -9,7 +9,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import BadgeIcon from "@mui/icons-material/Badge";
 
-const API = "https://vjc-invoice-backend-main.vercel.app/api";
+const API = "https://invoice.vjcoverseas.com/api";
 
 const DEPARTMENTS = ["Sales", "Operations", "Accounts", "HR", "Marketing", "Management", "MIS", "Developer" ,  "Study/Visit Process Consultant",
   "Immigration Process Consultant"];

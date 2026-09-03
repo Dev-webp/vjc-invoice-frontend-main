@@ -97,9 +97,9 @@ export default function Login() {
  const API_URL =
   window.location.hostname === "localhost"
     ? "http://localhost:5000"
-    : "https://vjc-invoice-backend-main.vercel.app";
+    : "https://invoice.vjcoverseas.com/api";
   const res = await axios.post(
-    `${API_URL}/api/auth/login`,
+    `${API_URL}/auth/login`,
     {
       email,
       password,

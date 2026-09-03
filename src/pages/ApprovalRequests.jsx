@@ -5,7 +5,7 @@ import {
   DialogTitle, DialogContent, DialogActions, Divider, Grid, Pagination,
 } from "@mui/material";
 
-const API = "https://vjc-invoice-backend-main.vercel.app/api";
+const API = "https://invoice.vjcoverseas.com/api";
 const fmt = (n) => "₹" + Number(n || 0).toLocaleString("en-IN");
 
 function ApprovalRequests() {
