@@ -77,7 +77,7 @@ function Modal({ open, onClose, title, children, width = 480 }) {
       zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center"
     }}>
       <div onClick={e => e.stopPropagation()} style={{
-        background: "#fff", borderRadius: 14, padding: "28px 28px 24px",
+        background: "#fff", borderRadius: 16, padding: "32px 36px 28px",
         width, maxWidth: "95vw", maxHeight: "90vh", overflowY: "auto",
         boxShadow: "0 8px 40px rgba(0,0,0,0.18)",
         border: "0.5px solid #e0e0e0"
@@ -124,14 +124,14 @@ function SectionHeader({ icon, label }) {
 // ─── BoxedField — icon-in-box wrapper, matches the Add Enquiry look ─────
 function BoxedField({ icon, label, required, error, children }) {
   return (
-    <div style={{ marginBottom: 14 }}>
-      <div style={{ fontSize: 11.5, fontWeight: 600, color: "#555", marginBottom: 5 }}>
+    <div style={{ marginBottom: 18 }}>
+      <div style={{ fontSize: 12, fontWeight: 600, color: "#555", marginBottom: 6 }}>
         {label}{required && <span style={{ color: "#d32f2f" }}> *</span>}
       </div>
       <div style={{
-        display: "flex", alignItems: "center", gap: 9,
+        display: "flex", alignItems: "center", gap: 10,
         border: `1px solid ${error ? "#e24b4a" : "#d9dee3"}`,
-        borderRadius: 8, padding: "8px 11px", background: "#fff",
+        borderRadius: 9, padding: "11px 14px", background: "#fff",
         transition: "border-color 0.15s",
       }}>
         <span style={{ color: "#7b8794", fontSize: 14, flexShrink: 0, width: 16, textAlign: "center" }}>{icon}</span>
@@ -664,10 +664,9 @@ export default function Expenses() {
       </div>
 
       {/* Add / Edit Modal — redesigned to match the "Add Enquiry" boxed-field look */}
-      <Modal open={showAdd} onClose={() => setShowAdd(false)} title={editId ? "Edit Expense" : "New Expense"} width={620}>
-
+<Modal open={showAdd} onClose={() => setShowAdd(false)} title={editId ? "Edit Expense" : "New Expense"} width={760}>
         <SectionHeader icon="📋" label="Expense Details" />
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 24px" }}>
           <BoxedField icon="📅" label="Date" required error={formErrors.date}>
             <input type="date" {...inp("date")} />
           </BoxedField>
