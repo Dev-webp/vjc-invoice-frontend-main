@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 
 const API = axios.create({
-  baseURL: "https://vjc-invoice-backend-main.vercel.app/api"
+  baseURL: "https://invoice.vjcoverseas.com/api"
 });
 
 const fmt = (n) => "₹" + Number(n || 0).toLocaleString("en-IN");

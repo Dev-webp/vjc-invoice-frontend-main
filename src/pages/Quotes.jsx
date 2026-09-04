@@ -13,7 +13,7 @@ import AddIcon from "@mui/icons-material/Add";
 const getToken = () => localStorage.getItem("vjc_invoice_auth");
 
 const API = axios.create({
-  baseURL: "https://vjc-invoice-backend-main.vercel.app/api"
+  baseURL: "https://invoice.vjcoverseas.com/api"
 });
 
 // Every axios request lo auto token add avutundi

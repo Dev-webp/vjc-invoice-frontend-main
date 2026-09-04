@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 
 // ─── Config ──────────────────────────────────────────────────
-const API = "https://vjc-invoice-backend-main.vercel.app/api";
+const API = "https://invoice.vjcoverseas.com/api";
 
 const CATEGORIES = [
   "Travel", "Food", "Office Supplies", "Rent", "Mobile Recharge",
