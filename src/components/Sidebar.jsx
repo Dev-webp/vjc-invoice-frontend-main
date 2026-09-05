@@ -224,8 +224,11 @@ const finalMenuItems =
         flexDirection: "column",
       }}
     >
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "30px" }}>
+               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "30px" }}>
         <img src={vjcLogo} alt="VJC" style={{ width: "220px", height: "auto", objectFit: "contain" }} />
+        <span style={{ fontSize: "11px", letterSpacing: "1.5px", color: "#94a3b8", fontWeight: 500, marginTop: "8px" }}>
+          INVOICE PORTAL
+        </span>
       </div>
       <AssignmentNotifier />
 
