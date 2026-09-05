@@ -23,7 +23,8 @@ const MainLayout = () => {
 
   return (
     <div>
-      <Sidebar
+            <Sidebar
+  activePage={page}
   setPage={(value) => {
     console.log("Clicked =", value);
     setPage(value);
