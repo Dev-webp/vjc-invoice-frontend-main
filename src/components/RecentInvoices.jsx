@@ -57,12 +57,12 @@ function RecentInvoices({ invoices = [] }) {
       <TableContainer>
         <Table>
           <TableHead>
-            <TableRow>
-              <TableCell><b>Invoice No</b></TableCell>
-              <TableCell><b>Original Invoice</b></TableCell>
-<TableCell><b>Customer Name</b></TableCell>
-              <TableCell align="right"><b>Amount</b></TableCell>
-              <TableCell align="right"><b>Paid</b></TableCell>
+                        <TableRow>
+              <TableCell sx={{ borderRight: "1px solid #e5e7eb" }}><b>Invoice No</b></TableCell>
+              <TableCell sx={{ borderRight: "1px solid #e5e7eb" }}><b>Original Invoice</b></TableCell>
+<TableCell sx={{ borderRight: "1px solid #e5e7eb" }}><b>Customer Name</b></TableCell>
+              <TableCell align="right" sx={{ borderRight: "1px solid #e5e7eb" }}><b>Amount</b></TableCell>
+              <TableCell align="right" sx={{ borderRight: "1px solid #e5e7eb" }}><b>Paid</b></TableCell>
               <TableCell><b>Status</b></TableCell>
             </TableRow>
           </TableHead>
@@ -80,20 +80,20 @@ function RecentInvoices({ invoices = [] }) {
                 hover
                 sx={{ "&:hover": { backgroundColor: "#f8fafc" } }}
               >
-                <TableCell sx={{ color: "#2563eb", fontWeight: 600, cursor: "pointer" }}>
+                <TableCell sx={{ color: "#2563eb", fontWeight: 600, cursor: "pointer", borderRight: "1px solid #e5e7eb" }}>
                   {invoice.invoiceNo}
                 </TableCell>
 
-                <TableCell>
+                <TableCell sx={{ borderRight: "1px solid #e5e7eb" }}>
   {invoice.original_invoice_number ? invoice.original_invoice_number : "Original"}
 </TableCell>
-<TableCell>{invoice.customerName}</TableCell>
+<TableCell sx={{ borderRight: "1px solid #e5e7eb" }}>{invoice.customerName}</TableCell>
 
-                <TableCell align="right" sx={{ fontWeight: 700 }}>
+                <TableCell align="right" sx={{ fontWeight: 700, borderRight: "1px solid #e5e7eb" }}>
                   {fmt(invoice.amount)}
                 </TableCell>
 
-                <TableCell align="right" sx={{ fontWeight: 700, color: "#16a34a" }}>
+                <TableCell align="right" sx={{ fontWeight: 700, color: "#16a34a", borderRight: "1px solid #e5e7eb" }}>
                   {fmt(invoice.paidAmount)}
                 </TableCell>
 
