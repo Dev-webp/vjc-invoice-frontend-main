@@ -1691,7 +1691,7 @@ const [statusFilter, setStatusFilter] = useState("All");
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
       {/* ── Tab 0: Add Enquiry ── */}
-// AFTER
+
       {tab === 0 && (
         <AddEnquiryForm
           isChairman={isChairman}
