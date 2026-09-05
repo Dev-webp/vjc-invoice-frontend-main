@@ -130,10 +130,10 @@ const fetchAll = async () => {
           </Box>
           <Box>
             <Typography variant="h6" fontWeight="bold" sx={{ whiteSpace: "nowrap" }}>
-              {greeting}, {user?.role === "chairman" ? "Dr.Mani" : (user?.name || "User")}
+              {greeting}, <span style={{ color: "#F5820C" }}>{user?.role === "chairman" ? "Dr.Mani" : (user?.name || "User")}</span> 👋
             </Typography>
-            <Typography sx={{ fontSize: "13px", color: "#6b7280", whiteSpace: "nowrap" }}>
-              Welcome back to VJC Invoice Software
+            <Typography sx={{ fontSize: "12px", color: "#6b7280", whiteSpace: "nowrap", mt: 0.3 }}>
+              📅 {new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}  •  🕐 {new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
             </Typography>
           </Box>
         </Box>
