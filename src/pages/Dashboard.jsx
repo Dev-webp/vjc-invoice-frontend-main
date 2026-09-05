@@ -13,7 +13,9 @@ import {
   TextField,
   MenuItem,
 } from "@mui/material";
-
+import PaidIcon from "@mui/icons-material/Paid";
+import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
+import GroupsIcon from "@mui/icons-material/Groups";
 const API = axios.create({
   baseURL: "https://invoice.vjcoverseas.com/api"
 });
@@ -138,18 +140,35 @@ const fetchAll = async () => {
 
         <Box sx={{ width: "1px", alignSelf: "stretch", background: "#e5e7eb" }} />
 
-        <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-          <Box sx={{ borderLeft: "3px solid #F5820C", pl: 2, py: 0.5, whiteSpace: "nowrap" }}>
-            <Typography variant="h6" fontWeight="bold">{fmt(kpis.paymentsReceived)}</Typography>
-            <Typography sx={{ fontSize: "12px", color: "#6b7280" }}>Total Revenue</Typography>
+                <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+          <Box sx={{ border: "1px solid #F5820C", borderRadius: "10px", px: 1.75, py: 1, display: "flex", alignItems: "center", gap: 1.5, background: "#FEF3E8", whiteSpace: "nowrap" }}>
+            <Box sx={{ width: 34, height: 34, borderRadius: "8px", background: "#F5820C", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <PaidIcon sx={{ color: "#fff", fontSize: 18 }} />
+            </Box>
+            <Box>
+              <Typography variant="body1" fontWeight="bold" sx={{ color: "#7c3a05" }}>{fmt(kpis.paymentsReceived)}</Typography>
+              <Typography sx={{ fontSize: "10px", color: "#7c3a05" }}>Total Revenue</Typography>
+            </Box>
           </Box>
-          <Box sx={{ borderLeft: "3px solid #dc2626", pl: 2, py: 0.5, whiteSpace: "nowrap" }}>
-            <Typography variant="h6" fontWeight="bold">{fmt(kpis.pendingAmount)}</Typography>
-            <Typography sx={{ fontSize: "12px", color: "#6b7280" }}>Pending Amount</Typography>
+
+          <Box sx={{ border: "1px solid #dc2626", borderRadius: "10px", px: 1.75, py: 1, display: "flex", alignItems: "center", gap: 1.5, background: "#FEECEC", whiteSpace: "nowrap" }}>
+            <Box sx={{ width: 34, height: 34, borderRadius: "8px", background: "#dc2626", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <HourglassEmptyIcon sx={{ color: "#fff", fontSize: 18 }} />
+            </Box>
+            <Box>
+              <Typography variant="body1" fontWeight="bold" sx={{ color: "#7c1414" }}>{fmt(kpis.pendingAmount)}</Typography>
+              <Typography sx={{ fontSize: "10px", color: "#7c1414" }}>Pending Amount</Typography>
+            </Box>
           </Box>
-          <Box sx={{ borderLeft: "3px solid #16a34a", pl: 2, py: 0.5, whiteSpace: "nowrap" }}>
-            <Typography variant="h6" fontWeight="bold">{kpis.totalCustomers}</Typography>
-            <Typography sx={{ fontSize: "12px", color: "#6b7280" }}>Total Customers</Typography>
+
+          <Box sx={{ border: "1px solid #16a34a", borderRadius: "10px", px: 1.75, py: 1, display: "flex", alignItems: "center", gap: 1.5, background: "#EAF7EE", whiteSpace: "nowrap" }}>
+            <Box sx={{ width: 34, height: 34, borderRadius: "8px", background: "#16a34a", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <GroupsIcon sx={{ color: "#fff", fontSize: 18 }} />
+            </Box>
+            <Box>
+              <Typography variant="body1" fontWeight="bold" sx={{ color: "#0f5c26" }}>{kpis.totalCustomers}</Typography>
+              <Typography sx={{ fontSize: "10px", color: "#0f5c26" }}>Total Customers</Typography>
+            </Box>
           </Box>
         </Box>
       </Box>
