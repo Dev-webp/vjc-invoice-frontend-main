@@ -18,7 +18,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import vjcLogo from "../assets/vjc-logo-badge.png";
 import FactCheckIcon from "@mui/icons-material/FactCheck";
 import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
-
+import vjcLogo from "../assets/vjc-logo-badge.png";
 const API = "https://invoice.vjcoverseas.com/api";
 const authHeader = () => ({
   Authorization: `Bearer ${localStorage.getItem("vjc_invoice_auth")}`,
@@ -224,26 +224,9 @@ const finalMenuItems =
         flexDirection: "column",
       }}
     >
-     <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "30px" }}>
-        <img src={vjcLogo} alt="VJC" style={{ width: "48px", height: "48px", objectFit: "contain" }} />
-        <div>
-         <h2
-  style={{
-    fontSize: "22px",
-    fontWeight: 600,
-    margin: 0,
-    lineHeight: 1.1,
-    whiteSpace: "nowrap",
-  }}
->
-  VJC Overseas
-</h2>
-          <span style={{ fontSize: "11px", letterSpacing: "1.5px", color: "#94a3b8", fontWeight: 500 }}>
-            INVOICE PORTAL
-          </span>
-        </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "30px" }}>
+        <img src={vjcLogo} alt="VJC" style={{ width: "220px", height: "auto", objectFit: "contain" }} />
       </div>
-
       <AssignmentNotifier />
 
       <div style={{ flex: 1 }}>
