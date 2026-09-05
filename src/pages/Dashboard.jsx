@@ -140,34 +140,34 @@ const fetchAll = async () => {
 
         <Box sx={{ width: "1px", alignSelf: "stretch", background: "#e5e7eb" }} />
 
-                <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-          <Box sx={{ borderLeft: "4px solid #F5820C", borderRadius: "6px", px: 1.75, py: 1, display: "flex", alignItems: "center", gap: 1.5, background: "#fff", boxShadow: "0px 2px 6px rgba(0,0,0,0.06)", whiteSpace: "nowrap" }}>
-            <Box sx={{ width: 34, height: 34, borderRadius: "8px", background: "#FEF3E8", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <PaidIcon sx={{ color: "#F5820C", fontSize: 18 }} />
+                <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+          <Box sx={{ borderLeft: "4px solid #F5820C", borderRadius: "8px", px: 2.5, py: 1.75, display: "flex", alignItems: "center", gap: 2, background: "#fff", boxShadow: "0px 2px 6px rgba(0,0,0,0.06)", whiteSpace: "nowrap" }}>
+            <Box sx={{ width: 42, height: 42, borderRadius: "10px", background: "#FEF3E8", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <PaidIcon sx={{ color: "#F5820C", fontSize: 22 }} />
             </Box>
             <Box>
-              <Typography variant="body1" fontWeight="bold" sx={{ color: "#111827" }}>{fmt(kpis.paymentsReceived)}</Typography>
-              <Typography sx={{ fontSize: "10px", color: "#F5820C", fontWeight: 600 }}>Total Revenue</Typography>
+              <Typography variant="h6" fontWeight="bold" sx={{ color: "#111827" }}>{fmt(kpis.paymentsReceived)}</Typography>
+              <Typography sx={{ fontSize: "12px", color: "#F5820C", fontWeight: 600 }}>Total Revenue</Typography>
             </Box>
           </Box>
 
-          <Box sx={{ borderLeft: "4px solid #dc2626", borderRadius: "6px", px: 1.75, py: 1, display: "flex", alignItems: "center", gap: 1.5, background: "#fff", boxShadow: "0px 2px 6px rgba(0,0,0,0.06)", whiteSpace: "nowrap" }}>
-            <Box sx={{ width: 34, height: 34, borderRadius: "8px", background: "#FEECEC", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <HourglassEmptyIcon sx={{ color: "#dc2626", fontSize: 18 }} />
+          <Box sx={{ borderLeft: "4px solid #dc2626", borderRadius: "8px", px: 2.5, py: 1.75, display: "flex", alignItems: "center", gap: 2, background: "#fff", boxShadow: "0px 2px 6px rgba(0,0,0,0.06)", whiteSpace: "nowrap" }}>
+            <Box sx={{ width: 42, height: 42, borderRadius: "10px", background: "#FEECEC", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <HourglassEmptyIcon sx={{ color: "#dc2626", fontSize: 22 }} />
             </Box>
             <Box>
-              <Typography variant="body1" fontWeight="bold" sx={{ color: "#111827" }}>{fmt(kpis.pendingAmount)}</Typography>
-              <Typography sx={{ fontSize: "10px", color: "#dc2626", fontWeight: 600 }}>Pending Amount</Typography>
+              <Typography variant="h6" fontWeight="bold" sx={{ color: "#111827" }}>{fmt(kpis.pendingAmount)}</Typography>
+              <Typography sx={{ fontSize: "12px", color: "#dc2626", fontWeight: 600 }}>Pending Amount</Typography>
             </Box>
           </Box>
 
-          <Box sx={{ borderLeft: "4px solid #16a34a", borderRadius: "6px", px: 1.75, py: 1, display: "flex", alignItems: "center", gap: 1.5, background: "#fff", boxShadow: "0px 2px 6px rgba(0,0,0,0.06)", whiteSpace: "nowrap" }}>
-            <Box sx={{ width: 34, height: 34, borderRadius: "8px", background: "#EAF7EE", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <GroupsIcon sx={{ color: "#16a34a", fontSize: 18 }} />
+          <Box sx={{ borderLeft: "4px solid #16a34a", borderRadius: "8px", px: 2.5, py: 1.75, display: "flex", alignItems: "center", gap: 2, background: "#fff", boxShadow: "0px 2px 6px rgba(0,0,0,0.06)", whiteSpace: "nowrap" }}>
+            <Box sx={{ width: 42, height: 42, borderRadius: "10px", background: "#EAF7EE", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <GroupsIcon sx={{ color: "#16a34a", fontSize: 22 }} />
             </Box>
             <Box>
-              <Typography variant="body1" fontWeight="bold" sx={{ color: "#111827" }}>{kpis.totalCustomers}</Typography>
-              <Typography sx={{ fontSize: "10px", color: "#16a34a", fontWeight: 600 }}>Total Customers</Typography>
+              <Typography variant="h6" fontWeight="bold" sx={{ color: "#111827" }}>{kpis.totalCustomers}</Typography>
+              <Typography sx={{ fontSize: "12px", color: "#16a34a", fontWeight: 600 }}>Total Customers</Typography>
             </Box>
           </Box>
         </Box>
