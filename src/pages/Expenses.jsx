@@ -9,7 +9,7 @@ const API = "https://invoice.vjcoverseas.com/api";
 
 const CATEGORIES = [
   "Travel", "Food", "Office Supplies", "Rent", "Mobile Recharge",
-  "Internet Recharge", "Water Bill", "Electricity Bill", "Others",
+  "Internet Recharge", "Water Bill", "Electricity Bill", "Petty Cash", "Others",
 ];
 
 const PAYMENT_METHODS = ["Cash", "Card", "Bank Transfer", "UPI"];
