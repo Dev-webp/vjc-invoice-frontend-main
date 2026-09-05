@@ -236,7 +236,7 @@ const fetchAll = async () => {
                   <Typography
                     variant="body2"
                     color="text.secondary"
-                    sx={{ fontSize: "11px", whiteSpace: "nowrap" }}
+                    sx={{ fontSize: "13px", fontWeight: 600, whiteSpace: "nowrap" }}
                   >
                     {card.title}
                   </Typography>
