@@ -203,8 +203,8 @@ function ExpenseDueBell() {
     return () => clearInterval(interval);
   }, []);
 
-  return (
-    <div style={{ position: "fixed", top: 18, right: 28, zIndex: 500 }}>
+    return (
+    <div style={{ position: "relative", zIndex: 500 }}>
       <button onClick={() => setOpen(o => !o)} title="Due / Unpaid Expenses" style={{
         position: "relative", background: "#fff", border: "1px solid #e0e0e0",
         borderRadius: "50%", width: 42, height: 42, cursor: "pointer",
@@ -507,25 +507,25 @@ export default function Expenses() {
   return (
     <div style={{ padding: "24px 28px", background: "#f4f6fb", minHeight: "100vh", fontFamily: "Inter, -apple-system, sans-serif" }}>
 
-      {/* Top-right due/unpaid notification bell — fixed position so it shows
-          regardless of scroll, per the "top right corner" requirement */}
-      <ExpenseDueBell />
-
-      {/* Header */}
+           {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: "#1a1a2e", margin: 0 }}>Expenses</h1>
           <p style={{ fontSize: 13, color: "#888", margin: "4px 0 0" }}>Track and manage all business expenses</p>
         </div>
-        <button onClick={openAdd} style={{
-          background: "#185FA5", color: "#fff", border: "none", borderRadius: 8,
-          padding: "10px 18px", fontSize: 14, fontWeight: 600, cursor: "pointer",
-          display: "flex", alignItems: "center", gap: 7
-        }}>
-          + New Expense
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {/* Due/unpaid notification bell — now sits right next to the button
+              instead of floating fixed top-right */}
+          <ExpenseDueBell />
+          <button onClick={openAdd} style={{
+            background: "#185FA5", color: "#fff", border: "none", borderRadius: 8,
+            padding: "10px 18px", fontSize: 14, fontWeight: 600, cursor: "pointer",
+            display: "flex", alignItems: "center", gap: 7
+          }}>
+            + New Expense
+          </button>
+        </div>
       </div>
-
       {/* Stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 14, marginBottom: 24 }}>
         {[
