@@ -17,6 +17,7 @@ import PaidIcon from "@mui/icons-material/Paid";
 import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import GroupsIcon from "@mui/icons-material/Groups";
 import PersonIcon from "@mui/icons-material/Person";
+import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 const API = axios.create({
   baseURL: "https://invoice.vjcoverseas.com/api"
 });
@@ -80,11 +81,11 @@ const fetchAll = async () => {
 
   setLoading(false);
 };
-  const cards = [
-    { title: "Total Customers", value: kpis.totalCustomers },
-    { title: "Total Invoices", value: kpis.totalInvoices },
-    { title: "Payments Received", value: fmt(kpis.paymentsReceived) },
-    { title: "Pending Amount", value: fmt(kpis.pendingAmount) },
+    const cards = [
+    { title: "Total Customers", value: kpis.totalCustomers, icon: <GroupsIcon sx={{ fontSize: 18 }} />, color: "#185FA5", bg: "#E6F1FB" },
+    { title: "Total Invoices", value: kpis.totalInvoices, icon: <ReceiptLongIcon sx={{ fontSize: 18 }} />, color: "#534AB7", bg: "#EEEDFE" },
+    { title: "Payments Received", value: fmt(kpis.paymentsReceived), icon: <PaidIcon sx={{ fontSize: 18 }} />, color: "#3B6D11", bg: "#EAF3DE" },
+    { title: "Pending Amount", value: fmt(kpis.pendingAmount), icon: <HourglassEmptyIcon sx={{ fontSize: 18 }} />, color: "#A32D2D", bg: "#FCEBEB" },
   ];
 
   if (loading) {
@@ -191,7 +192,7 @@ const fetchAll = async () => {
 
       {/* KPI Cards */}
 
-      <Grid container spacing={3}>
+            <Grid container spacing={3}>
         {cards.map((card) => (
           <Grid
             item
@@ -202,34 +203,51 @@ const fetchAll = async () => {
           >
             <Card
               sx={{
-                borderRadius: 4,
+                borderRadius: 2,
+                borderLeft: `4px solid ${card.color}`,
                 boxShadow:
                   "0px 4px 12px rgba(0,0,0,0.08)",
                 minHeight: "110px",
                 transition: "0.3s",
+                display: "flex",
+                alignItems: "center",
                 "&:hover": {
                   transform: "translateY(-5px)",
                 },
               }}
             >
-              <CardContent>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
+              <CardContent sx={{ display: "flex", alignItems: "center", gap: 1.5, width: "100%" }}>
+                <Box
                   sx={{
-                    fontWeight: 600,
-                    mb: 1,
+                    width: 38,
+                    height: 38,
+                    borderRadius: "10px",
+                    background: card.bg,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    color: card.color,
                   }}
                 >
-                  {card.title}
-                </Typography>
-
-                <Typography
-                  variant="h6"
-                  fontWeight="bold"
-                >
-                  {card.value}
-                </Typography>
+                  {card.icon}
+                </Box>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ fontSize: "11px", whiteSpace: "nowrap" }}
+                  >
+                    {card.title}
+                  </Typography>
+                  <Typography
+                    variant="h6"
+                    fontWeight="bold"
+                    sx={{ fontSize: "16px", whiteSpace: "nowrap" }}
+                  >
+                    {card.value}
+                  </Typography>
+                </Box>
               </CardContent>
             </Card>
           </Grid>
