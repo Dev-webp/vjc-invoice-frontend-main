@@ -118,15 +118,14 @@ const fetchAll = async () => {
               width: 52,
               height: 52,
               borderRadius: "50%",
-              background: "#eef2ff",
+              background: "#1e3a8a",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: 24,
               flexShrink: 0,
             }}
           >
-            👋
+            <PersonIcon sx={{ color: "#fff", fontSize: 28 }} />
           </Box>
           <Box>
             <Typography variant="h6" fontWeight="bold" sx={{ whiteSpace: "nowrap" }}>
