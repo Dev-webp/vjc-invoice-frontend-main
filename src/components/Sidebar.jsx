@@ -226,7 +226,7 @@ const finalMenuItems =
     >
                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "30px" }}>
         <img src={vjcLogo} alt="VJC" style={{ width: "220px", height: "auto", objectFit: "contain" }} />
-        <span style={{ fontSize: "11px", letterSpacing: "1.5px", color: "#94a3b8", fontWeight: 500, marginTop: "8px" }}>
+                <span style={{ fontSize: "13px", letterSpacing: "3px", color: "#ffffff", fontWeight: 700, marginTop: "10px", textTransform: "uppercase" }}>
           INVOICE PORTAL
         </span>
       </div>
