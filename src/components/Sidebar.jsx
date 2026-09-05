@@ -211,7 +211,7 @@ const finalMenuItems =
       style={{
         width: "290px",
         height: "100vh",
-        background: "#155DA6",
+        background: "#0B3D6E",
         color: "white",
         padding: "20px",
         position: "fixed",
