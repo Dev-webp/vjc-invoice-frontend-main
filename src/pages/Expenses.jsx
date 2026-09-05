@@ -19,9 +19,9 @@ const emptyForm = {
   date: "", category: "", customer: "VJC", amount: "", billable: "true",
   paymentStatus: "Unpaid", notes: "",
   // NEW fields
-  vendorSupplier: "", paymentDate: "", paymentMethod: "", invoiceNumber: "",
+    vendorSupplier: "", paymentDate: "", paymentMethod: "", invoiceNumber: "",
   receiptUrl: "", gstApplicable: "false", gstAmount: "",
-  department: "", paidBy: "Company", dueDate: "",
+  department: "", paidBy: "Company", paidByName: "VJC", dueDate: "",
 };
 
 const STATUS_BADGE = {
@@ -51,8 +51,10 @@ const mapRow = (r) => ({
   gstAmount:      Number(r.gst_amount || 0),
   department:     r.department || "",
   paidBy:         r.paid_by || "Company",
+  paidByName:     r.paid_by_name || "VJC",
   dueDate:        r.due_date?.slice(0, 10) || "",
 });
+
 
 // ─── Badge ───────────────────────────────────────────────────
 function Badge({ status }) {
@@ -345,6 +347,7 @@ export default function Expenses() {
       gstAmount:      e.gstAmount ? String(e.gstAmount) : "",
       department:     e.department || "",
       paidBy:         e.paidBy || "Company",
+      paidByName:     e.paidByName || (e.paidBy === "Employee" ? "" : "VJC"),
       dueDate:        e.dueDate || "",
     });
     setFormErrors({});
@@ -357,7 +360,8 @@ export default function Expenses() {
     if (!form.category.trim()) errs.category = "Required";
     if (!form.amount || isNaN(Number(form.amount)) || Number(form.amount) <= 0)
       errs.amount = "Enter a valid amount";
-    if (!form.date) errs.date = "Required";
+       if (!form.date) errs.date = "Required";
+    if (form.paidBy === "Employee" && !form.paidByName.trim()) errs.paidByName = "Enter employee name";
     setFormErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -408,8 +412,9 @@ export default function Expenses() {
       receipt_url:     form.receiptUrl || null,
       gst_applicable:  form.gstApplicable === "true",
       gst_amount:      form.gstAmount ? Number(form.gstAmount) : 0,
-      department:      form.department.trim() || null,
+            department:      form.department.trim() || null,
       paid_by:         form.paidBy,
+      paid_by_name:    form.paidBy === "Employee" ? (form.paidByName.trim() || null) : "VJC",
       due_date:        form.dueDate || null,
     };
 
@@ -738,10 +743,37 @@ export default function Expenses() {
           </BoxedField>
 
           <BoxedField icon="👤" label="Paid By">
-            <select {...inp("paidBy")}>
+            <select
+              value={form.paidBy}
+              onChange={e => {
+                const val = e.target.value;
+                setForm(f => ({
+                  ...f,
+                  paidBy: val,
+                  paidByName: val === "Company" ? "VJC" : "",
+                }));
+              }}
+              style={plainInputStyle}
+            >
               {PAID_BY_OPTIONS.map(p => <option key={p}>{p}</option>)}
             </select>
           </BoxedField>
+
+          {form.paidBy === "Employee" ? (
+            <BoxedField icon="🧑‍💼" label="Employee Name" required error={formErrors.paidByName}>
+              <input
+                type="text"
+                value={form.paidByName}
+                onChange={e => setForm(f => ({ ...f, paidByName: e.target.value }))}
+                placeholder="Enter employee name"
+                style={plainInputStyle}
+              />
+            </BoxedField>
+          ) : (
+            <BoxedField icon="🏢" label="Paid By (Company)">
+              <input type="text" value="VJC" readOnly style={{ ...plainInputStyle, color: "#888" }} />
+            </BoxedField>
+          )}
 
           <BoxedField icon="🏬" label="Department / Project">
             <input type="text" {...inp("department")} placeholder="e.g. Germany OC Team" />
