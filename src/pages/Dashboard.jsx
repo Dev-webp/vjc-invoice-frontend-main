@@ -96,83 +96,62 @@ const fetchAll = async () => {
     <div>
       {/* Welcome Banner */}
 
-      <Box
+            <Box
         sx={{
-          background:
-            "linear-gradient(135deg, #1e3a8a, #7c3aed)",
-          color: "white",
-          p: 4,
+          background: "#fff",
+          border: "1px solid #e5e7eb",
+          p: 3,
           borderRadius: 4,
           mb: 4,
-          boxShadow: "0px 8px 20px rgba(0,0,0,0.12)",
+          display: "flex",
+          alignItems: "center",
+          gap: 4,
+          flexWrap: "wrap",
+          boxShadow: "0px 4px 12px rgba(0,0,0,0.06)",
         }}
       >
-       <Typography
-  variant="h6"
-  fontWeight="bold"
->
-   👋 {greeting}, {user?.role === "chairman" ? "Dr.Mani" : (user?.name || "User")}
-</Typography>
-
-        <Typography
-          sx={{
-            mt: 1,
-            opacity: 0.9,
-            fontSize: "14px",
-          }}
-        >
-          Welcome back to VJC Invoice Software
-        </Typography>
-
-        <Grid container spacing={4} sx={{ mt: 2 }}>
-          <Grid item xs={12} md={4}>
-            <Typography
-              variant="body2"
-              sx={{ opacity: 0.8 }}
-            >
-              Total Revenue
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Box
+            sx={{
+              width: 52,
+              height: 52,
+              borderRadius: "50%",
+              background: "#eef2ff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 24,
+              flexShrink: 0,
+            }}
+          >
+            👋
+          </Box>
+          <Box>
+            <Typography variant="h6" fontWeight="bold" sx={{ whiteSpace: "nowrap" }}>
+              {greeting}, {user?.role === "chairman" ? "Dr.Mani" : (user?.name || "User")}
             </Typography>
-
-            <Typography
-              variant="h6"
-              fontWeight="bold"
-            >
-              {fmt(kpis.paymentsReceived)}
+            <Typography sx={{ fontSize: "13px", color: "#6b7280", whiteSpace: "nowrap" }}>
+              Welcome back to VJC Invoice Software
             </Typography>
-          </Grid>
+          </Box>
+        </Box>
 
-          <Grid item xs={12} md={4}>
-            <Typography
-              variant="body2"
-              sx={{ opacity: 0.8 }}
-            >
-              Pending Amount
-            </Typography>
+        <Box sx={{ width: "1px", alignSelf: "stretch", background: "#e5e7eb" }} />
 
-            <Typography
-              variant="h6"
-              fontWeight="bold"
-            >
-              {fmt(kpis.pendingAmount)}
-            </Typography>
-          </Grid>
-
-<Grid item xs={12} md={4}>
-            <Typography
-              variant="body2"
-              sx={{ opacity: 0.8 }}
-            >
-              Total Customers
-            </Typography>
-
-            <Typography
-              variant="h6"
-              fontWeight="bold"
-            >
-              {kpis.totalCustomers}
-            </Typography>
-          </Grid>
-        </Grid>
+        <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+          <Box sx={{ borderLeft: "3px solid #F5820C", pl: 2, py: 0.5, whiteSpace: "nowrap" }}>
+            <Typography variant="h6" fontWeight="bold">{fmt(kpis.paymentsReceived)}</Typography>
+            <Typography sx={{ fontSize: "12px", color: "#6b7280" }}>Total Revenue</Typography>
+          </Box>
+          <Box sx={{ borderLeft: "3px solid #dc2626", pl: 2, py: 0.5, whiteSpace: "nowrap" }}>
+            <Typography variant="h6" fontWeight="bold">{fmt(kpis.pendingAmount)}</Typography>
+            <Typography sx={{ fontSize: "12px", color: "#6b7280" }}>Pending Amount</Typography>
+          </Box>
+          <Box sx={{ borderLeft: "3px solid #16a34a", pl: 2, py: 0.5, whiteSpace: "nowrap" }}>
+            <Typography variant="h6" fontWeight="bold">{kpis.totalCustomers}</Typography>
+            <Typography sx={{ fontSize: "12px", color: "#6b7280" }}>Total Customers</Typography>
+          </Box>
+        </Box>
       </Box>
 
       {/* Business Overview */}
