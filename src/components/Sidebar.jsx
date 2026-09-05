@@ -211,7 +211,7 @@ const finalMenuItems =
       style={{
         width: "290px",
         height: "100vh",
-        background: "#0f172a",
+        background: "#155DA6",
         color: "white",
         padding: "20px",
         position: "fixed",
@@ -262,9 +262,9 @@ const finalMenuItems =
               transition: "0.3s",
               background:
                 activePage === item.name
-                  ? "#2563eb"
+                  ? "#F5820C"
                   : index === 0 && !activePage
-                  ? "#2563eb"
+                  ? "#F5820C"
                   : "transparent",
             }}
             onMouseEnter={(e) => {
