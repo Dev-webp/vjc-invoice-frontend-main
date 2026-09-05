@@ -18,7 +18,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import vjcLogo from "../assets/vjc-logo-badge.png";
 import FactCheckIcon from "@mui/icons-material/FactCheck";
 import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
-import vjcLogo from "../assets/vjc-logo-badge.png";
+
 const API = "https://invoice.vjcoverseas.com/api";
 const authHeader = () => ({
   Authorization: `Bearer ${localStorage.getItem("vjc_invoice_auth")}`,
