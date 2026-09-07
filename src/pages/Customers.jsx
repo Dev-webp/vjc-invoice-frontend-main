@@ -301,6 +301,7 @@ function InvoiceDialog({ open, onClose, customer, onSuccess }) {
 const [form, setForm] = useState(EMPTY_INVOICE_FORM);
 const [loading, setLoading] = useState(false);
 const [invoiceErrors, setInvoiceErrors] = useState({});
+const [discountOnly, setDiscountOnly] = useState(false);
 
 const [services, setServices] = useState([]);
   const [paxList, setPaxList] = useState([]);           // ✅ NEW
@@ -341,6 +342,7 @@ const [services, setServices] = useState([]);
      setPassThroughExpenses([]); 
   }
 
+    setDiscountOnly(false);
   setSearchOpen(false);
 }, [open, customer]);
 
@@ -396,7 +398,8 @@ const taxPercent = 18;
   const passThroughTotal = passThroughExpenses.reduce((s, x) => s + Number(x.amount || 0), 0); // NEW
   const totalAmountNum = Number(form.totalAmount || 0) + extraServicesTotal;
   // passThroughTotal ఇక్కడ కలవదు — GST calculation తర్వాత, direct గా Grand Total లో కలుస్తుంది
-  const discountNum = Number(form.discount || 0);
+  const discountPercent = Number(form.discount || 0);
+  const discountNum = (totalAmountNum * discountPercent) / 100;
   const paidAmountNum = Number(form.paidAmount || 0);
   const invoiceAmount = Math.max(totalAmountNum - discountNum, 0);
 
@@ -421,14 +424,16 @@ const set = (field) => (e) =>
     [field]: e.target.value,
   }));
   const handleSubmit = async () => {
-    const errs = {};
+        const errs = {};
     if (!activeCustomer) errs.clientName = "Client is required";
     if (!form.totalAmount) errs.totalAmount = "Total Amount is required";
-    if (!form.paymentMode) errs.paymentMode = "Payment Mode is required";
+    if (!discountOnly) {
+      if (!form.paymentMode) errs.paymentMode = "Payment Mode is required";
 if (needsRef && !form.referenceNo?.trim()) errs.referenceNo = `${refLabel} is required`;
-    if (balanceAmount > 0 && !form.dueDate) errs.dueDate = "Due Date is required";
-    if (form.paymentMode && form.paymentMode !== "Cash" && !form.attachment) {
-      errs.attachment = "Payment screenshot/attachment is required for this payment mode";
+      if (balanceAmount > 0 && !form.dueDate) errs.dueDate = "Due Date is required";
+      if (form.paymentMode && form.paymentMode !== "Cash" && !form.attachment) {
+        errs.attachment = "Payment screenshot/attachment is required for this payment mode";
+      }
     }
     if (!form.serviceType) errs.serviceType = "Service Type is required";
     if (!form.stateBy) errs.stateBy = "State By is required";
@@ -481,11 +486,12 @@ items: [
           grand_total: grandTotal,
           paid_amount: paidAmountNum,
           balance_amount: balanceAmount,
-due_date: balanceAmount > 0 ? form.dueDate : null,
+          due_date: balanceAmount > 0 ? form.dueDate : null,
           service_type: form.serviceType,
           state_by: form.stateBy,
           notes: form.description,
           screenshot_base64: screenshotBase64,
+          is_discount_only: discountOnly,
         }),
       });
       const result = await res.json();
@@ -552,7 +558,26 @@ due_date: balanceAmount > 0 ? form.dueDate : null,
         </IconButton>
       </Box>
 
-      <DialogContent sx={{ px: 4, pt: 3, pb: 1 }}>
+            <DialogContent sx={{ px: 4, pt: 3, pb: 1 }}>
+
+        <Box sx={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          bgcolor: "#fff8e1", border: "1px solid #ffe082", borderRadius: 1,
+          px: 2, py: 1, mb: 2,
+        }}>
+          <Typography sx={{ fontSize: 13, fontWeight: 600, color: "#856404" }}>
+            Request discount approval only (payment not collected yet)
+          </Typography>
+          <Button
+            size="small"
+            variant={discountOnly ? "contained" : "outlined"}
+            color="warning"
+            onClick={() => setDiscountOnly((v) => !v)}
+            sx={{ textTransform: "none" }}
+          >
+            {discountOnly ? "ON" : "OFF"}
+          </Button>
+        </Box>
 
         {/* Top row */}
         <Box sx={{ display: "flex", alignItems: "flex-end", gap: 2, mb: 1 }}>
@@ -870,7 +895,7 @@ setSearchOpen(false);
   />
 </FieldRow>
 
-            <FieldRow label="Discount">
+                        <FieldRow label="Discount (%)">
               <TextField
                 fullWidth size="small"
                 value={form.discount}
