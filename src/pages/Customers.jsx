@@ -1497,15 +1497,16 @@ const displayCustomers = sortedCustomers.filter((customer) => {
                 <TableCell sx={{ fontWeight: 700 }}>Payment </TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Outstanding</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Last Transaction</TableCell>
-                <TableCell sx={{ fontWeight: 700, minWidth: 230 }}>Actions</TableCell>
+                               <TableCell sx={{ fontWeight: 700, minWidth: 230 }}>Actions</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>PDFs</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Discount Status</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {customers.length === 0 && (
                 <TableRow>
-                                    <TableCell colSpan={11} align="center" sx={{ py: 4, color: "text.secondary" }}>
+                                                                       <TableCell colSpan={12} align="center" sx={{ py: 4, color: "text.secondary" }}>
                     No customers found. Click "+ ADD CUSTOMER" to create a customer.
                   </TableCell>
                 </TableRow>
@@ -1620,6 +1621,29 @@ const displayCustomers = sortedCustomers.filter((customer) => {
                           </MenuItem>
                         </Menu>
                       </>
+                    )}
+                  </TableCell>
+                                   <TableCell>
+                    {customer.discount_status ? (
+                      <Chip
+                        label={
+                          customer.discount_status === "Pending"
+                            ? "Discount: Pending"
+                            : customer.discount_status === "Approved"
+                            ? "Discount: Approved"
+                            : "Discount: Rejected"
+                        }
+                        color={
+                          customer.discount_status === "Approved"
+                            ? "success"
+                            : customer.discount_status === "Rejected"
+                            ? "error"
+                            : "warning"
+                        }
+                        size="small"
+                      />
+                    ) : (
+                      <Typography variant="caption" color="text.secondary">—</Typography>
                     )}
                   </TableCell>
                   <TableCell>
