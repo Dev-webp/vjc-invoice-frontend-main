@@ -226,7 +226,7 @@ function EmployeeCard({ emp, onDeactivate, onRefresh }) {
           { label: "Department",  field: "department",  type: "select", options: DEPARTMENTS },
           { label: "Location",    field: "location",    type: "select", options: LOCATIONS   },
           { label: "Salary (₹)",  field: "salary",      type: "number"                       },
-          { label: "Employee ID", field: "employee_id", type: "static"                       },
+          { label: "Employee ID", field: "employee_id", type: "text"                          },
         ].map(row => (
           <Box key={row.label} sx={{
             display: "flex", justifyContent: "space-between",
