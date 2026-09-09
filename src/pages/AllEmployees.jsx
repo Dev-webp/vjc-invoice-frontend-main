@@ -46,7 +46,7 @@ function EmployeeCard({ emp, onDeactivate, onRefresh }) {
   const [saving,       setSaving]       = useState(false);
   const [editError,    setEditError]    = useState("");
 
-  const [form, setForm] = useState({
+    const [form, setForm] = useState({
     name:         emp.name         || "",
     email:        emp.email        || "",
     department:   emp.department   || "",
@@ -61,6 +61,7 @@ function EmployeeCard({ emp, onDeactivate, onRefresh }) {
     paid_leaves:  emp.paid_leaves  ?? "0",
     permissions:  emp.permissions  || {},
     new_password: "",   // ← NEW: blank by default, only sent if filled
+    employee_id:  emp.employee_id  || "",
   });
 
   const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }));
@@ -94,7 +95,7 @@ function EmployeeCard({ emp, onDeactivate, onRefresh }) {
     }
   };
 
-  const handleCancel = () => {
+    const handleCancel = () => {
     setForm({
       name:         emp.name         || "",
       email:        emp.email        || "",
@@ -110,6 +111,7 @@ function EmployeeCard({ emp, onDeactivate, onRefresh }) {
       paid_leaves:  emp.paid_leaves  ?? "0",
       permissions:  emp.permissions  || {},
       new_password: "",
+      employee_id:  emp.employee_id  || "",
     });
     setEditError("");
     setEditing(false);
