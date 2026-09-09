@@ -123,13 +123,13 @@ function EmployeeCard({ emp, onDeactivate, onRefresh }) {
   const rs        = roleStyle(editing ? form.role : emp.role);
 
   // ── inline field helper — WIDTH stays same, just replaces value ──
-  const inlineText = (field, placeholder = "", type = "text") =>
+    const inlineText = (field, placeholder = "", type = "text") =>
     editing ? (
       <TextField
         fullWidth size="small" type={type}
         value={form[field]} onChange={set(field)}
         placeholder={placeholder}
-        inputProps={{ autoComplete: "off" }}
+        inputProps={{ autoComplete: "new-password", name: `field-${field}-${emp.id}` }}
         sx={{
           maxWidth: "100%",
           "& .MuiInputBase-root": { fontSize: 12 },
