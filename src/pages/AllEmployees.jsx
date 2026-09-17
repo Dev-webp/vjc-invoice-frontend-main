@@ -29,8 +29,8 @@ const ALL_PERMISSIONS = [
   { key: "reports",   label: "Reports",           icon: "📊" },
   { key: "services",  label: "Services",          icon: "🛠️" },
   { key: "leads",     label: "Lead Management",   icon: "🎯" },
+  { key: "rejected_invoices", label: "Rejected Invoices", icon: "🚫" },   // NEW
 ];
-
 function roleStyle(role) {
   if (role === "manager")              return { bg: "#fef3c7", color: "#92400e", border: "#fde68a" };
   if (role === "mis-executive")        return { bg: "#fce7f3", color: "#9d174d", border: "#fbcfe8" };
