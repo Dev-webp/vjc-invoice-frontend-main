@@ -173,13 +173,14 @@ console.log("Logged User =", user);
 { name: "All Employees", icon: <PeopleIcon /> },
         { name: "Add Employee", icon: <BadgeIcon /> },
       ]
-    : [
+        : [
         { name: "Dashboard", icon: <DashboardIcon /> },
         { name: "Leads", icon: <PersonSearchIcon /> },
         { name: "Customers", icon: <PeopleIcon /> },
         { name: "Services", icon: <InventoryIcon /> },
         { name: "Proforma Invoice", icon: <RequestQuoteIcon /> },
         { name: "Approved Invoices", icon: <ReceiptLongIcon /> },
+        { name: "Rejected Invoices", icon: <HighlightOffIcon /> },   // NEW
         { name: "Payments Received", icon: <PaymentsIcon /> },
         { name: "Reports", icon: <AssessmentIcon /> },
       ];
@@ -191,7 +192,7 @@ console.log("Logged User =", user);
     "Proforma Invoice": "quotes",
       "Approval Requests": "invoices",
     "Approved Invoices": "invoices",
-      "Rejected Invoices": "invoices",
+      "Rejected Invoices": "rejected_invoices",   // CHANGED — was "invoices"
     "Payments Received": "payments",
     "Reports": "reports",
   };
