@@ -1238,6 +1238,10 @@ function Customers() {
   // NEW — PDFs dropdown (Invoice PDF / Agreement PDF)
   const [pdfMenuAnchor, setPdfMenuAnchor] = useState({ el: null, customerId: null });
 
+  // NEW — Send to Ops confirm dialog
+  const [sendToOpsDialog, setSendToOpsDialog] = useState({ open: false, customer: null });
+  const [sendToOpsLoading, setSendToOpsLoading] = useState(false);
+
   const persistInvoicedIds = (nextSet) => {
     try {
       window.localStorage?.setItem("vjc_invoiced_customer_ids", JSON.stringify([...nextSet]));
@@ -1399,8 +1403,36 @@ const res = await fetch(`${API}/customers/${selected.id}`, {
       alert("❌ Failed to download Agreement PDF");
     }
   };
-  const sortedCustomers = [...customers];
+  // NEW — Send to Ops: opens confirm dialog first
+  const openSendToOpsDialog = (customer) => {
+    setSendToOpsDialog({ open: true, customer });
+  };
 
+  const confirmSendToOps = async () => {
+    const customer = sendToOpsDialog.customer;
+    if (!customer?.last_invoice_id) return;
+    setSendToOpsLoading(true);
+    try {
+      const token = localStorage.getItem("vjc_invoice_auth");
+      const res = await fetch(`${API}/invoices/${customer.last_invoice_id}/send-to-ops`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        alert(`❌ ${data.message || "Failed to send to Ops"}`);
+      } else {
+        alert("✅ Sent to Ops — the counselor can now review and add this lead.");
+        fetchCustomers();
+      }
+    } catch (err) {
+      alert("❌ Failed to send to Ops");
+    } finally {
+      setSendToOpsLoading(false);
+      setSendToOpsDialog({ open: false, customer: null });
+    }
+  };
+  const sortedCustomers = [...customers];
 const displayCustomers = sortedCustomers.filter((customer) => {
   if (filterStatus === "Paid") {
     return Number(customer.outstanding || 0) === 0;
@@ -1498,7 +1530,8 @@ const displayCustomers = sortedCustomers.filter((customer) => {
                 <TableCell sx={{ fontWeight: 700 }}>Outstanding</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Last Transaction</TableCell>
                                <TableCell sx={{ fontWeight: 700, minWidth: 230 }}>Actions</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>PDFs</TableCell>
+                               <TableCell sx={{ fontWeight: 700 }}>PDFs</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Ops</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Discount Status</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
               </TableRow>
@@ -1506,7 +1539,7 @@ const displayCustomers = sortedCustomers.filter((customer) => {
             <TableBody>
               {customers.length === 0 && (
                 <TableRow>
-                                                                       <TableCell colSpan={12} align="center" sx={{ py: 4, color: "text.secondary" }}>
+                                                                                                                                             <TableCell colSpan={13} align="center" sx={{ py: 4, color: "text.secondary" }}>
                     No customers found. Click "+ ADD CUSTOMER" to create a customer.
                   </TableCell>
                 </TableRow>
@@ -1623,6 +1656,22 @@ const displayCustomers = sortedCustomers.filter((customer) => {
                       </>
                     )}
                   </TableCell>
+                  <TableCell>
+                    {customer.invoice_status === "Approved" && (
+                      customer.sent_to_ops ? (
+                        <Chip label="Sent ✓" color="success" size="small" variant="outlined" />
+                      ) : (
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          color="secondary"
+                          onClick={() => openSendToOpsDialog(customer)}
+                        >
+                          Send to Ops
+                        </Button>
+                      )
+                    )}
+                  </TableCell>
                                    <TableCell>
                     {customer.discount_status ? (
                       <Chip
@@ -1711,6 +1760,46 @@ const displayCustomers = sortedCustomers.filter((customer) => {
         customer={selected}
         onSuccess={fetchCustomers}
       />
+
+      {/* NEW — Send to Ops confirmation dialog */}
+      <Dialog
+        open={sendToOpsDialog.open}
+        onClose={() => (!sendToOpsLoading && setSendToOpsDialog({ open: false, customer: null }))}
+        maxWidth="sm" fullWidth
+      >
+        <DialogTitle>
+          Send to Ops — Review before sending
+        </DialogTitle>
+        <DialogContent dividers>
+          {sendToOpsDialog.customer && (
+            <Table size="small">
+              <TableBody>
+                <TableRow><TableCell sx={{ fontWeight: 600 }}>Student Name</TableCell><TableCell>{sendToOpsDialog.customer.name}</TableCell></TableRow>
+                <TableRow><TableCell sx={{ fontWeight: 600 }}>Phone</TableCell><TableCell>{sendToOpsDialog.customer.phone}</TableCell></TableRow>
+                <TableRow><TableCell sx={{ fontWeight: 600 }}>Email</TableCell><TableCell>{sendToOpsDialog.customer.email}</TableCell></TableRow>
+                <TableRow><TableCell sx={{ fontWeight: 600 }}>Service Type</TableCell><TableCell>{sendToOpsDialog.customer.service_type || sendToOpsDialog.customer.company || "—"}</TableCell></TableRow>
+                <TableRow><TableCell sx={{ fontWeight: 600 }}>Invoice No</TableCell><TableCell>{sendToOpsDialog.customer.last_invoice_id ? `#${sendToOpsDialog.customer.last_invoice_id}` : "—"}</TableCell></TableRow>
+                <TableRow><TableCell sx={{ fontWeight: 600 }}>Outstanding</TableCell><TableCell>{fmt(sendToOpsDialog.customer.outstanding)}</TableCell></TableRow>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 600 }}>Payment Status</TableCell>
+                  <TableCell>{Number(sendToOpsDialog.customer.outstanding || 0) === 0 ? "Paid" : "Partial"}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          )}
+          <Alert severity="info" sx={{ mt: 2 }}>
+            Once sent, this student will appear in the Ops Portal for the counselor to review and add as a lead. This cannot be undone from here.
+          </Alert>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSendToOpsDialog({ open: false, customer: null })} disabled={sendToOpsLoading}>
+            Cancel
+          </Button>
+          <Button variant="contained" color="secondary" onClick={confirmSendToOps} disabled={sendToOpsLoading}>
+            {sendToOpsLoading ? "Sending..." : "Confirm & Send to Ops"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
