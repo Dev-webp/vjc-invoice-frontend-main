@@ -62,8 +62,8 @@ function EmployeeCard({ emp, onDeactivate, onRefresh }) {
     permissions:  emp.permissions  || {},
     new_password: "",   // ← NEW: blank by default, only sent if filled
     employee_id:  emp.employee_id  || "",
+    office_number: emp.office_number || "",   // NEW
   });
-
   const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }));
   const togglePerm = (key) =>
     setForm(f => ({ ...f, permissions: { ...f.permissions, [key]: !f.permissions[key] } }));
@@ -110,8 +110,9 @@ function EmployeeCard({ emp, onDeactivate, onRefresh }) {
       doj:          emp.doj          || "",
       paid_leaves:  emp.paid_leaves  ?? "0",
       permissions:  emp.permissions  || {},
-      new_password: "",
+           new_password: "",
       employee_id:  emp.employee_id  || "",
+      office_number: emp.office_number || "",   // NEW
     });
     setEditError("");
     setEditing(false);
@@ -229,6 +230,7 @@ function EmployeeCard({ emp, onDeactivate, onRefresh }) {
           { label: "Location",    field: "location",    type: "select", options: LOCATIONS   },
           { label: "Salary (₹)",  field: "salary",      type: "number"                       },
           { label: "Employee ID", field: "employee_id", type: "text"                          },
+          { label: "Office No.",  field: "office_number", type: "text"                        },
         ].map(row => (
           <Box key={row.label} sx={{
             display: "flex", justifyContent: "space-between",

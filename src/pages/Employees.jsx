@@ -41,6 +41,7 @@ const EMPTY_FORM = {
   role: "employee", location: "Hyderabad",
   salary: "", bank_account: "", pan: "", ifsc: "",
   dob: "", doj: "", paid_leaves: "0",employee_number: "",
+  office_number: "",   // NEW — WhatsApp number for lead-assignment alerts
   permissions: {},
 };
 
@@ -262,8 +263,16 @@ function Employees() {
             <MenuItem value=""><em style={{ color: "#94a3b8" }}>Select department</em></MenuItem>
             {DEPARTMENTS.map((d) => <MenuItem key={d} value={d}>{d}</MenuItem>)}
           </TextField>
-          <Typography variant="caption" color="text.secondary">
+                   <Typography variant="caption" color="text.secondary">
             Select from list — Chairman can add new
+          </Typography>
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <FieldLabel>Office Number (WhatsApp)</FieldLabel>
+          <TextField fullWidth size="small" placeholder="e.g. 9198xxxxxxx (optional)"
+            value={form.office_number} onChange={set("office_number")} />
+          <Typography variant="caption" color="text.secondary">
+            Optional — lead assignment WhatsApp alerts go here
           </Typography>
         </Grid>
       </Grid>

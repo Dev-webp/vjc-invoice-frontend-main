@@ -1381,28 +1381,42 @@ const res = await fetch(`${API}/customers/${selected.id}`, {
       alert("❌ Invoice ID not found for this customer");
       return;
     }
-    try {
-      const token = localStorage.getItem("vjc_invoice_auth");
-      const res = await fetch(`${API}/invoices/${invoiceId}/download-agreement-pdf`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) {
-        alert("❌ Agreement not yet generated for this invoice");
-        return;
-      }
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `Agreement-${customerName || "invoice"}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
+    try {    } catch (err) {
       alert("❌ Failed to download Agreement PDF");
     }
   };
+
+  // ▼▼▼ NEW — paste this whole function here ▼▼▼
+  const handleAgreementLink = async (invoiceId) => {
+    if (!invoiceId) {
+      alert("❌ Invoice ID not found for this customer");
+      return;
+    }
+    try {
+      const token = localStorage.getItem("vjc_invoice_auth");
+      const res = await fetch(`${API}/invoices/${invoiceId}/agreement-link`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        alert(`❌ ${data.message || "Agreement link not available yet"}`);
+        return;
+      }
+      const statusLine = data.signed
+        ? "✅ This agreement is already signed."
+        : "📝 Not signed yet — share this link with the client to sign.";
+      try {
+        await navigator.clipboard.writeText(data.link);
+        alert(`${statusLine}\n\nLink copied to clipboard:\n${data.link}`);
+      } catch {
+        window.prompt(`${statusLine}\nCopy this agreement link:`, data.link);
+      }
+    } catch (err) {
+      alert("❌ Failed to fetch agreement link");
+    }
+  };
+  // ▲▲▲ NEW function ends here ▲▲▲
+
   // NEW — Send to Ops: opens confirm dialog first
   const openSendToOpsDialog = (customer) => {
     setSendToOpsDialog({ open: true, customer });
@@ -1646,30 +1660,48 @@ const displayCustomers = sortedCustomers.filter((customer) => {
                           }}>
                             Invoice PDF
                           </MenuItem>
-                          <MenuItem onClick={() => {
+                                                   <MenuItem onClick={() => {
                             handleDownloadAgreementPdf(customer.last_invoice_id, customer.name);
                             setPdfMenuAnchor({ el: null, customerId: null });
                           }}>
                             Agreement PDF
                           </MenuItem>
+                          <MenuItem onClick={() => {
+                            handleAgreementLink(customer.last_invoice_id);
+                            setPdfMenuAnchor({ el: null, customerId: null });
+                          }}>
+                            Agreement Link
+                          </MenuItem>
                         </Menu>
                       </>
                     )}
                   </TableCell>
-                  <TableCell>
+                                   <TableCell>
                     {customer.invoice_status === "Approved" && (
-                      customer.sent_to_ops ? (
-                        <Chip label="Sent ✓" color="success" size="small" variant="outlined" />
-                      ) : (
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          color="secondary"
-                          onClick={() => openSendToOpsDialog(customer)}
-                        >
-                          Send to Ops
-                        </Button>
-                      )
+                      <Stack spacing={0.5} alignItems="flex-start">
+                        {customer.agreement_generated && (
+                          <Chip
+                            label={customer.agreement_signed ? "Agreement Signed" : "Agreement Pending"}
+                            color={customer.agreement_signed ? "success" : "warning"}
+                            size="small"
+                            variant="outlined"
+                          />
+                        )}
+                        {customer.sent_to_ops ? (
+                          <Chip label="Sent ✓" color="success" size="small" variant="outlined" />
+                        ) : (
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="secondary"
+                            disabled={!customer.agreement_signed}
+                            title={!customer.agreement_signed ? "Client must sign the agreement first" : ""}
+                            onClick={() => openSendToOpsDialog(customer)}
+                          >
+                            Send to Ops
+                          </Button>
+                        )}
+                      </Stack>
                     )}
                   </TableCell>
                                    <TableCell>
