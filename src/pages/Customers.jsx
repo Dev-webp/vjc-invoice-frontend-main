@@ -1203,6 +1203,32 @@ function PaymentDialog({ open, onClose, customer, onSuccess }) {
   );
 }
 
+// ── Sticky (frozen) column helpers ─────────────────────────────────────────
+const STICKY_SHADOW = "2px 0 4px -2px rgba(0,0,0,0.25)";
+
+const stickyBase = (left, width) => ({
+  position: "sticky",
+  left,
+  width,
+  minWidth: width,
+  maxWidth: width,
+  boxSizing: "border-box",
+});
+
+const stickyHead = (left, width, last = false) => ({
+  ...stickyBase(left, width),
+  zIndex: 3,
+  backgroundColor: "#f5f5f5",
+  ...(last ? { boxShadow: STICKY_SHADOW } : {}),
+});
+
+const stickyBody = (left, width, last = false) => ({
+  ...stickyBase(left, width),
+  zIndex: 2,
+  backgroundColor: "#fff",
+  ...(last ? { boxShadow: STICKY_SHADOW } : {}),
+});
+
 // ── Main Component ─────────────────────────────────────────────────────────
 function Customers() {
   const [customers, setCustomers] = useState([]);
@@ -1535,9 +1561,9 @@ const displayCustomers = sortedCustomers.filter((customer) => {
           >
             <TableHead sx={{ bgcolor: "#f5f5f5" }}>
                             <TableRow>
-                <TableCell sx={{ fontWeight: 700 }}>Customer ID</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Customer Name</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Service Type</TableCell>
+<TableCell sx={{ fontWeight: 700, ...stickyHead(0, 110) }}>Customer ID</TableCell>
+<TableCell sx={{ fontWeight: 700, ...stickyHead(110, 260) }}>Customer Name</TableCell>
+<TableCell sx={{ fontWeight: 700, ...stickyHead(370, 220, true) }}>Service Type</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Phone</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Type</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Payment </TableCell>
@@ -1560,15 +1586,18 @@ const displayCustomers = sortedCustomers.filter((customer) => {
               )}
 {displayCustomers.map((customer) => (
   
-                <TableRow key={customer.id} hover>
-                  <TableCell>
+<TableRow
+  key={customer.id}
+  hover
+  sx={{ "&:hover > .stickyCol": { backgroundColor: "#f5f5f5" } }}
+><TableCell className="stickyCol" sx={stickyBody(0, 110)}>
   <Typography variant="body2" fontWeight={600} color="primary">
     {customer.display_customer_id || customer.customer_id}
   </Typography>
 </TableCell>
-                  <TableCell>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Avatar sx={{ width: 32, height: 32, fontSize: 12, bgcolor: "#1976d2" }}>
+                  <TableCell className="stickyCol" sx={stickyBody(110, 260)}>
+  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+    <Avatar sx={{ width: 32, height: 32, fontSize: 12, bgcolor: "#1976d2" }}>
                         {customer.name.split(" ").map((w) => w[0]).join("").slice(0, 2)}
                       </Avatar>
                       <Box>
@@ -1577,12 +1606,12 @@ const displayCustomers = sortedCustomers.filter((customer) => {
                       </Box>
                     </Box>
                   </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={customer.service_type || customer.company || "—"}
-                      size="small" variant="outlined" color="info"
-                    />
-                  </TableCell>
+<TableCell className="stickyCol" sx={stickyBody(370, 220, true)}>
+  <Chip
+    label={customer.service_type || customer.company || "—"}
+    size="small" variant="outlined" color="info"
+  />
+</TableCell>
                   <TableCell>{customer.phone}</TableCell>
                   <TableCell>
                     <Chip label={customer.type} color={typeColor(customer.type)} size="small" variant="outlined" />
