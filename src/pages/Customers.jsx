@@ -1205,6 +1205,7 @@ function PaymentDialog({ open, onClose, customer, onSuccess }) {
 
 // ── Sticky (frozen) column helpers ─────────────────────────────────────────
 const STICKY_SHADOW = "2px 0 4px -2px rgba(0,0,0,0.25)";
+const STICKY_BORDER = "1px solid #e5e7eb";
 
 const stickyBase = (left, width) => ({
   position: "sticky",
@@ -1213,6 +1214,9 @@ const stickyBase = (left, width) => ({
   minWidth: width,
   maxWidth: width,
   boxSizing: "border-box",
+  overflow: "hidden",              // text leak ("iding") aapadaniki
+  borderRight: STICKY_BORDER,      // column line sticky tho paatu undali
+  backgroundClip: "padding-box",   // border background tho kappabadakunda
 });
 
 const stickyHead = (left, width, last = false) => ({
@@ -1549,16 +1553,18 @@ const displayCustomers = sortedCustomers.filter((customer) => {
 ) : ( 
    <>
 <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
-          <Table
-            sx={{
-              "& th, & td": {
-                borderRight: "1px solid #e5e7eb",
-              },
-              "& th:last-child, & td:last-child": {
-                borderRight: "none",
-              },
-            }}
-          >
+<Table
+  sx={{
+    borderCollapse: "separate",
+    borderSpacing: 0,
+    "& th, & td": {
+      borderRight: "1px solid #e5e7eb",
+    },
+    "& th:last-child, & td:last-child": {
+      borderRight: "none",
+    },
+  }}
+>
             <TableHead sx={{ bgcolor: "#f5f5f5" }}>
                             <TableRow>
 <TableCell sx={{ fontWeight: 700, ...stickyHead(0, 110) }}>Customer ID</TableCell>
