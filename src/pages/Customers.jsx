@@ -393,8 +393,7 @@ const taxType =
     ? (activeCustomer?.state === form.stateBy ? "CGST_SGST" : "IGST")
     : form.taxType;
 
-const taxPercent = 18;
-  const extraServicesTotal = extraServices.reduce((s, x) => s + Number(x.amount || 0), 0);
+const taxPercent = form.paymentMode === "Cash" ? 0 : 18;  const extraServicesTotal = extraServices.reduce((s, x) => s + Number(x.amount || 0), 0);
   const passThroughTotal = passThroughExpenses.reduce((s, x) => s + Number(x.amount || 0), 0); // NEW
   const totalAmountNum = Number(form.totalAmount || 0) + extraServicesTotal;
   // passThroughTotal ఇక్కడ కలవదు — GST calculation తర్వాత, direct గా Grand Total లో కలుస్తుంది
@@ -1846,6 +1845,8 @@ const displayCustomers = sortedCustomers.filter((customer) => {
                 <TableRow><TableCell sx={{ fontWeight: 600 }}>Email</TableCell><TableCell>{sendToOpsDialog.customer.email}</TableCell></TableRow>
                 <TableRow><TableCell sx={{ fontWeight: 600 }}>Service Type</TableCell><TableCell>{sendToOpsDialog.customer.service_type || sendToOpsDialog.customer.company || "—"}</TableCell></TableRow>
                 <TableRow><TableCell sx={{ fontWeight: 600 }}>Invoice No</TableCell><TableCell>{sendToOpsDialog.customer.last_invoice_id ? `#${sendToOpsDialog.customer.last_invoice_id}` : "—"}</TableCell></TableRow>
+                <TableRow><TableCell sx={{ fontWeight: 600 }}>Total Amount</TableCell><TableCell>{fmt(sendToOpsDialog.customer.last_invoice_total)}</TableCell></TableRow>
+                <TableRow><TableCell sx={{ fontWeight: 600 }}>Paid Amount</TableCell><TableCell>{fmt(sendToOpsDialog.customer.total_payments)}</TableCell></TableRow>
                 <TableRow><TableCell sx={{ fontWeight: 600 }}>Outstanding</TableCell><TableCell>{fmt(sendToOpsDialog.customer.outstanding)}</TableCell></TableRow>
                 <TableRow>
                   <TableCell sx={{ fontWeight: 600 }}>Payment Status</TableCell>
