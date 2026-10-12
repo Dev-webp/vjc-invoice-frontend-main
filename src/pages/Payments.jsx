@@ -669,7 +669,16 @@ id: inv.invoice_id || inv.invoice_number || inv.invoice_no || inv.id || "",  cus
         </Box>
       ) : (
         <TableContainer component={Paper}>
-          <Table>
+          <Table
+            sx={{
+              "& th, & td": {
+                borderRight: "1px solid #e5e7eb",
+              },
+              "& th:last-child, & td:last-child": {
+                borderRight: "none",
+              },
+            }}
+          >
             <TableHead sx={{ bgcolor: "#f5f5f5" }}>
               <TableRow>
                 {["Payment #","Invoice #","Customer","Due Date","Amount Due","Received","Payment Method","Status","Actions"].map((h) => (

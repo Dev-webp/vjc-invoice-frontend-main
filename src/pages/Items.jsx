@@ -335,7 +335,16 @@ const res = await axios.delete(`${API_BASE}/${id}`, authHeader());
         </Box>
       ) : (
         <TableContainer component={Paper}>
-          <Table>
+          <Table
+            sx={{
+              "& th, & td": {
+                borderRight: "1px solid #e5e7eb",
+              },
+              "& th:last-child, & td:last-child": {
+                borderRight: "none",
+              },
+            }}
+          >
             <TableHead sx={{ bgcolor: "#f5f5f5" }}>
               <TableRow>
                 <TableCell><strong>Service</strong></TableCell>

@@ -399,9 +399,18 @@ console.log("QUOTE PAYLOAD", payload);
         </Button>
       </Box>
 
-      {/* Quotes Table */}
+            {/* Quotes Table */}
       <TableContainer component={Paper}>
-        <Table>
+        <Table
+          sx={{
+            "& th, & td": {
+              borderRight: "1px solid #e5e7eb",
+            },
+            "& th:last-child, & td:last-child": {
+              borderRight: "none",
+            },
+          }}
+        >
           <TableHead sx={{ bgcolor: "#f5f5f5" }}>
             <TableRow>
               {["Proforma Invoice #", "Customer", "Date", "Expiry",  "Amount", "Status", "Actions"].map((h) => (
