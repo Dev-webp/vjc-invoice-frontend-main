@@ -634,8 +634,7 @@ function AddEnquiryForm({ onSaved, isChairman }) {
             </BoxedField>
           </Grid>
 
-          // AFTER
-          <Grid item xs={12} sm={6} md={4}>
+                   <Grid item xs={12} sm={6} md={4}>
             <BoxedField
               icon={<CampaignIcon fontSize="small" />}
               label="Source"
@@ -1603,8 +1602,8 @@ function ClientMeetingToggle({ onModeChange }) {
         const res = await fetch(`${API}/departments/meeting-mode`, { headers: authHeader() });
         const data = await res.json();
         if (data.success) {
-          setIsStaff(!!data.is_staff);
-          setInMeeting(!!data.in_meeting);
+          setIsStaff(true);
+                    setInMeeting(!!data.in_meeting);
           if (onModeChange) onModeChange(!!data.in_meeting);
         }
       } catch {
@@ -1758,8 +1757,7 @@ const [statusFilter, setStatusFilter] = useState("All");
           {isChairman && <Tab label="Pending Assignment" />}
         </Tabs>
         <Stack direction="row" spacing={1} alignItems="center">
-          <ClientMeetingToggle onModeChange={setInMeeting} />
-          {isChairman && <ChairmanAssignmentFeed />}
+          {!isChairman && <ClientMeetingToggle onModeChange={setInMeeting} />}          {isChairman && <ChairmanAssignmentFeed />}
           <ReminderBell />
         </Stack>
       </Box>
