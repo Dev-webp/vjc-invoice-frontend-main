@@ -29,7 +29,7 @@ import AddIcon from "@mui/icons-material/Add";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
 import ListAltIcon from "@mui/icons-material/ListAlt";
-const API = "https://invoice.vjcoverseas.com/api";
+import Switch from "@mui/material/Switch";   // NEW — Client Meeting Mode toggleconst API = "https://invoice.vjcoverseas.com/api";
 
 // ── Assumption: after login you store the logged-in user's basic info here.
 // If your Login.jsx stores it under a different key / shape, just change
@@ -1589,6 +1589,80 @@ function ChairmanAssignmentFeed() {
     </Box>
   );
 }
+// ── Client Meeting Mode toggle ───────────────────────────────────────────
+// ON  = this person is skipped by round-robin (no new leads while in a client meeting)
+// OFF = back in the round-robin. Hidden for people who are not in any department.
+function ClientMeetingToggle({ onModeChange }) {
+  const [isStaff, setIsStaff] = useState(false);
+  const [inMeeting, setInMeeting] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch(`${API}/departments/meeting-mode`, { headers: authHeader() });
+        const data = await res.json();
+        if (data.success) {
+          setIsStaff(!!data.is_staff);
+          setInMeeting(!!data.in_meeting);
+          if (onModeChange) onModeChange(!!data.in_meeting);
+        }
+      } catch {
+        // silent — the toggle simply stays hidden if this fails
+      }
+    };
+    load();
+  }, [onModeChange]);
+
+  const handleToggle = async (e) => {
+    const next = e.target.checked;
+    setSaving(true);
+    try {
+      const res = await fetch(`${API}/departments/meeting-mode`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...authHeader() },
+        body: JSON.stringify({ in_meeting: next }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setInMeeting(next);
+        if (onModeChange) onModeChange(next);
+      } else {
+        alert("❌ " + (data.message || "Failed to update Client Meeting Mode"));
+      }
+    } catch {
+      alert("❌ Failed to update Client Meeting Mode");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!isStaff) return null;
+
+  return (
+    <Box
+      sx={{
+        display: "flex", alignItems: "center", gap: 1,
+        border: "1px solid", borderColor: inMeeting ? "#eb6834" : "#c9cfd9",
+        borderRadius: 5, pl: 1.5, pr: 0.5, py: 0.25, bgcolor: "#fff",
+      }}
+    >
+      <Box>
+        <Typography variant="caption" fontWeight={700} sx={{ display: "block", lineHeight: 1.2 }}>
+          Client Meeting Mode
+        </Typography>
+        <Typography
+          variant="caption"
+          sx={{ display: "block", lineHeight: 1.2, fontSize: 10.5, color: inMeeting ? "#b94a1a" : "#0f6e56" }}
+        >
+          ● {inMeeting ? "In meeting · leads paused" : "Available · receiving leads"}
+        </Typography>
+      </Box>
+      <Switch size="small" color="warning" checked={inMeeting} onChange={handleToggle} disabled={saving} />
+    </Box>
+  );
+}
+
 // ── Main Lead Management Page ────────────────────────────────────────────
 function LeadManagement() {
   const currentUser = getCurrentUser();
@@ -1598,7 +1672,7 @@ function LeadManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [tab, setTab] = useState(0); // 0 = Add Enquiry, 1 = View Enquiry
-  const [assignOpen, setAssignOpen] = useState(false);
+  const [inMeeting, setInMeeting] = useState(false); // NEW — drives the "In meeting" banner  const [assignOpen, setAssignOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
 const [statusFilter, setStatusFilter] = useState("All");
   const [search, setSearch] = useState(""); // Name / Email / Mobile search — client-side filter
@@ -1684,12 +1758,17 @@ const [statusFilter, setStatusFilter] = useState("All");
           {isChairman && <Tab label="Pending Assignment" />}
         </Tabs>
         <Stack direction="row" spacing={1} alignItems="center">
+          <ClientMeetingToggle onModeChange={setInMeeting} />
           {isChairman && <ChairmanAssignmentFeed />}
           <ReminderBell />
         </Stack>
       </Box>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-
+      {inMeeting && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          Client Meeting Mode is ON — you are skipped in lead assignment. Turn it OFF after the meeting to start receiving leads again.
+        </Alert>
+      )}
       {/* ── Tab 0: Add Enquiry ── */}
 
       {tab === 0 && (
