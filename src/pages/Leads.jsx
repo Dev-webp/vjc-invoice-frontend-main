@@ -29,8 +29,8 @@ import AddIcon from "@mui/icons-material/Add";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
 import ListAltIcon from "@mui/icons-material/ListAlt";
-import Switch from "@mui/material/Switch";   // NEW — Client Meeting Mode toggleconst API = "https://invoice.vjcoverseas.com/api";
-
+import Switch from "@mui/material/Switch";   // NEW — Client Meeting Mode toggle
+const API = "https://invoice.vjcoverseas.com/api";
 // ── Assumption: after login you store the logged-in user's basic info here.
 // If your Login.jsx stores it under a different key / shape, just change
 // this one line below (getCurrentUser) — nothing else needs to change.
@@ -1672,8 +1672,8 @@ function LeadManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [tab, setTab] = useState(0); // 0 = Add Enquiry, 1 = View Enquiry
-  const [inMeeting, setInMeeting] = useState(false); // NEW — drives the "In meeting" banner  const [assignOpen, setAssignOpen] = useState(false);
-  const [selectedIds, setSelectedIds] = useState([]);
+  const [inMeeting, setInMeeting] = useState(false); // NEW — drives the "In meeting" banner
+  const [assignOpen, setAssignOpen] = useState(false);  const [selectedIds, setSelectedIds] = useState([]);
 const [statusFilter, setStatusFilter] = useState("All");
   const [search, setSearch] = useState(""); // Name / Email / Mobile search — client-side filter
   const [notesOpen, setNotesOpen] = useState(false);
