@@ -30,6 +30,7 @@ import NotificationsIcon from "@mui/icons-material/Notifications";
 import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import Switch from "@mui/material/Switch";   // NEW — Client Meeting Mode toggle
+import TeamMonitorTab from "./TeamMonitorTab";   // NEW — Team Monitor tab
 const API = "https://invoice.vjcoverseas.com/api";
 // ── Assumption: after login you store the logged-in user's basic info here.
 // If your Login.jsx stores it under a different key / shape, just change
@@ -1753,9 +1754,10 @@ const [statusFilter, setStatusFilter] = useState("All");
         >
           <Tab label="Add Enquiry" />
           <Tab label="View Enquiry" />
-          {isChairman && <Tab label="Departments" />}
+                    {isChairman && <Tab label="Departments" />}
           {isChairman && <Tab label="Pending Assignment" />}
-        </Tabs>
+          <Tab label="Team Monitor" value={4} />
+                  </Tabs>
         <Stack direction="row" spacing={1} alignItems="center">
           {!isChairman && <ClientMeetingToggle onModeChange={setInMeeting} />}          {isChairman && <ChairmanAssignmentFeed />}
           <ReminderBell />
@@ -1782,9 +1784,11 @@ const [statusFilter, setStatusFilter] = useState("All");
             {/* ── Tab 2: Departments (chairman only) ── */}
       {tab === 2 && isChairman && <DepartmentsTab />}
 
-      {/* ── Tab 3: Pending Assignment (chairman only) ── */}
+           {/* ── Tab 3: Pending Assignment (chairman only) ── */}
       {tab === 3 && isChairman && <PendingAssignmentTab />}
 
+      {/* ── Tab 4: Team Monitor (chairman / mis-executive only) ── */}
+      {tab === 4 && <TeamMonitorTab onGoPending={isChairman ? () => setTab(3) : undefined} />}
       {/* ── Tab 1: View Enquiry ── */}
       {tab === 1 && (
       <>
