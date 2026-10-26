@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Box, Typography, CircularProgress, Alert } from "@mui/material";
 
-const API = import.meta.env.VITE_API_URL || "https://invoice.vjcoverseas.com/api";
+const API = "https://vjc-invoice-backend-main.vercel.app/api";
 const authHeader = () => ({
   Authorization: `Bearer ${localStorage.getItem("vjc_invoice_auth")}`,
 });
