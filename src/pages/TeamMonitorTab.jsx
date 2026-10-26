@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Box, Typography, CircularProgress, Alert } from "@mui/material";
 
-const API = "https://vjc-invoice-backend-git-team-monitor-abc.vercel.app/api"; // TEMP: preview test only
+const API = import.meta.env.VITE_API_URL || "https://invoice.vjcoverseas.com/api";
 const authHeader = () => ({
   Authorization: `Bearer ${localStorage.getItem("vjc_invoice_auth")}`,
 });
@@ -36,7 +36,40 @@ const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
 const diff = (cur = 0, prev = 0) => cur - prev;
 const slaColor = (m) => (m <= 5 ? C.red : m <= 15 ? "#EF9F27" : C.grn);
 
+// DEMO MODE (preview only): in the browser console run localStorage.setItem("tm_demo","1") and refresh.
+// Remove it with localStorage.removeItem("tm_demo"). Never touches the API or the database.
+const IS_DEMO = typeof window !== "undefined" && localStorage.getItem("tm_demo") === "1";
+const DEMO_DATA = {
+  scope: "all",
+  summary: { received: 47, assigned: 41, contacted: 33, warm_prospect: 14, pending_agreement: 3, closed: 2, pending_assignment: 6, red_flags: 5, auto_shuffled: 9, agents_online: 5, agents_total: 8 },
+  previous: { received: 34, assigned: 32, contacted: 35, warm_prospect: 10, pending_agreement: 2, closed: 1 },
+  pending: { count: 6, oldest_min: 47 },
+  agents: [
+    { id: 1, name: "Ravi Kumar", department: "Study Visas", is_online: true, in_meeting: false, leads: 11, flags: 0, avg_reply_min: 6, sla_met_pct: 100, open_leads: [{ lead_id: 1, lead_name: "Rohit M.", minutes_left: 28 }, { lead_id: 2, lead_name: "Asha K.", minutes_left: 19 }] },
+    { id: 2, name: "Sneha Reddy", department: "Study Visas", is_online: true, in_meeting: false, leads: 9, flags: 1, avg_reply_min: 12, sla_met_pct: 89, open_leads: [{ lead_id: 3, lead_name: "Meena T.", minutes_left: 4 }, { lead_id: 4, lead_name: "Pooja S.", minutes_left: 12 }] },
+    { id: 3, name: "Imran Khan", department: "Immigration / PR", is_online: true, in_meeting: true, leads: 7, flags: 1, avg_reply_min: 18, sla_met_pct: 71, open_leads: [{ lead_id: 5, lead_name: "Vikram N.", minutes_left: 9 }] },
+    { id: 4, name: "Divya Nair", department: "Visitor Visas", is_online: true, in_meeting: false, leads: 8, flags: 0, avg_reply_min: 9, sla_met_pct: 100, open_leads: [{ lead_id: 6, lead_name: "Karthik V.", minutes_left: 21 }, { lead_id: 7, lead_name: "Sai P.", minutes_left: 27 }] },
+    { id: 5, name: "Arjun Das", department: "Air Tickets", is_online: true, in_meeting: false, leads: 6, flags: 3, avg_reply_min: 29, sla_met_pct: 50, open_leads: [] },
+    { id: 6, name: "Kiran Rao", department: "Forex", is_online: false, in_meeting: false, leads: 0, flags: 0, avg_reply_min: null, sla_met_pct: null, open_leads: [] },
+  ],
+  open_leads: [{ lead_id: 3, lead_name: "Meena T.", assigned_to: 2, minutes_left: 4 }, { lead_id: 4, lead_name: "Pooja S.", assigned_to: 2, minutes_left: 12 }],
+  red_flag_feed: [
+    { id: 1, lead_id: 11, lead_name: "Suresh P.", agent_name: "Arjun Das", now_with: "Divya Nair" },
+    { id: 2, lead_id: 12, lead_name: "Anil G.", agent_name: "Imran Khan", now_with: null },
+  ],
+  by_department: [
+    { department: "Study Visas", new_leads: 11, warm: 5, prospect: 3, closed: 1, dead: 0 },
+    { department: "Immigration / PR", new_leads: 8, warm: 3, prospect: 1, closed: 1, dead: 0 },
+    { department: "Visitor Visas", new_leads: 5, warm: 2, prospect: 1, closed: 0, dead: 1 },
+    { department: "Air Tickets", new_leads: 3, warm: 1, prospect: 0, closed: 0, dead: 0 },
+    { department: "Forex", new_leads: 1, warm: 0, prospect: 0, closed: 0, dead: 0 },
+  ],
+  by_source: [{ source: "Facebook", count: 22 }, { source: "Instagram", count: 12 }, { source: "Walk-in", count: 7 }, { source: "Referral", count: 5 }, { source: "Website", count: 1 }],
+  by_hour: [{ hour: 9, count: 3 }, { hour: 10, count: 6 }, { hour: 11, count: 9 }, { hour: 12, count: 7 }, { hour: 13, count: 11 }, { hour: 14, count: 5 }, { hour: 15, count: 3 }, { hour: 16, count: 2 }, { hour: 17, count: 1 }],
+};
+
 const cardSx = { bgcolor: C.sf2, borderRadius: "10px", p: "18px 20px", minWidth: 0 };
+const selSx = { height: 38, border: "none", bgcolor: C.sf2, color: C.tx2, borderRadius: "8px", px: 2, fontSize: 13, fontFamily: "inherit", cursor: "pointer", outline: "none" };
 const headSx = { fontSize: 14, fontWeight: 500, mb: 1.5, display: "flex", alignItems: "baseline", gap: 1.25 };
 const subSx = { fontSize: 12, fontWeight: 400, color: C.tx2 };
 
@@ -83,13 +116,13 @@ function Btn({ primary, children, onClick }) {
 
 function AlertRow({ tag, amber, title, text, children }) {
   return (
-    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "minmax(0,1fr) auto" }, columnGap: 2.5, rowGap: 0.5, alignItems: "center", py: 1.5, borderTop: `1px solid ${C.bd}`, "&:first-of-type": { borderTop: "none", pt: 0 } }}>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, minWidth: 0, flexWrap: "wrap" }}>
+    <Box sx={{ py: 1.5, borderTop: `1px solid ${C.bd}`, "&:first-of-type": { borderTop: "none", pt: 0 } }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, minWidth: 0 }}>
         <Box component="span" sx={{ width: 74, textAlign: "center", fontSize: 11, fontWeight: 500, borderRadius: "10px", py: "1px", flex: "none", bgcolor: amber ? C.ambBg : C.redBg, color: amber ? C.amb : C.red }}>{tag}</Box>
-        <Typography sx={{ fontSize: 14, fontWeight: 500 }}>{title}</Typography>
+        <Typography sx={{ fontSize: 14, fontWeight: 500 }} noWrap>{title}</Typography>
       </Box>
-      <Box sx={{ display: "flex", gap: 1, gridRow: { xl: "1 / span 2" }, gridColumn: { xl: 2 }, mt: { xs: 0.5, xl: 0 } }}>{children}</Box>
-      <Typography sx={{ fontSize: 12, color: C.tx2, pl: { xl: "86px" } }}>{text}</Typography>
+      <Typography sx={{ fontSize: 12, color: C.tx2, mt: 0.5 }}>{text}</Typography>
+      <Box sx={{ display: "flex", gap: 1, mt: 1 }}>{children}</Box>
     </Box>
   );
 }
@@ -100,8 +133,18 @@ function TeamMonitorTab({ onGoPending }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [updatedAt, setUpdatedAt] = useState(null);
+  const [now, setNow] = useState(Date.now());
+  const [dept, setDept] = useState("");
+  const [agentId, setAgentId] = useState("");
+  const boardRef = useRef(null);
 
   const load = useCallback(async (showSpinner) => {
+    if (IS_DEMO) {
+      setData(DEMO_DATA);
+      setUpdatedAt(new Date());
+      setLoading(false);
+      return;
+    }
     if (showSpinner) setLoading(true);
     try {
       const res = await fetch(`${API}/leads/team-monitor?range=${range}`, { headers: authHeader() });
@@ -118,6 +161,11 @@ function TeamMonitorTab({ onGoPending }) {
   }, [range]);
 
   useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 5000);
+    return () => clearInterval(t);
+  }, []);
+
+  useEffect(() => {
     load(true);
     const t = setInterval(() => load(false), 30000);
     return () => clearInterval(t);
@@ -131,7 +179,10 @@ function TeamMonitorTab({ onGoPending }) {
 
   const s = data?.summary || {};
   const prev = data?.previous || {};
-  const agents = data?.agents || [];
+  const allAgents = data?.agents || [];
+  const agents = allAgents.filter((a) => (!dept || a.department === dept) && (!agentId || String(a.id) === agentId));
+  const deptNames = [...new Set(allAgents.map((a) => a.department).filter(Boolean))];
+  const byDepartment = (data?.by_department || []).filter((d) => !dept || d.department === dept);
   const flagFeed = data?.red_flag_feed || [];
   const openLeads = data?.open_leads || [];
   const rangeText = RANGES.find((r) => r.key === range)?.text || "today";
@@ -139,19 +190,19 @@ function TeamMonitorTab({ onGoPending }) {
   const greet = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
   const slaMet = pct(s.contacted || 0, s.assigned || 0);
   const atRisk = openLeads.filter((l) => l.minutes_left <= 10).slice(0, 2);
-    const agentName = (id) => agents.find((a) => a.id === id)?.name || "agent";
+  const agentName = (id) => allAgents.find((a) => a.id === id)?.name || "agent";
   const self = data?.scope === "self";
   const me = getCurrentUser();
   const who = me.role === "chairman" ? "Chairman" : (me.name || "");
 
   const funnel = [
-        { l: self ? "My leads" : "Received", n: s.received, p: "100%", w: 100, k: "received", col: C.blu },
+    { l: self ? "My leads" : "Received", n: s.received, p: "100%", w: 100, k: "received", col: C.blu },
     { l: "Assigned", n: s.assigned, p: `${pct(s.assigned, s.received)}% of received`, w: pct(s.assigned, s.received), k: "assigned", col: C.blu },
-    { l: "Contacted", n: s.contacted, p: `${pct(s.contacted, s.assigned)}% of assigned`, w: pct(s.contacted, s.received), k: "contacted", col: C.blu },
+    { l: "Contacted in SLA", n: s.contacted, p: `${pct(s.contacted, s.assigned)}% of assigned`, w: pct(s.contacted, s.received), k: "contacted", col: C.blu },
     { l: "Warm or Prospect", n: s.warm_prospect, p: `${pct(s.warm_prospect, s.contacted)}% of contacted`, w: pct(s.warm_prospect, s.received), k: "warm_prospect", col: C.blu },
     { l: "Pending agreement", n: s.pending_agreement, p: "Needs follow up", w: pct(s.pending_agreement, s.received), k: "pending_agreement", col: "#EF9F27", tone: "a" },
     { l: "Closed", n: s.closed, p: `${pct(s.closed, s.received)}% of received`, w: pct(s.closed, s.received), k: "closed", col: C.grn, tone: "g" },
-    ].filter((f) => !(self && f.k === "assigned"));
+  ].filter((f) => !(self && f.k === "assigned"));
 
   const hourMap = Object.fromEntries((data?.by_hour || []).map((h) => [h.hour, h.count]));
   const hours = Array.from({ length: 10 }, (_, i) => ({ h: i + 9, c: hourMap[i + 9] || 0 }));
@@ -161,6 +212,21 @@ function TeamMonitorTab({ onGoPending }) {
 
   const cols = "26% 30% 8% 11% 10% 15%";
 
+  const reviewAgent = () => boardRef.current && boardRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  const exportCsv = () => {
+    const rows = [["Agent", "Department", "Leads", "Avg reply (min)", "Red flags", "SLA met %"]].concat(
+      agents.map((a) => [a.name, a.department || "", a.leads, a.avg_reply_min ?? "", a.flags, a.sla_met_pct ?? ""])
+    );
+    const csv = rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `team-monitor-${range}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <Box>
       {/* teal breadcrumb bar, same look as the other tabs */}
@@ -168,7 +234,7 @@ function TeamMonitorTab({ onGoPending }) {
         <span>Lead » Team Monitor</span>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, fontSize: 13 }}>
           <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: "#9ff0c9" }} />
-          Live, refreshes every 30 sec{updatedAt ? ` · ${updatedAt.toLocaleTimeString()}` : ""}
+          Live, updated {updatedAt ? (() => { const sec = Math.max(0, Math.round((now - updatedAt.getTime()) / 1000)); return sec < 60 ? `${sec} sec ago` : `${Math.floor(sec / 60)} min ago`; })() : "just now"}
         </Box>
       </Box>
 
@@ -178,7 +244,7 @@ function TeamMonitorTab({ onGoPending }) {
         {/* Chairman summary banner */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 3, bgcolor: C.navy, color: "#fff", borderRadius: "12px", p: "18px 24px", mb: 2.75, flexWrap: "wrap" }}>
           <Box>
-                       <Typography sx={{ fontSize: 18, fontWeight: 500, mb: 0.5 }}>{greet}{who ? `, ${who}` : ""}</Typography>
+            <Typography sx={{ fontSize: 18, fontWeight: 500, mb: 0.5 }}>{greet}{who ? `, ${who}` : ""}</Typography>
             <Typography sx={{ fontSize: 13, opacity: 0.9 }}>
               {self
                 ? `${s.received || 0} leads are assigned to you ${rangeText}, and you have ${s.red_flags || 0} red flags.`
@@ -186,9 +252,9 @@ function TeamMonitorTab({ onGoPending }) {
             </Typography>
           </Box>
           <Box sx={{ display: "flex", gap: 4, ml: "auto" }}>
-                        {(self
-              ? [[`${slaMet}%`, "contacted"], [`${s.red_flags || 0}`, "red flags"], [agents[0]?.avg_reply_min != null ? `${agents[0].avg_reply_min} min` : "-", "avg reply"]]
-              : [[`${pct(s.assigned, s.received)}%`, "assigned"], [`${slaMet}%`, "contacted"], [`${s.agents_online || 0} / ${s.agents_total || 0}`, "agents online"]]
+            {(self
+              ? [[`${slaMet}%`, "SLA met"], [`${s.red_flags || 0}`, "red flags"], [allAgents[0]?.avg_reply_min != null ? `${allAgents[0].avg_reply_min} min` : "-", "avg reply"]]
+              : [[`${pct(s.assigned, s.received)}%`, "assigned"], [`${slaMet}%`, "SLA met"], [`${s.agents_online || 0} / ${s.agents_total || 0}`, "agents online"]]
             ).map(([v, l]) => (
               <Box key={l} sx={{ textAlign: "right" }}>
                 <Typography sx={{ fontSize: 22, fontWeight: 500, lineHeight: 1.2 }}>{v}</Typography>
@@ -199,7 +265,7 @@ function TeamMonitorTab({ onGoPending }) {
         </Box>
 
         {/* Filter bar */}
-        <Box sx={{ display: "flex", gap: 1.5, alignItems: "center", mb: 2.5 }}>
+        <Box sx={{ display: "flex", gap: 1.5, alignItems: "center", mb: 2.5, flexWrap: "wrap" }}>
           <Box sx={{ display: "flex", bgcolor: C.sf2, borderRadius: "8px", p: "3px", height: 38 }}>
             {RANGES.map((r) => (
               <Box key={r.key} onClick={() => setRange(r.key)} sx={{ display: "flex", alignItems: "center", px: 2, borderRadius: "6px", fontSize: 13, cursor: "pointer", userSelect: "none", bgcolor: range === r.key ? C.navy : "transparent", color: range === r.key ? "#fff" : C.tx2 }}>
@@ -207,10 +273,32 @@ function TeamMonitorTab({ onGoPending }) {
               </Box>
             ))}
           </Box>
+          {!self && (
+            <>
+              <Box component="select" value={dept} onChange={(e) => setDept(e.target.value)} sx={selSx}>
+                <option value="">All departments</option>
+                {deptNames.map((d) => <option key={d} value={d}>{d}</option>)}
+              </Box>
+              <Box component="select" value={agentId} onChange={(e) => setAgentId(e.target.value)} sx={selSx}>
+                <option value="">All agents</option>
+                {allAgents.map((a) => <option key={a.id} value={String(a.id)}>{a.name}</option>)}
+              </Box>
+            </>
+          )}
+          <Box onClick={exportCsv} sx={{ ml: "auto", height: 38, display: "flex", alignItems: "center", px: 2.5, bgcolor: C.navy, color: "#fff", borderRadius: "8px", fontSize: 13, fontWeight: 500, cursor: "pointer", userSelect: "none" }}>
+            Export report
+          </Box>
         </Box>
 
+        {!IS_DEMO && !error && (s.received || 0) === 0 && (
+          <Alert severity="info" sx={{ mb: 2.5 }}>
+            No leads found {rangeText}. Try Last 7 days to see more data.
+          </Alert>
+        )}
+        {IS_DEMO && <Alert severity="warning" sx={{ mb: 2.5 }}>Demo mode: this is sample data, not your real leads.</Alert>}
+
         {/* Pipeline */}
-        <Typography sx={headSx}>Lead pipeline<span style={{ ...subSx }}>Where the {s.received || 0} leads stand right now, change shown against the previous period</span></Typography>
+        <Typography sx={headSx}>Lead pipeline {range === "today" ? "today" : range === "yesterday" ? "yesterday" : "last 7 days"}<span style={{ ...subSx }}>Where the {s.received || 0} leads stand right now, change shown against {range === "today" ? "yesterday" : "the previous period"}</span></Typography>
         <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2,1fr)", md: "repeat(3,1fr)", lg: `repeat(${funnel.length},1fr)` }, gap: 1.5, mb: 2.75 }}>
           {funnel.map((f) => {
             const d = diff(s[f.k], prev[f.k]);
@@ -233,9 +321,9 @@ function TeamMonitorTab({ onGoPending }) {
 
         {/* Agent board + attention panel */}
         <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "2fr 1fr" }, gap: 2, mb: 2, alignItems: "stretch" }}>
-          <Box sx={cardSx}>
+          <Box ref={boardRef} sx={cardSx}>
             <Typography sx={headSx}>
-                            {self ? "My workload" : "Agent workload board"}<span style={subSx}>Open leads run on a 30 min SLA clock</span>
+              {self ? "My workload" : "Agent workload board"}<span style={subSx}>Open leads run on a 30 min SLA clock</span>
               <Box component="span" sx={{ ml: "auto", display: "flex", gap: 1.75, fontSize: 11, color: C.tx2 }}>
                 {[["On track", C.grn], ["Under 15 min", "#EF9F27"], ["Under 5 min", C.red]].map(([t, c]) => (
                   <Box key={t} component="span" sx={{ display: "flex", alignItems: "center", gap: 0.6 }}>
@@ -248,7 +336,7 @@ function TeamMonitorTab({ onGoPending }) {
               <Box sx={{ minWidth: 720 }}>
                 <Box sx={{ display: "grid", gridTemplateColumns: cols, fontSize: 12, color: C.tx2, pb: 1.25 }}>
                   <Box sx={{ px: 1 }}>Agent</Box><Box sx={{ px: 1 }}>Open leads and time left</Box>
-                  <Box sx={{ px: 1, textAlign: "center" }}>Leads</Box><Box sx={{ px: 1, textAlign: "center" }}>Avg reply</Box>
+                  <Box sx={{ px: 1, textAlign: "center" }}>{range === "today" ? "Today" : "Leads"}</Box><Box sx={{ px: 1, textAlign: "center" }}>Avg reply</Box>
                   <Box sx={{ px: 1, textAlign: "center" }}>Flags</Box><Box sx={{ px: 1 }}>SLA met</Box>
                 </Box>
                 {agents.length === 0 && <Typography sx={{ py: 2, color: C.tx2, fontSize: 13 }}>No department staff found.</Typography>}
@@ -305,18 +393,20 @@ function TeamMonitorTab({ onGoPending }) {
             {flagFeed.slice(0, 3).map((f) => (
               <AlertRow key={`f${f.id}`} tag="Red flag" title={`${f.agent_name} missed ${f.lead_name || "a lead"}`}
                 text={f.now_with ? `Moved to ${f.now_with}, clock restarted.` : "No agent available. Now in Pending Assignment."}>
-                {f.lead_id && <Btn primary onClick={() => openLead(f.lead_id)}>Open lead</Btn>}
-               {!f.now_with && onGoPending && <Btn onClick={onGoPending}>Assign now</Btn>}
+                {!f.now_with && onGoPending ? <Btn primary onClick={onGoPending}>Assign now</Btn> : null}
+                {f.lead_id && <Btn primary={!(!f.now_with && onGoPending)} onClick={() => openLead(f.lead_id)}>Open lead</Btn>}
+                {f.now_with && !self && <Btn onClick={reviewAgent}>Review agent</Btn>}
               </AlertRow>
             ))}
             {atRisk.map((l) => (
               <AlertRow key={`r${l.lead_id}`} tag="At risk" amber title={`${l.lead_name} with ${agentName(l.assigned_to)}`}
                 text={`${Math.max(0, l.minutes_left)} min left and no note added yet.`}>
                 <Btn primary onClick={() => openLead(l.lead_id)}>Open lead</Btn>
+                {!self && <Btn onClick={reviewAgent}>Review agent</Btn>}
               </AlertRow>
             ))}
-<Box sx={{ mt: "auto", pt: 1.75, display: self ? "none" : "block" }}>
-                  <Box sx={{ bgcolor: C.ambBg, color: C.amb, borderRadius: "10px", px: 2.25, py: 1.5, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <Box sx={{ mt: "auto", pt: 1.75, display: self ? "none" : "block" }}>
+              <Box sx={{ bgcolor: C.ambBg, color: C.amb, borderRadius: "10px", px: 2.25, py: 1.5, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <Box sx={{ lineHeight: 1.35 }}>
                   <Box component="span" sx={{ fontSize: 22, fontWeight: 500, mr: 0.75 }}>{s.pending_assignment || 0}</Box>leads waiting for an agent
                   <Box sx={{ fontSize: 12 }}>Oldest has waited {data?.pending?.oldest_min || 0} min</Box>
@@ -333,7 +423,7 @@ function TeamMonitorTab({ onGoPending }) {
             <Typography sx={headSx}>Department by lead status</Typography>
             <Box sx={{ display: "grid", gridTemplateColumns: "118px repeat(5,minmax(0,1fr))", gap: "4px", fontSize: 12 }}>
               <Box />{["New", "Warm", "Prospect", "Closed", "Dead"].map((h) => <Box key={h} sx={{ textAlign: "center", color: C.tx2, fontSize: 11, pb: 0.5 }}>{h}</Box>)}
-              {(data?.by_department || []).map((d) => (
+              {byDepartment.map((d) => (
                 <Box key={d.department} sx={{ display: "contents" }}>
                   <Box sx={{ display: "flex", alignItems: "center", height: 32 }}><Typography noWrap sx={{ fontSize: 12 }}>{d.department}</Typography></Box>
                   {[d.new_leads, d.warm, d.prospect, d.closed, d.dead].map((v, i) => {
@@ -343,7 +433,7 @@ function TeamMonitorTab({ onGoPending }) {
                 </Box>
               ))}
             </Box>
-            {(data?.by_department || []).length === 0 && <Typography sx={{ fontSize: 13, color: C.tx2 }}>No leads in this period.</Typography>}
+            {byDepartment.length === 0 && <Typography sx={{ fontSize: 13, color: C.tx2 }}>No leads in this period.</Typography>}
           </Box>
 
           <Box sx={cardSx}>
