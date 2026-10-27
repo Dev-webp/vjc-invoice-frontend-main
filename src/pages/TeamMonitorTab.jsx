@@ -1,5 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
-import { Box, Typography, CircularProgress, Alert, Button } from "@mui/material";
+import {
+  Box,
+  Typography,
+  CircularProgress,
+  Alert,
+  Button,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "@mui/material";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import DescriptionRoundedIcon from "@mui/icons-material/DescriptionRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
@@ -184,9 +195,12 @@ export default function TeamMonitorTab({ onGoPending }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [updatedAt, setUpdatedAt] = useState(null);
-  const [dept, setDept] = useState("");
-  const [search, setSearch] = useState("");
-
+ const [dept, setDept] = useState("");
+const [search, setSearch] = useState("");
+const [selectedAgent, setSelectedAgent] = useState(null);
+const [agentRedFlags, setAgentRedFlags] = useState([]);
+const [redFlagsLoading, setRedFlagsLoading] = useState(false);
+const [redFlagsError, setRedFlagsError] = useState("");
   const load = useCallback(
     async (showSpinner = false) => {
       if (showSpinner) setLoading(true);
@@ -281,7 +295,31 @@ export default function TeamMonitorTab({ onGoPending }) {
   const self = data?.scope === "self";
 
   const openLead = (id) => window.open(`/lead-history/${id}`, "_blank");
+const openAgentRedFlags = async (agent) => {
+  setSelectedAgent(agent);
+  setAgentRedFlags([]);
+  setRedFlagsError("");
+  setRedFlagsLoading(true);
 
+  try {
+    const res = await fetch(
+      `${API}/leads/team-monitor/${encodeURIComponent(agent.id)}/red-flags`,
+      { headers: authHeader() }
+    );
+
+    const json = await res.json();
+
+    if (!res.ok || !json.success) {
+      throw new Error(json.message || "Unable to load today's red flags");
+    }
+
+    setAgentRedFlags(json.redFlags || []);
+  } catch (err) {
+    setRedFlagsError(err.message || "Failed to load red flags");
+  } finally {
+    setRedFlagsLoading(false);
+  }
+};
   const exportCsv = () => {
     const rows = [
       [
@@ -745,9 +783,14 @@ export default function TeamMonitorTab({ onGoPending }) {
 
                     <Box>{tag(status, statusColor[0], statusColor[1])}</Box>
 
-                    <Box sx={{ color: COLORS.muted, display: "flex" }}>
-                      <MoreHorizRoundedIcon fontSize="small" />
-                    </Box>
+                   <IconButton
+  size="small"
+  aria-label={`View today's red flags for ${a.name}`}
+  onClick={() => openAgentRedFlags(a)}
+  sx={{ color: COLORS.muted }}
+>
+  <MoreHorizRoundedIcon fontSize="small" />
+</IconButton>
                   </Box>
                 );
               })}
@@ -1187,6 +1230,136 @@ export default function TeamMonitorTab({ onGoPending }) {
       >
         VJC Invoice Portal · Live team monitoring
       </Typography>
+      <Dialog
+  open={Boolean(selectedAgent)}
+  onClose={() => setSelectedAgent(null)}
+  fullWidth
+  maxWidth="sm"
+>
+  <DialogTitle
+    sx={{
+      color: COLORS.ink,
+      fontWeight: 800,
+      borderBottom: `1px solid ${COLORS.border}`,
+    }}
+  >
+    Today's Red Flags
+
+    {selectedAgent && (
+      <Typography
+        sx={{
+          fontSize: 13,
+          color: COLORS.muted,
+          mt: 0.5,
+        }}
+      >
+        {selectedAgent.name}
+      </Typography>
+    )}
+  </DialogTitle>
+
+  <DialogContent sx={{ pt: "16px !important" }}>
+    {redFlagsLoading && (
+      <Box sx={{ textAlign: "center", py: 3 }}>
+        <CircularProgress size={28} />
+
+        <Typography
+          sx={{
+            mt: 1,
+            fontSize: 12,
+            color: COLORS.muted,
+          }}
+        >
+          Loading red flags...
+        </Typography>
+      </Box>
+    )}
+
+    {!redFlagsLoading && redFlagsError && (
+      <Alert severity="error">
+        {redFlagsError}
+      </Alert>
+    )}
+
+    {!redFlagsLoading &&
+      !redFlagsError &&
+      agentRedFlags.length === 0 && (
+        <Alert severity="success">
+          No red flags recorded for this agent today.
+        </Alert>
+      )}
+
+    {!redFlagsLoading &&
+      !redFlagsError &&
+      agentRedFlags.map((flag) => (
+        <Box
+          key={flag.id}
+          sx={{
+            p: 1.5,
+            mb: 1,
+            border: `1px solid ${COLORS.border}`,
+            borderRadius: 2,
+            bgcolor: COLORS.pale,
+          }}
+        >
+          <Typography
+            sx={{
+              fontWeight: 750,
+              fontSize: 13,
+            }}
+          >
+            {flag.lead_name ||
+              `Lead #${flag.lead_id ?? "N/A"}`}
+          </Typography>
+
+          <Typography
+            sx={{
+              fontSize: 12,
+              color: COLORS.muted,
+              mt: 0.5,
+            }}
+          >
+            {flag.created_at
+              ? new Date(flag.created_at).toLocaleString("en-IN")
+              : "Time unavailable"}
+          </Typography>
+
+          {flag.now_with && (
+            <Typography
+              sx={{
+                fontSize: 12,
+                mt: 0.5,
+              }}
+            >
+              Reassigned to: {flag.now_with}
+            </Typography>
+          )}
+
+          {flag.lead_id && (
+            <Button
+              size="small"
+              onClick={() => openLead(flag.lead_id)}
+              sx={{
+                textTransform: "none",
+                mt: 0.5,
+              }}
+            >
+              Open Lead
+            </Button>
+          )}
+        </Box>
+      ))}
+  </DialogContent>
+
+  <DialogActions sx={{ p: 2 }}>
+    <Button
+      onClick={() => setSelectedAgent(null)}
+      sx={{ textTransform: "none" }}
+    >
+      Close
+    </Button>
+  </DialogActions>
+</Dialog>
     </Box>
   );
 }
