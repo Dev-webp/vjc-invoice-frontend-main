@@ -186,13 +186,13 @@ console.log("Logged User =", user);
       ];
       const nameToPermKey = {
     "Dashboard": "dashboard",
-     "Leads": "leads",
+     "Leads": "customers",  // Changed from "leads" to "customers" to match HRMS
     "Customers": "customers",
     "Services": "services",
     "Proforma Invoice": "quotes",
       "Approval Requests": "invoices",
     "Approved Invoices": "invoices",
-      "Rejected Invoices": "rejected_invoices",   // CHANGED — was "invoices"
+      "Rejected Invoices": "invoices",  // Changed to use "invoices" permission
     "Payments Received": "payments",
     "Reports": "reports",
   };

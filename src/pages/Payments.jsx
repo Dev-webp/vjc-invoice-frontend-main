@@ -23,7 +23,7 @@ import RefreshIcon      from "@mui/icons-material/Refresh";
 import CloseIcon        from "@mui/icons-material/Close";
 
 // ─── Config ──────────────────────────────────────────────────
-const API = "https://invoice.vjcoverseas.com/api";
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const formatPrice = (value) =>
   Number(value || 0).toLocaleString("en-IN", {
@@ -419,13 +419,16 @@ const res  = await fetch(`${API}/customers`, {
   // ── Fetch invoices from backend ──
   const fetchInvoices = useCallback(async () => {
     try {
-      const res  = await fetch(`${API}/sales-invoices`);
+      const token = localStorage.getItem("vjc_invoice_auth");
+      const res  = await fetch(`${API}/invoices`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
       const data = await res.json();
      const list = Array.isArray(data)
   ? data
   : (data.data || data.invoices || []);
 
-console.log("SALES INVOICES API:", list);
+console.log("INVOICES API:", list);
 
 setInvoices(list);
     } catch (err) {

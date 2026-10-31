@@ -22,7 +22,7 @@ import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 
-const API = "https://invoice.vjcoverseas.com/api";
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const authHeader = () => ({
   Authorization: `Bearer ${localStorage.getItem("vjc_invoice_auth")}`,
