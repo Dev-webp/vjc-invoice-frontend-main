@@ -32,7 +32,7 @@ import ListAltIcon from "@mui/icons-material/ListAlt";
 import ShareIcon from "@mui/icons-material/Share";   // NEW
 import EventIcon from "@mui/icons-material/Event";   // NEW
 import CheckIcon from "@mui/icons-material/Check";   // NEW
-// import Switch from "@mui/material/Switch";   // NEW — Client Meeting Mode toggle
+import Switch from "@mui/material/Switch";   // NEW — Client Meeting Mode toggle
 import TeamMonitorTab from "./TeamMonitorTab";   // NEW — Team Monitor tab
 const API = import.meta.env.VITE_API_URL || "https://invoice.vjcoverseas.com/api";
 // ── Assumption: after login you store the logged-in user's basic info here.
