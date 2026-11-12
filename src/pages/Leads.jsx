@@ -31,7 +31,8 @@ import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import ShareIcon from "@mui/icons-material/Share";   // NEW
 import EventIcon from "@mui/icons-material/Event";   // NEW
-import CheckIcon from "@mui/icons-material/Check";   // NEW
+import FlagIcon from "@mui/icons-material/Flag";   // NEW
+import AccessTimeIcon from "@mui/icons-material/AccessTime";   // NEW
 import Switch from "@mui/material/Switch";   // NEW — Client Meeting Mode toggle
 import TeamMonitorTab from "./TeamMonitorTab";   // NEW — Team Monitor tab
 const API = import.meta.env.VITE_API_URL || "https://invoice.vjcoverseas.com/api";
@@ -1863,24 +1864,47 @@ function FollowupDialog({ open, onClose, lead }) {
   const totalPages = Math.max(1, Math.ceil(followups.length / FU_PAGE_SIZE));
   const pageRows = followups.slice((page - 1) * FU_PAGE_SIZE, page * FU_PAGE_SIZE);
 
-  const roField = (icon, value, placeholder) => (
-    <TextField
-      fullWidth
-      size="small"
-      value={value}
-      placeholder={placeholder}
-      InputProps={{
-        readOnly: true,
-        startAdornment: (
-          <InputAdornment position="start" sx={{ color: "#555" }}>{icon}</InputAdornment>
-        ),
-      }}
-      sx={{ "& .MuiInputBase-root": { bgcolor: "#e9ecef" } }}
-    />
+  // NEW — 30-minute slots for the time dropdown (saved as "HH:MM", same format as before)
+  const timeSlots = Array.from({ length: 48 }, (_, i) => `${pad2(Math.floor(i / 2))}:${i % 2 ? "30" : "00"}`);
+
+  const FU_ICON_BG = "#e4f5f5";
+  const FU_LINE = "#ced4da";
+
+  // NEW — icon box on the left + field on the right (matches the reference)
+  const fuField = (icon, content, readOnly) => (
+    <Box sx={{ display: "flex", alignItems: "stretch", height: 44 }}>
+      <Box
+        sx={{
+          width: 56, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+          bgcolor: FU_ICON_BG, color: "#3d4a52",
+          border: `1px solid ${FU_LINE}`, borderRight: "none", borderRadius: "4px 0 0 4px",
+        }}
+      >
+        {icon}
+      </Box>
+      <Box
+        sx={{
+          flex: 1, minWidth: 0, display: "flex", alignItems: "center", px: 1.75,
+          bgcolor: readOnly ? "#e9ecef" : "#fff",
+          border: `1px solid ${FU_LINE}`, borderRadius: "0 4px 4px 0",
+        }}
+      >
+        {content}
+      </Box>
+    </Box>
   );
 
+  const roField = (icon, value, placeholder) =>
+    fuField(
+      icon,
+      <Typography noWrap sx={{ fontSize: 16, color: value ? "#495057" : "#9aa1a9" }}>
+        {value || placeholder}
+      </Typography>,
+      true
+    );
+
   const lbl = (text, req) => (
-    <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.75, fontSize: 15 }}>
+    <Typography sx={{ fontWeight: 500, mb: 0.75, fontSize: 17, color: "#343a40" }}>
       {text}{req && <span style={{ color: "#d32f2f" }}> *</span>}
     </Typography>
   );
@@ -1891,6 +1915,8 @@ function FollowupDialog({ open, onClose, lead }) {
     </Box>
   );
 
+  const cardSx = { border: "1px solid #cfd4d9", borderRadius: 1.5, boxShadow: "0 1px 6px rgba(0,0,0,0.35)", p: 2.5, mb: 2, bgcolor: "#fff" };
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
       <Box sx={{ bgcolor: FU_HEADER, color: "#fff", px: 3, py: 2, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -1899,12 +1925,12 @@ function FollowupDialog({ open, onClose, lead }) {
       </Box>
 
       <DialogContent sx={{ pt: 2.5 }}>
-        <Box sx={{ border: "1px solid #ddd", borderRadius: 1.5, boxShadow: 2, p: 2.5, mb: 2 }}>
+        <Box sx={cardSx}>
           <Grid container spacing={2.5}>
             <Grid item xs={12} sm={6} md={3}>{lbl("Name")}{roField(<PersonIcon fontSize="small" />, name, "Name")}</Grid>
             <Grid item xs={12} sm={6} md={3}>{lbl("Email")}{roField(<EmailIcon fontSize="small" />, email, "Email")}</Grid>
             <Grid item xs={12} sm={6} md={3}>{lbl("Mobile")}{roField(<CallIcon fontSize="small" />, mobile, "Mobile")}</Grid>
-            <Grid item xs={12} sm={6} md={3}>{lbl("Interested Country")}{roField(<PublicIcon fontSize="small" />, countries, "—")}</Grid>
+            <Grid item xs={12} sm={6} md={3}>{lbl("Interested Country")}{roField(<FlagIcon fontSize="small" />, countries, "—")}</Grid>
           </Grid>
         </Box>
 
@@ -1933,34 +1959,72 @@ function FollowupDialog({ open, onClose, lead }) {
 
         {tabIdx === 0 && (
           <>
-            <Box sx={{ border: "1px solid #ddd", borderRadius: 1.5, boxShadow: 2, p: 2.5, mb: 2 }}>
+            <Box sx={cardSx}>
               <Grid container spacing={2.5}>
-                <Grid item xs={12} md={3}>
+                <Grid item xs={12} md={4}>
                   {lbl("Next Followup Date", true)}
-                  <TextField fullWidth size="small" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+                  {fuField(
+                    <EventIcon fontSize="small" />,
+                    <TextField
+                      variant="standard" fullWidth type="date" value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      InputProps={{ disableUnderline: true }}
+                    />
+                  )}
                 </Grid>
-                <Grid item xs={12} md={3}>
+                <Grid item xs={12} md={4}>
                   {lbl("Next Followup Time", true)}
-                  <TextField fullWidth size="small" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+                  {fuField(
+                    <AccessTimeIcon fontSize="small" />,
+                    <TextField
+                      select variant="standard" fullWidth value={time}
+                      onChange={(e) => setTime(e.target.value)}
+                      InputProps={{ disableUnderline: true }}
+                      SelectProps={{
+                        displayEmpty: true,
+                        renderValue: (v) => (v ? fmtTime12(v) : <span style={{ color: "#9aa1a9" }}>Follow Up Time</span>),
+                        MenuProps: { PaperProps: { sx: { maxHeight: 280 } } },
+                      }}
+                    >
+                      {timeSlots.map((t) => (
+                        <MenuItem key={t} value={t}>{fmtTime12(t)}</MenuItem>
+                      ))}
+                    </TextField>
+                  )}
                 </Grid>
-                <Grid item xs={12} md={6}>
+                <Grid item xs={12} md={4}>
                   {lbl("Remarks", true)}
-                  <TextField fullWidth size="small" placeholder="Remarks" value={remarks} onChange={(e) => setRemarks(e.target.value)} />
+                  {fuField(
+                    <StickyNote2Icon fontSize="small" />,
+                    <TextField
+                      variant="standard" fullWidth placeholder="Remarks" value={remarks}
+                      onChange={(e) => setRemarks(e.target.value)}
+                      InputProps={{ disableUnderline: true }}
+                    />
+                  )}
                 </Grid>
               </Grid>
             </Box>
 
-            <TableContainer>
-              <Table size="small">
+            <TableContainer sx={{ border: "1px solid #dee2e6", borderRadius: 1, p: 1 }}>
+              <Table
+                size="small"
+                sx={{
+                  tableLayout: "fixed",
+                  minWidth: 900,
+                  "& .MuiTableCell-root": { border: "1px solid #dee2e6", fontSize: 15, color: "#343a40", verticalAlign: "top", py: 1.25 },
+                  "& .MuiTableHead-root .MuiTableCell-root": { fontWeight: 700, borderBottom: "2px solid #c9ced3", verticalAlign: "bottom" },
+                }}
+              >
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 700 }}>S.No.</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Action</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Created By</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Remarks</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Stage</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Attempt<br />Date / Time</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Next Follow Up<br />Date / Time</TableCell>
+                    <TableCell sx={{ width: 70 }}>S.No.</TableCell>
+                    <TableCell sx={{ width: 90 }}>Action</TableCell>
+                    <TableCell sx={{ width: 230 }}>Created By</TableCell>
+                    <TableCell>Remarks</TableCell>
+                    <TableCell sx={{ width: 120 }}>Stage</TableCell>
+                    <TableCell sx={{ width: 150 }}>Attempt<br />Date / Time</TableCell>
+                    <TableCell sx={{ width: 150 }}>Next Follow Up<br />Date / Time</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -1979,18 +2043,18 @@ function FollowupDialog({ open, onClose, lead }) {
                           disabled={!!f.done}
                           onClick={() => markDone(f.id)}
                           title={f.done ? "Done" : "Mark as done"}
-                          sx={{ bgcolor: FU_HEADER, color: "#fff", borderRadius: 1, "&:hover": { bgcolor: "#0c7d72" }, "&.Mui-disabled": { bgcolor: "#b0bec5", color: "#fff" } }}
+                          sx={{ width: 34, height: 34, bgcolor: FU_HEADER, color: "#fff", borderRadius: 1, "&:hover": { bgcolor: "#0c7d72" }, "&.Mui-disabled": { bgcolor: "#b0bec5", color: "#fff" } }}
                         >
                           <CheckIcon fontSize="small" />
                         </IconButton>
                       </TableCell>
                       <TableCell>
                         {f.created_by_name || f.commented_by || "—"}
-                        {f.department ? ` (${f.department})` : ""}
+                        {f.department && (<><br />({f.department})</>)}
                       </TableCell>
                       <TableCell>{f.remark}</TableCell>
                       <TableCell>
-                        <Box sx={{ display: "inline-block", border: "1px solid #333", borderRadius: 0.75, px: 1, py: 0.25, fontSize: 13 }}>{stage}</Box>
+                        <Box sx={{ display: "inline-block", border: "1px solid #3d4a6b", color: "#3d4a6b", borderRadius: "4px", px: 1.25, py: 0.25, fontSize: 14, fontWeight: 600 }}>{stage}</Box>
                       </TableCell>
                       <TableCell>{fmtDateTime(f.created_at)}</TableCell>
                       <TableCell>{fmtDMY(f.reminder_date)} {fmtTime12(f.reminder_time)}</TableCell>
@@ -2015,14 +2079,14 @@ function FollowupDialog({ open, onClose, lead }) {
       </DialogContent>
 
       <Divider />
-      <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button variant="contained" onClick={handleSave} disabled={saving || tabIdx !== 0}
-          sx={{ textTransform: "none", bgcolor: FU_HEADER, "&:hover": { bgcolor: "#0c7d72" } }}>
-          {saving ? "Saving..." : "Save Followup"}
-        </Button>
+      <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
         <Button variant="contained" onClick={onClose}
-          sx={{ textTransform: "none", bgcolor: "#6c757d", "&:hover": { bgcolor: "#5a6268" } }}>
+          sx={{ textTransform: "none", minWidth: 84, bgcolor: "#ff6b7d", "&:hover": { bgcolor: "#e85a6b" } }}>
           Close
+        </Button>
+        <Button variant="contained" onClick={handleSave} disabled={saving || tabIdx !== 0}
+          sx={{ textTransform: "none", minWidth: 84, bgcolor: FU_HEADER, "&:hover": { bgcolor: "#0c7d72" } }}>
+          {saving ? "Saving..." : "Save"}
         </Button>
       </DialogActions>
     </Dialog>
