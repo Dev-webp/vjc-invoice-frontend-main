@@ -2250,7 +2250,8 @@ const [statusFilter, setStatusFilter] = useState("All");
   const [followupOpen, setFollowupOpen] = useState(false);   // NEW
   const [followupLead, setFollowupLead] = useState(null);    // NEW
   const [calendarOpen, setCalendarOpen] = useState(false);   // NEW
-  //   const [notesOpen, setNotesOpen] = useState(false);
+    const [notesOpen, setNotesOpen] = useState(false);
+    //   const [notesOpen, setNotesOpen] = useState(false);
   const [notesLead, setNotesLead] = useState(null);
 
   const fetchLeads = async () => {
