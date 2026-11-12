@@ -1302,10 +1302,29 @@ onChange={(e) => {
                     >
                       {fmt(m.over_30)}
                     </Typography>
-                    <Box>
+                                       <Box>
                       {m.in_meeting_now
                         ? tag("In meeting now", "#ffe3e3", "#c62828")
                         : tag("Completed", "#d9f8ec", "#07865a")}
+                    </Box>
+
+                    {/* NEW — every meeting: start – end · duration (green < 15, orange 15-30, red 30+) */}
+                    <Box sx={{ gridColumn: "1 / -1", display: "flex", flexWrap: "wrap", gap: 0.75, pt: 0.5 }}>
+                      {(m.list || []).map((x, k) => {
+                        const d = Number(x.duration_sec || 0);
+                        const c = d >= 1800 ? "#d32f2f" : d >= 900 ? "#eb6834" : "#1e9e5a";
+                        return (
+                          <Box
+                            key={k}
+                            sx={{
+                              px: 1, py: 0.4, borderRadius: 1.5, fontSize: 10.5, fontWeight: 700,
+                              color: c, border: `1px solid ${c}`, bgcolor: "#fff",
+                            }}
+                          >
+                            #{k + 1} · {fmtClock(x.started_at)} – {x.running ? "now" : fmtClock(x.ended_at)} · {fmtDur(d)}
+                          </Box>
+                        );
+                      })}
                     </Box>
                   </Box>
                 );
@@ -1472,9 +1491,17 @@ onChange={(e) => {
 }
 
 function fmtDur(sec = 0) {
-  const m = Math.round(Number(sec || 0) / 60);
+  const s = Math.round(Number(sec || 0));
+  if (s < 60) return `${s} sec`;
+  const m = Math.round(s / 60);
   if (m < 60) return `${m} min`;
   return `${Math.floor(m / 60)}h ${m % 60}m`;
+}
+
+function fmtClock(iso) {
+  return iso
+    ? new Date(iso).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", hour12: true })
+    : "—";
 }
 
 function diffText(current = 0, previous = 0) {

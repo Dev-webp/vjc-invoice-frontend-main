@@ -1716,7 +1716,9 @@ function ClientMeetingToggle({ onModeChange }) {
 
       {/* NEW — 30 min reminder. Does not auto-close: stays until a button is clicked. */}
       <Dialog open={showPopup} onClose={() => {}} disableEscapeKeyDown maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ fontWeight: 700, color: "#d32f2f" }}>Is your meeting over?</DialogTitle>        <DialogContent>
+        <DialogTitle sx={{ fontWeight: 700, bgcolor: "#d32f2f", color: "#fff" }}>
+          Is your meeting over? ({elapsedMin} min)
+        </DialogTitle>       <DialogContent>
           <Typography variant="body2">
             Client Meeting Mode has been ON for {elapsedMin} minutes. New leads are paused for you.
             Turn it OFF if the meeting is finished.
