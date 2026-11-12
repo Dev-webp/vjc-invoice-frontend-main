@@ -2375,6 +2375,174 @@ function FollowupCalendarDialog({ open, onClose }) {
     </>
   );
 }
+// ── NEW: Dead Enquiry tab — all leads with status "Dead" ─────────────────
+function DeadEnquiryTab() {
+  const [leads, setLeads] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [fuOpen, setFuOpen] = useState(false);
+  const [fuLead, setFuLead] = useState(null);
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [notesLead, setNotesLead] = useState(null);
+
+  const fetchDead = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API}/leads?status=Dead`, { headers: authHeader() });
+      const data = await res.json();
+      if (data.success) setLeads(data.leads || []);
+    } catch {
+      // silent
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchDead(); }, []);
+
+  // changing status away from Dead sends the lead back to View Enquiry
+  const changeStatus = async (leadId, newStatus) => {
+    if (newStatus === "Dead") return;
+    setLeads((prev) => prev.filter((l) => l.id !== leadId));
+    try {
+      await fetch(`${API}/leads/${leadId}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...authHeader() },
+        body: JSON.stringify({ status: newStatus }),
+      });
+    } catch {
+      alert("❌ Failed to update status");
+      fetchDead();
+    }
+  };
+
+  const shown = leads.filter((l) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (
+      l.lead_name?.toLowerCase().includes(q) ||
+      l.email?.toLowerCase().includes(q) ||
+      l.contact_number?.toLowerCase().includes(q)
+    );
+  });
+
+  return (
+    <>
+      <Box sx={{ display: "flex", gap: 2, mb: 2, alignItems: "center", flexWrap: "wrap" }}>
+        <TextField
+          size="small"
+          placeholder="Search Name / Email / Mobile"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          sx={{ width: 260 }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" color="action" />
+              </InputAdornment>
+            ),
+          }}
+        />
+        <Typography variant="body2" color="text.secondary" sx={{ ml: "auto" }}>
+          Total Number of Records - {shown.length}
+        </Typography>
+      </Box>
+
+      {loading ? (
+        <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}><CircularProgress /></Box>
+      ) : (
+        <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 2, boxShadow: "none", border: "1px solid #e0e0e0" }}>
+          <Table
+            size="small"
+            sx={{
+              minWidth: 1500,
+              "& .MuiTableCell-root": { borderRight: "1px solid #c4c4c4", borderBottom: "1px solid #c4c4c4" },
+            }}
+          >
+            <TableHead sx={{ bgcolor: "#f5f5f5" }}>
+              <TableRow>
+                {["Action", "Created - Updated", "Name", "Mobile", "Email", "Service Type", "Interested Country", "Assigned To", "Status", "Review", "Last Remark"].map((h) => (
+                  <TableCell key={h} sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>{h}</TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {shown.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={11} align="center" sx={{ py: 4, color: "text.secondary" }}>
+                    No dead enquiries.
+                  </TableCell>
+                </TableRow>
+              )}
+              {shown.map((lead) => (
+                <TableRow key={lead.id} sx={{ bgcolor: statusRowColor("Dead") }}>
+                  <TableCell align="center">
+                    <IconButton
+                      size="small"
+                      title="Followup / Appointment (see reason)"
+                      onClick={() => { setFuLead(lead); setFuOpen(true); }}
+                      sx={{ bgcolor: "#28a745", color: "#fff", borderRadius: 1, "&:hover": { bgcolor: "#1e7e34" } }}
+                    >
+                      <ShareIcon fontSize="small" />
+                    </IconButton>
+                  </TableCell>
+                  <TableCell sx={{ lineHeight: 1.8, whiteSpace: "nowrap" }}>
+                    <Typography variant="body2">{fmtDateTime(lead.created_at)}</Typography>
+                    <Typography variant="body2" color="text.secondary">{fmtDateTime(lead.updated_at)}</Typography>
+                  </TableCell>
+                  <TableCell sx={{ whiteSpace: "nowrap" }}>{lead.lead_name}</TableCell>
+                  <TableCell sx={{ whiteSpace: "nowrap" }}>{lead.contact_number}</TableCell>
+                  <TableCell sx={{ whiteSpace: "nowrap" }}>{lead.email || "—"}</TableCell>
+                  <TableCell>{lead.service_type || "—"}</TableCell>
+                  <TableCell>
+                    {(lead.interested_countries || []).map((c) => (
+                      <Chip key={c} label={c} size="small" sx={{ mr: 0.5, mb: 0.5 }} />
+                    ))}
+                  </TableCell>
+                  <TableCell>{lead.assigned_to_name || "Not Assigned"}</TableCell>
+                  <TableCell>
+                    <TextField
+                      select size="small" value="Dead"
+                      onChange={(e) => changeStatus(lead.id, e.target.value)}
+                      sx={{ minWidth: 140, bgcolor: "#fff" }}
+                    >
+                      {STATUS_OPTIONS.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
+                    </TextField>
+                  </TableCell>
+                  <TableCell>
+                    <Stack direction="row" spacing={0.5}>
+                      <Button
+                        size="small" variant="outlined"
+                        startIcon={<HistoryIcon fontSize="small" />}
+                        onClick={() => window.open(`/lead-history/${lead.id}`, "_blank")}
+                        sx={{ textTransform: "none", height: 32, minWidth: "auto", px: 1, borderRadius: 1 }}
+                      >
+                        History
+                      </Button>
+                      <Button
+                        size="small" variant="outlined"
+                        startIcon={<StickyNote2Icon fontSize="small" />}
+                        onClick={() => { setNotesLead(lead); setNotesOpen(true); }}
+                        sx={{ textTransform: "none", height: 32, minWidth: "auto", px: 1, borderRadius: 1 }}
+                      >
+                        Notes
+                      </Button>
+                    </Stack>
+                  </TableCell>
+                  <TableCell sx={{ minWidth: 300 }}>{lead.last_remark || "—"}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+
+      <FollowupDialog open={fuOpen} onClose={() => setFuOpen(false)} lead={fuLead} />
+      <NotesDialog open={notesOpen} onClose={() => setNotesOpen(false)} lead={notesLead} onSaved={fetchDead} />
+    </>
+  );
+}
+
 // ── Main Lead Management Page ────────────────────────────────────────────
 function LeadManagement() {
   const currentUser = getCurrentUser();
@@ -2447,7 +2615,8 @@ const [statusFilter, setStatusFilter] = useState("All");
   };
 
   // Client-side search — filters by Name / Email / Mobile, matches the "Search Customers" bar style
-  const filteredLeads = leads.filter((l) => {
+    const filteredLeads = leads.filter((l) => {
+    if (l.status === "Dead") return false;   // NEW — Dead leads live in the Dead Enquiry tab
     if (!search.trim()) return true;
     const q = search.toLowerCase();
     return (
@@ -2473,6 +2642,7 @@ const [statusFilter, setStatusFilter] = useState("All");
                     {isChairman && <Tab label="Departments" />}
           {isChairman && <Tab label="Pending Assignment" />}
           <Tab label="Lead Monitor" value={4} />
+          <Tab label="Dead Enquiry" value={5} />
                   </Tabs>
         <Stack direction="row" spacing={1} alignItems="center">
           {!isChairman && <ClientMeetingToggle onModeChange={setInMeeting} />}          {isChairman && <ChairmanAssignmentFeed />}
@@ -2513,6 +2683,10 @@ const [statusFilter, setStatusFilter] = useState("All");
 
       {/* ── Tab 4: Team Monitor (chairman / mis-executive only) ── */}
       {tab === 4 && <TeamMonitorTab onGoPending={isChairman ? () => setTab(3) : undefined} />}
+
+      {/* NEW — Tab 5: Dead Enquiry (chairman + employee) */}
+      {tab === 5 && <DeadEnquiryTab />}
+
       {/* ── Tab 1: View Enquiry ── */}
       {tab === 1 && (
       <>
@@ -2535,7 +2709,7 @@ const [statusFilter, setStatusFilter] = useState("All");
         <TextField select label="Status" size="small" value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)} sx={{ width: 180 }}>
           <MenuItem value="All">All</MenuItem>
-          {STATUS_OPTIONS.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
+          {STATUS_OPTIONS.filter((s) => s !== "Dead").map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
         </TextField>
 
         {isChairman && (
