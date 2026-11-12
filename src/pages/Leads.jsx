@@ -1774,10 +1774,10 @@ function FollowupDialog({ open, onClose, lead }) {
   const [info, setInfo] = useState(null);
   const [followups, setFollowups] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [tabIdx, setTabIdx] = useState(0);
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [remarks, setRemarks] = useState("");
+  const [country, setCountry] = useState("");
   const [saving, setSaving] = useState(false);
   const [page, setPage] = useState(1);
 
@@ -1792,6 +1792,8 @@ function FollowupDialog({ open, onClose, lead }) {
       if (data.success) {
         setInfo(data.lead);
         setFollowups(data.followups || []);
+        const ic = data.lead?.interested_countries;
+        setCountry(Array.isArray(ic) ? (ic[0] || "") : (ic || ""));
       } else {
         alert("❌ " + (data.message || "Failed to load followups"));
       }
@@ -1804,7 +1806,7 @@ function FollowupDialog({ open, onClose, lead }) {
 
   useEffect(() => {
     if (!open || !leadId) return;
-    setInfo(null); setFollowups([]); setTabIdx(0);
+    setInfo(null); setFollowups([]); setCountry("");
     setDate(""); setTime(""); setRemarks(""); setPage(1);
     load();
     // eslint-disable-next-line
@@ -1856,23 +1858,29 @@ function FollowupDialog({ open, onClose, lead }) {
   const name = info?.lead_name || lead?.lead_name || "";
   const email = info?.email || "";
   const mobile = info?.contact_number || lead?.contact_number || "";
-  const countries = Array.isArray(info?.interested_countries)
-    ? info.interested_countries.join(", ")
-    : info?.interested_countries || "";
   const stage = info?.status || lead?.status || "Enquiry";
 
   const totalPages = Math.max(1, Math.ceil(followups.length / FU_PAGE_SIZE));
   const pageRows = followups.slice((page - 1) * FU_PAGE_SIZE, page * FU_PAGE_SIZE);
 
-  // NEW — 30-minute slots for the time dropdown (saved as "HH:MM", same format as before)
+  // 30-minute slots, saved as "HH:MM" (same format as before)
   const timeSlots = Array.from({ length: 48 }, (_, i) => `${pad2(Math.floor(i / 2))}:${i % 2 ? "30" : "00"}`);
+  // all countries, plus the lead's own value if it is not in the list (e.g. "Canada PR")
+  const countryOptions = country && !COUNTRIES.includes(country) ? [country, ...COUNTRIES] : COUNTRIES;
 
   const FU_ICON_BG = "#e4f5f5";
   const FU_LINE = "#ced4da";
 
-  // NEW — icon box on the left + field on the right (matches the reference)
-  const fuField = (icon, content, readOnly) => (
-    <Box sx={{ display: "flex", alignItems: "stretch", height: 44 }}>
+  // plain input/select styling: no underline, no MUI quirks
+  const plainSx = {
+    width: "100%", border: "none", outline: "none", background: "transparent",
+    fontSize: 16, fontFamily: "inherit", color: "#495057", p: 0, m: 0,
+    "&::placeholder": { color: "#9aa1a9", opacity: 1 },
+  };
+
+  // icon box on the left + field on the right
+  const fuField = (icon, content, grey) => (
+    <Box sx={{ display: "flex", alignItems: "stretch", height: 44, width: "100%" }}>
       <Box
         sx={{
           width: 56, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
@@ -1885,7 +1893,7 @@ function FollowupDialog({ open, onClose, lead }) {
       <Box
         sx={{
           flex: 1, minWidth: 0, display: "flex", alignItems: "center", px: 1.75,
-          bgcolor: readOnly ? "#e9ecef" : "#fff",
+          bgcolor: grey ? "#e9ecef" : "#fff",
           border: `1px solid ${FU_LINE}`, borderRadius: "0 4px 4px 0",
         }}
       >
@@ -1925,157 +1933,133 @@ function FollowupDialog({ open, onClose, lead }) {
       </Box>
 
       <DialogContent sx={{ pt: 2.5 }}>
+        {/* Top info: 4 equal full-width columns */}
         <Box sx={cardSx}>
-          <Grid container spacing={2.5}>
-            <Grid item xs={12} sm={6} md={3}>{lbl("Name")}{roField(<PersonIcon fontSize="small" />, name, "Name")}</Grid>
-            <Grid item xs={12} sm={6} md={3}>{lbl("Email")}{roField(<EmailIcon fontSize="small" />, email, "Email")}</Grid>
-            <Grid item xs={12} sm={6} md={3}>{lbl("Mobile")}{roField(<CallIcon fontSize="small" />, mobile, "Mobile")}</Grid>
-            <Grid item xs={12} sm={6} md={3}>{lbl("Interested Country")}{roField(<FlagIcon fontSize="small" />, countries, "—")}</Grid>
-          </Grid>
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(4, minmax(0, 1fr))" }, gap: 2.5 }}>
+            <Box sx={{ minWidth: 0 }}>{lbl("Name")}{roField(<PersonIcon fontSize="small" />, name, "Name")}</Box>
+            <Box sx={{ minWidth: 0 }}>{lbl("Email")}{roField(<EmailIcon fontSize="small" />, email, "Email")}</Box>
+            <Box sx={{ minWidth: 0 }}>{lbl("Mobile")}{roField(<CallIcon fontSize="small" />, mobile, "Mobile")}</Box>
+            <Box sx={{ minWidth: 0 }}>
+              {lbl("Interested Country")}
+              {fuField(
+                <FlagIcon fontSize="small" />,
+                <Box component="select" value={country} onChange={(e) => setCountry(e.target.value)} sx={{ ...plainSx, cursor: "pointer" }}>
+                  <option value="">—</option>
+                  {countryOptions.map((c) => <option key={c} value={c}>{c}</option>)}
+                </Box>,
+                true
+              )}
+            </Box>
+          </Box>
         </Box>
 
-        <Tabs
-          value={tabIdx}
-          onChange={(_, v) => setTabIdx(v)}
-          variant="fullWidth"
-          TabIndicatorProps={{ style: { backgroundColor: FU_HEADER, height: 3 } }}
-          sx={{ mb: 2, borderBottom: "1px solid #e0e0e0" }}
-        >
-          <Tab
-            sx={{ textTransform: "none", fontSize: 18, color: tabIdx === 0 ? FU_HEADER : "#555" }}
-            label={<Stack direction="row" spacing={1} alignItems="center"><span>Followups</span>{badge(followups.length)}</Stack>}
-          />
-          <Tab
-            sx={{ textTransform: "none", fontSize: 18, color: tabIdx === 1 ? FU_HEADER : "#555" }}
-            label={<Stack direction="row" spacing={1} alignItems="center"><span>Appointments</span>{badge(0)}</Stack>}
-          />
-        </Tabs>
+        {/* Followups header (Appointments removed) */}
+        <Box sx={{ borderBottom: "1px solid #e0e0e0", mb: 2 }}>
+          <Box sx={{ display: "inline-flex", alignItems: "center", gap: 1, px: 8, py: 1.5, borderBottom: `3px solid ${FU_HEADER}`, mb: "-1px" }}>
+            <Typography sx={{ fontSize: 18, color: FU_HEADER }}>Followups</Typography>
+            {badge(followups.length)}
+          </Box>
+        </Box>
 
-        {tabIdx === 1 && (
-          <Typography variant="body2" color="text.secondary" sx={{ py: 4, textAlign: "center" }}>
-            No appointments yet.
-          </Typography>
-        )}
-
-        {tabIdx === 0 && (
-          <>
-            <Box sx={cardSx}>
-              <Grid container spacing={2.5}>
-                <Grid item xs={12} md={4}>
-                  {lbl("Next Followup Date", true)}
-                  {fuField(
-                    <EventIcon fontSize="small" />,
-                    <TextField
-                      variant="standard" fullWidth type="date" value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                      InputProps={{ disableUnderline: true }}
-                    />
-                  )}
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  {lbl("Next Followup Time", true)}
-                  {fuField(
-                    <AccessTimeIcon fontSize="small" />,
-                    <TextField
-                      select variant="standard" fullWidth value={time}
-                      onChange={(e) => setTime(e.target.value)}
-                      InputProps={{ disableUnderline: true }}
-                      SelectProps={{
-                        displayEmpty: true,
-                        renderValue: (v) => (v ? fmtTime12(v) : <span style={{ color: "#9aa1a9" }}>Follow Up Time</span>),
-                        MenuProps: { PaperProps: { sx: { maxHeight: 280 } } },
-                      }}
-                    >
-                      {timeSlots.map((t) => (
-                        <MenuItem key={t} value={t}>{fmtTime12(t)}</MenuItem>
-                      ))}
-                    </TextField>
-                  )}
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  {lbl("Remarks", true)}
-                  {fuField(
-                    <StickyNote2Icon fontSize="small" />,
-                    <TextField
-                      variant="standard" fullWidth placeholder="Remarks" value={remarks}
-                      onChange={(e) => setRemarks(e.target.value)}
-                      InputProps={{ disableUnderline: true }}
-                    />
-                  )}
-                </Grid>
-              </Grid>
+        {/* Date / Time / Remarks: 1 : 1 : 2 */}
+        <Box sx={cardSx}>
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr 2fr" }, gap: 2.5 }}>
+            <Box sx={{ minWidth: 0 }}>
+              {lbl("Next Followup Date", true)}
+              {fuField(
+                <EventIcon fontSize="small" />,
+                <Box component="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} sx={plainSx} />
+              )}
             </Box>
+            <Box sx={{ minWidth: 0 }}>
+              {lbl("Next Followup Time", true)}
+              {fuField(
+                <AccessTimeIcon fontSize="small" />,
+                <Box component="select" value={time} onChange={(e) => setTime(e.target.value)}
+                  sx={{ ...plainSx, cursor: "pointer", color: time ? "#495057" : "#9aa1a9" }}>
+                  <option value="">Follow Up Time</option>
+                  {timeSlots.map((t) => <option key={t} value={t} style={{ color: "#495057" }}>{fmtTime12(t)}</option>)}
+                </Box>
+              )}
+            </Box>
+            <Box sx={{ minWidth: 0 }}>
+              {lbl("Remarks", true)}
+              {fuField(
+                <StickyNote2Icon fontSize="small" />,
+                <Box component="input" type="text" placeholder="Remarks" value={remarks} onChange={(e) => setRemarks(e.target.value)} sx={plainSx} />
+              )}
+            </Box>
+          </Box>
+        </Box>
 
-            <TableContainer sx={{ border: "1px solid #dee2e6", borderRadius: 1, p: 1 }}>
-              <Table
-                size="small"
-                sx={{
-                  tableLayout: "fixed",
-                  minWidth: 900,
-                  "& .MuiTableCell-root": { border: "1px solid #dee2e6", fontSize: 15, color: "#343a40", verticalAlign: "top", py: 1.25 },
-                  "& .MuiTableHead-root .MuiTableCell-root": { fontWeight: 700, borderBottom: "2px solid #c9ced3", verticalAlign: "bottom" },
-                }}
-              >
-                <TableHead>
-                  <TableRow>
-                    <TableCell sx={{ width: 70 }}>S.No.</TableCell>
-                    <TableCell sx={{ width: 90 }}>Action</TableCell>
-                    <TableCell sx={{ width: 230 }}>Created By</TableCell>
-                    <TableCell>Remarks</TableCell>
-                    <TableCell sx={{ width: 120 }}>Stage</TableCell>
-                    <TableCell sx={{ width: 150 }}>Attempt<br />Date / Time</TableCell>
-                    <TableCell sx={{ width: 150 }}>Next Follow Up<br />Date / Time</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {loading && (
-                    <TableRow><TableCell colSpan={7} align="center" sx={{ py: 3 }}><CircularProgress size={24} /></TableCell></TableRow>
-                  )}
-                  {!loading && followups.length === 0 && (
-                    <TableRow><TableCell colSpan={7} align="center" sx={{ py: 3, color: "text.secondary" }}>No followups yet.</TableCell></TableRow>
-                  )}
-                  {!loading && pageRows.map((f, i) => (
-                    <TableRow key={f.id}>
-                      <TableCell>{(page - 1) * FU_PAGE_SIZE + i + 1}</TableCell>
-                      <TableCell>
-                        <IconButton
-                          size="small"
-                          disabled={!!f.done}
-                          onClick={() => markDone(f.id)}
-                          title={f.done ? "Done" : "Mark as done"}
-                          sx={{ width: 34, height: 34, bgcolor: FU_HEADER, color: "#fff", borderRadius: 1, "&:hover": { bgcolor: "#0c7d72" }, "&.Mui-disabled": { bgcolor: "#b0bec5", color: "#fff" } }}
-                        >
-                          <CheckIcon fontSize="small" />
-                        </IconButton>
-                      </TableCell>
-                      <TableCell>
-                        {f.created_by_name || f.commented_by || "—"}
-                        {f.department && (<><br />({f.department})</>)}
-                      </TableCell>
-                      <TableCell>{f.remark}</TableCell>
-                      <TableCell>
-                        <Box sx={{ display: "inline-block", border: "1px solid #3d4a6b", color: "#3d4a6b", borderRadius: "4px", px: 1.25, py: 0.25, fontSize: 14, fontWeight: 600 }}>{stage}</Box>
-                      </TableCell>
-                      <TableCell>{fmtDateTime(f.created_at)}</TableCell>
-                      <TableCell>{fmtDMY(f.reminder_date)} {fmtTime12(f.reminder_time)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-
-            <Stack direction="row" spacing={0} justifyContent="flex-end" sx={{ mt: 2 }}>
-              <Button size="small" variant="outlined" disabled={page <= 1} onClick={() => setPage(page - 1)}
-                sx={{ textTransform: "none", borderRadius: "4px 0 0 4px", color: "#555", borderColor: "#ddd" }}>Previous</Button>
-              {Array.from({ length: totalPages }, (_, k) => k + 1).map((p) => (
-                <Button key={p} size="small" variant={p === page ? "contained" : "outlined"} onClick={() => setPage(p)}
-                  sx={{ textTransform: "none", minWidth: 40, borderRadius: 0, bgcolor: p === page ? FU_HEADER : undefined, borderColor: "#ddd", color: p === page ? "#fff" : "#555", "&:hover": { bgcolor: p === page ? "#0c7d72" : undefined } }}>{p}</Button>
+        <TableContainer sx={{ border: "1px solid #dee2e6", borderRadius: 1, p: 1 }}>
+          <Table
+            size="small"
+            sx={{
+              tableLayout: "fixed",
+              minWidth: 900,
+              "& .MuiTableCell-root": { border: "1px solid #dee2e6", fontSize: 15, color: "#343a40", verticalAlign: "top", py: 1.25 },
+              "& .MuiTableHead-root .MuiTableCell-root": { fontWeight: 700, borderBottom: "2px solid #c9ced3", verticalAlign: "bottom" },
+            }}
+          >
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ width: 70 }}>S.No.</TableCell>
+                <TableCell sx={{ width: 90 }}>Action</TableCell>
+                <TableCell sx={{ width: 230 }}>Created By</TableCell>
+                <TableCell>Remarks</TableCell>
+                <TableCell sx={{ width: 120 }}>Stage</TableCell>
+                <TableCell sx={{ width: 150 }}>Attempt<br />Date / Time</TableCell>
+                <TableCell sx={{ width: 150 }}>Next Follow Up<br />Date / Time</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {loading && (
+                <TableRow><TableCell colSpan={7} align="center" sx={{ py: 3 }}><CircularProgress size={24} /></TableCell></TableRow>
+              )}
+              {!loading && followups.length === 0 && (
+                <TableRow><TableCell colSpan={7} align="center" sx={{ py: 3, color: "text.secondary" }}>No followups yet.</TableCell></TableRow>
+              )}
+              {!loading && pageRows.map((f, i) => (
+                <TableRow key={f.id}>
+                  <TableCell>{(page - 1) * FU_PAGE_SIZE + i + 1}</TableCell>
+                  <TableCell>
+                    <IconButton
+                      size="small"
+                      disabled={!!f.done}
+                      onClick={() => markDone(f.id)}
+                      title={f.done ? "Done" : "Mark as done"}
+                      sx={{ width: 34, height: 34, bgcolor: FU_HEADER, color: "#fff", borderRadius: 1, "&:hover": { bgcolor: "#0c7d72" }, "&.Mui-disabled": { bgcolor: "#b0bec5", color: "#fff" } }}
+                    >
+                      <CheckIcon fontSize="small" />
+                    </IconButton>
+                  </TableCell>
+                  <TableCell>
+                    {f.created_by_name || f.commented_by || "—"}
+                    {f.department && (<><br />({f.department})</>)}
+                  </TableCell>
+                  <TableCell>{f.remark}</TableCell>
+                  <TableCell>
+                    <Box sx={{ display: "inline-block", border: "1px solid #3d4a6b", color: "#3d4a6b", borderRadius: "4px", px: 1.25, py: 0.25, fontSize: 14, fontWeight: 600 }}>{stage}</Box>
+                  </TableCell>
+                  <TableCell>{fmtDateTime(f.created_at)}</TableCell>
+                  <TableCell>{fmtDMY(f.reminder_date)} {fmtTime12(f.reminder_time)}</TableCell>
+                </TableRow>
               ))}
-              <Button size="small" variant="outlined" disabled={page >= totalPages} onClick={() => setPage(page + 1)}
-                sx={{ textTransform: "none", borderRadius: "0 4px 4px 0", color: "#555", borderColor: "#ddd" }}>Next</Button>
-            </Stack>
-          </>
-        )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        <Stack direction="row" spacing={0} justifyContent="flex-end" sx={{ mt: 2 }}>
+          <Button size="small" variant="outlined" disabled={page <= 1} onClick={() => setPage(page - 1)}
+            sx={{ textTransform: "none", borderRadius: "4px 0 0 4px", color: "#555", borderColor: "#ddd" }}>Previous</Button>
+          {Array.from({ length: totalPages }, (_, k) => k + 1).map((p) => (
+            <Button key={p} size="small" variant={p === page ? "contained" : "outlined"} onClick={() => setPage(p)}
+              sx={{ textTransform: "none", minWidth: 40, borderRadius: 0, bgcolor: p === page ? FU_HEADER : undefined, borderColor: "#ddd", color: p === page ? "#fff" : "#555", "&:hover": { bgcolor: p === page ? "#0c7d72" : undefined } }}>{p}</Button>
+          ))}
+          <Button size="small" variant="outlined" disabled={page >= totalPages} onClick={() => setPage(page + 1)}
+            sx={{ textTransform: "none", borderRadius: "0 4px 4px 0", color: "#555", borderColor: "#ddd" }}>Next</Button>
+        </Stack>
       </DialogContent>
 
       <Divider />
@@ -2084,7 +2068,7 @@ function FollowupDialog({ open, onClose, lead }) {
           sx={{ textTransform: "none", minWidth: 84, bgcolor: "#ff6b7d", "&:hover": { bgcolor: "#e85a6b" } }}>
           Close
         </Button>
-        <Button variant="contained" onClick={handleSave} disabled={saving || tabIdx !== 0}
+        <Button variant="contained" onClick={handleSave} disabled={saving}
           sx={{ textTransform: "none", minWidth: 84, bgcolor: FU_HEADER, "&:hover": { bgcolor: "#0c7d72" } }}>
           {saving ? "Saving..." : "Save"}
         </Button>
