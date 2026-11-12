@@ -29,6 +29,7 @@ const authHeader = () => ({
 });
 
 const RANGES = [
+  { key: "all", label: "All time" },
   { key: "today", label: "Today" },
   { key: "yesterday", label: "Yesterday" },
   { key: "7d", label: "Last 7 days" },
@@ -189,9 +190,9 @@ function Panel({ title, subtitle, icon, children, action }) {
   );
 }
 
-export default function TeamMonitorTab({ onGoPending }) {
-  const [range, setRange] = useState("today");
-  const [selectedDate, setSelectedDate] = useState("");
+export default function TeamMonitorTab({ onGoPending, onGoView }) {
+      const [range, setRange] = useState("all");
+    const [selectedDate, setSelectedDate] = useState("");
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -255,9 +256,18 @@ const load = useCallback(
     );
   }
 
-  const s = data?.summary || {};
+    const s = data?.summary || {};
   const prev = data?.previous || {};
-  const allAgents = data?.agents || [];
+  const ov = data?.overall || null;   // NEW — live totals from all leads (follows the date filter)
+  const agentOv = Object.fromEntries((ov?.by_agent || []).map((x) => [String(x.id), x]));
+  const allAgents = (data?.agents || []).map((a) => {
+    if (!ov) return a;
+    const x = agentOv[String(a.id)] || {};
+    return { ...a, leads: x.leads || 0, contacted: x.contacted || 0, warm: x.warm || 0, prospect: x.prospect || 0 };
+  });
+  const pipe = ov
+    ? { received: ov.total, assigned: ov.assigned, contacted: ov.contacted, warm_prospect: ov.warm_prospect, pending_agreement: ov.pending_agreement, closed: ov.closed }
+    : s;
 
   const departments = [
     ...new Set(allAgents.map((a) => a.department).filter(Boolean)),
@@ -272,14 +282,14 @@ const load = useCallback(
           .includes(search.toLowerCase()))
   );
 
-  const sources = data?.by_source || [];
-  const maxSource = Math.max(
+  const sources = ov?.by_source || data?.by_source || [];
+    const maxSource = Math.max(
     1,
     ...sources.map((x) => Number(x.count || 0))
   );
 
-  const byDept = data?.by_department || [];
-  const maxDept = Math.max(
+  const byDept = ov?.by_department || data?.by_department || [];
+    const maxDept = Math.max(
     1,
     ...byDept.map((x) => Number(x.new_leads || 0))
   );
@@ -576,13 +586,11 @@ onChange={(e) => {
           progress={sla}
         />
 
-        <Metric
-          icon={<FactCheckRoundedIcon />}
-          label="Pending Assessments"
-          value={fmt(
-            s.pending_assessments ?? s.pending_assessment ?? 0
-          )}
-          note="Awaiting review"
+               <Metric
+          icon={<DescriptionRoundedIcon />}
+          label="Total Leads"
+          value={fmt(ov ? ov.total : s.received)}
+          note={ov ? `Includes ${fmt(ov.dead)} dead · ${rangeLabel}` : rangeLabel}
           color={COLORS.purple}
         />
       </Box>
@@ -874,16 +882,14 @@ onChange={(e) => {
               }
             />
 
-            <ActionCard
-              icon={<FactCheckRoundedIcon />}
-              count={Number(
-                s.pending_assessments ?? s.pending_assessment ?? 0
-              )}
-              title="Pending Assessments"
-              detail="Awaiting review and approval"
+                       <ActionCard
+              icon={<DescriptionRoundedIcon />}
+              count={ov ? ov.total : Number(s.received || 0)}
+              title="Total Leads"
+              detail="Open View Enquiry to see all"
               color={COLORS.purple}
-              button="Review Now"
-              onClick={onGoPending}
+              button="View Enquiry"
+              onClick={onGoView}
             />
           </Panel>
 
@@ -944,15 +950,16 @@ onChange={(e) => {
           title="Lead Pipeline"
           subtitle={`Current status overview · ${rangeLabel}`}
           icon={<QueryStatsRoundedIcon />}
-          action={tag(`Total ${fmt(s.received)}`, "#e4efff", COLORS.blue)}
+                   action={tag(`Total ${fmt(pipe.received)}`, "#e4efff", COLORS.blue)}
         >
           {[
-            ["New / Received", s.received, COLORS.blue],
-            ["Assigned", s.assigned, COLORS.green],
-            ["Contacted", s.contacted, "#0ab89b"],
-            ["Warm / Prospect", s.warm_prospect, COLORS.orange],
-            ["Pending Agreement", s.pending_agreement, COLORS.purple],
-            ["Closed", s.closed, COLORS.pink],
+            ["Total leads", pipe.received, COLORS.blue],
+            ["Assigned", pipe.assigned, COLORS.green],
+            ["Contacted", pipe.contacted, "#0ab89b"],
+            ["Warm / Prospect", pipe.warm_prospect, COLORS.orange],
+            ["Pending Agreement", pipe.pending_agreement, COLORS.purple],
+            ["Closed", pipe.closed, COLORS.pink],
+            ["Dead", ov ? ov.dead : 0, "#8a9bb5"],
           ].map(([label, value, color]) => (
             <Box
               key={label}
@@ -980,8 +987,8 @@ onChange={(e) => {
               >
                 <Box
                   sx={{
-                    width: `${pct(value, s.received)}%`,
-                    height: "100%",
+                    width: `${pct(value, pipe.received)}%`,
+                     height: "100%",
                     bgcolor: color,
                     borderRadius: 8,
                   }}

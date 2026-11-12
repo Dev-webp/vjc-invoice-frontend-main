@@ -2684,8 +2684,7 @@ const [statusFilter, setStatusFilter] = useState("All");
       {tab === 3 && isChairman && <PendingAssignmentTab />}
 
       {/* ── Tab 4: Team Monitor (chairman / mis-executive only) ── */}
-      {tab === 4 && <TeamMonitorTab onGoPending={isChairman ? () => setTab(3) : undefined} />}
-
+      {tab === 4 && <TeamMonitorTab onGoPending={isChairman ? () => setTab(3) : undefined} onGoView={() => setTab(1)} />}
       {/* NEW — Tab 5: Dead Enquiry (chairman + employee) */}
       {tab === 5 && <DeadEnquiryTab />}
 
