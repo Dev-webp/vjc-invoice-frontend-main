@@ -191,6 +191,7 @@ function Panel({ title, subtitle, icon, children, action }) {
 
 export default function TeamMonitorTab({ onGoPending }) {
   const [range, setRange] = useState("today");
+  const [selectedDate, setSelectedDate] = useState("");
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -201,16 +202,23 @@ const [selectedAgent, setSelectedAgent] = useState(null);
 const [agentRedFlags, setAgentRedFlags] = useState([]);
 const [redFlagsLoading, setRedFlagsLoading] = useState(false);
 const [redFlagsError, setRedFlagsError] = useState("");
-  const load = useCallback(
-    async (showSpinner = false) => {
-      if (showSpinner) setLoading(true);
+const load = useCallback(
+  async (showSpinner = false) => {
+    if (showSpinner) setLoading(true);
 
-      try {
-        const res = await fetch(
-          `${API}/leads/team-monitor?range=${range}`,
-          { headers: authHeader() }
-        );
+    try {
+      const params = new URLSearchParams();
 
+      if (selectedDate) {
+        params.set("date", selectedDate);
+      } else {
+        params.set("range", range);
+      }
+
+      const res = await fetch(
+        `${API}/leads/team-monitor?${params.toString()}`,
+        { headers: authHeader() }
+      );
         const json = await res.json();
 
         if (!res.ok || !json.success) {
@@ -228,7 +236,7 @@ const [redFlagsError, setRedFlagsError] = useState("");
         setLoading(false);
       }
     },
-    [range]
+    [range, selectedDate]
   );
 
   useEffect(() => {
@@ -428,7 +436,7 @@ const openAgentRedFlags = async (agent) => {
               color: COLORS.ink,
             }}
           >
-            Team Monitor
+            Lead Monitor
           </Typography>
 
           <Typography
@@ -438,7 +446,7 @@ const openAgentRedFlags = async (agent) => {
           </Typography>
         </Box>
 
-        <Box
+                <Box
           sx={{
             display: "flex",
             alignItems: "center",
@@ -446,11 +454,33 @@ const openAgentRedFlags = async (agent) => {
             gap: 1,
           }}
         >
+          {/* NEW: Calendar Date Picker */}
+          <input
+            type="date"
+            aria-label="Select dashboard date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            style={{
+              height: 40,
+              padding: "0 10px",
+              background: "#fff",
+              color: COLORS.ink,
+              border: `1px solid ${COLORS.border}`,
+              borderRadius: 8,
+              fontSize: 12,
+              fontFamily: "inherit",
+              cursor: "pointer",
+            }}
+          />
+
+          {/* EXISTING: Date Range Dropdown — unchanged */}
           <Box
             component="select"
             value={range}
-            onChange={(e) => setRange(e.target.value)}
-            sx={{
+onChange={(e) => {
+  setRange(e.target.value);
+  setSelectedDate("");
+}}            sx={{
               height: 40,
               px: 1.5,
               bgcolor: "#fff",
@@ -467,7 +497,6 @@ const openAgentRedFlags = async (agent) => {
               </option>
             ))}
           </Box>
-
           <Typography
             sx={{ fontSize: 11, color: COLORS.muted, px: 1 }}
           >

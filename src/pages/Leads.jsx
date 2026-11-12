@@ -29,7 +29,10 @@ import AddIcon from "@mui/icons-material/Add";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
 import ListAltIcon from "@mui/icons-material/ListAlt";
-import Switch from "@mui/material/Switch";   // NEW — Client Meeting Mode toggle
+import ShareIcon from "@mui/icons-material/Share";   // NEW
+import EventIcon from "@mui/icons-material/Event";   // NEW
+import CheckIcon from "@mui/icons-material/Check";   // NEW
+// import Switch from "@mui/material/Switch";   // NEW — Client Meeting Mode toggle
 import TeamMonitorTab from "./TeamMonitorTab";   // NEW — Team Monitor tab
 const API = "https://invoice.vjcoverseas.com/api";
 // ── Assumption: after login you store the logged-in user's basic info here.
@@ -262,9 +265,10 @@ const STATUS_OPTIONS = ["New", "Warm", "Cold", "Prospect", "HOLD", "Pending Agre
 // Name / Mobile stay pinned on the left while the remaining columns scroll.
 const STICKY_COL = {
   checkbox: { width: 56, left: 0 },
-  created: { width: 190, left: 56 },
-  name: { width: 200, left: 246 },
-  mobile: { width: 130, left: 446 },
+  action: { width: 80, left: 56 },       // NEW
+  created: { width: 190, left: 136 },    // was 56
+  name: { width: 200, left: 326 },       // was 246
+  mobile: { width: 130, left: 526 },     // was 446
 };
 
 // Row background color per status — matches the reference screenshots
@@ -1596,6 +1600,10 @@ function ClientMeetingToggle({ onModeChange }) {
   const [isStaff, setIsStaff] = useState(false);
   const [inMeeting, setInMeeting] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [startedAt, setStartedAt] = useState(null);   // NEW — when Meeting Mode was turned ON
+  const [now, setNow] = useState(Date.now());          // NEW — ticks every second while in meeting
+  const [snoozeUntil, setSnoozeUntil] = useState(0);   // NEW — "Still in meeting" hides popup for 30 min
+  const [endedMin, setEndedMin] = useState(null);      // NEW — shows "Meeting ended · X min" briefly
 
   useEffect(() => {
     const load = async () => {
@@ -1604,7 +1612,9 @@ function ClientMeetingToggle({ onModeChange }) {
         const data = await res.json();
         if (data.success) {
           setIsStaff(true);
-                    setInMeeting(!!data.in_meeting);
+          setInMeeting(!!data.in_meeting);
+          // NEW — keep the counter correct after a page refresh
+          if (data.in_meeting) setStartedAt(Date.now() - (Number(data.elapsed_seconds) || 0) * 1000);
           if (onModeChange) onModeChange(!!data.in_meeting);
         }
       } catch {
@@ -1614,8 +1624,33 @@ function ClientMeetingToggle({ onModeChange }) {
     load();
   }, [onModeChange]);
 
-  const handleToggle = async (e) => {
-    const next = e.target.checked;
+  // NEW — tick every second only while in a meeting
+  useEffect(() => {
+    if (!inMeeting) return;
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [inMeeting]);
+
+  // NEW — hide "Meeting ended" text after 15 seconds
+  useEffect(() => {
+    if (endedMin === null) return;
+    const t = setTimeout(() => setEndedMin(null), 15000);
+    return () => clearTimeout(t);
+  }, [endedMin]);
+
+  const elapsedMin = inMeeting && startedAt ? Math.floor((now - startedAt) / 60000) : 0;
+  const overdue = inMeeting && !!startedAt && now - startedAt >= 30 * 60 * 1000;
+  const showPopup = overdue && now >= snoozeUntil;
+
+  // NEW — browser tab title changes while the popup is showing
+  useEffect(() => {
+    if (!showPopup) return;
+    const original = document.title;
+    document.title = "(!) Meeting 30+ min - turn OFF?";
+    return () => { document.title = original; };
+  }, [showPopup]);
+
+  const updateMode = async (next) => {
     setSaving(true);
     try {
       const res = await fetch(`${API}/departments/meeting-mode`, {
@@ -1625,6 +1660,14 @@ function ClientMeetingToggle({ onModeChange }) {
       });
       const data = await res.json();
       if (data.success) {
+        if (next) {
+          setStartedAt(Date.now());
+          setSnoozeUntil(0);
+          setEndedMin(null);
+        } else {
+          setEndedMin(startedAt ? Math.max(1, Math.round((Date.now() - startedAt) / 60000)) : null);
+          setStartedAt(null);
+        }
         setInMeeting(next);
         if (onModeChange) onModeChange(next);
       } else {
@@ -1637,32 +1680,560 @@ function ClientMeetingToggle({ onModeChange }) {
     }
   };
 
+  const handleToggle = (e) => updateMode(e.target.checked);
+
   if (!isStaff) return null;
 
   return (
-    <Box
-      sx={{
-        display: "flex", alignItems: "center", gap: 1,
-        border: "1px solid", borderColor: inMeeting ? "#eb6834" : "#c9cfd9",
-        borderRadius: 5, pl: 1.5, pr: 0.5, py: 0.25, bgcolor: "#fff",
-      }}
-    >
-      <Box>
-        <Typography variant="caption" fontWeight={700} sx={{ display: "block", lineHeight: 1.2 }}>
-          Client Meeting Mode
-        </Typography>
-        <Typography
-          variant="caption"
-          sx={{ display: "block", lineHeight: 1.2, fontSize: 10.5, color: inMeeting ? "#b94a1a" : "#0f6e56" }}
-        >
-          ● {inMeeting ? "In meeting · leads paused" : "Available · receiving leads"}
-        </Typography>
+    <>
+      <Box
+        sx={{
+          display: "flex", alignItems: "center", gap: 1,
+          border: "1px solid", borderColor: overdue ? "#d32f2f" : inMeeting ? "#eb6834" : "#c9cfd9",
+          borderRadius: 5, pl: 1.5, pr: 0.5, py: 0.25, bgcolor: "#fff",
+        }}
+      >
+        <Box>
+          <Typography variant="caption" fontWeight={700} sx={{ display: "block", lineHeight: 1.2 }}>
+            Client Meeting Mode
+          </Typography>
+          <Typography
+            variant="caption"
+            sx={{ display: "block", lineHeight: 1.2, fontSize: 10.5, color: overdue ? "#d32f2f" : inMeeting ? "#b94a1a" : "#0f6e56" }}
+          >
+            ● {inMeeting
+              ? `In meeting · ${elapsedMin} min · leads paused`
+              : endedMin !== null
+                ? `Meeting ended · ${endedMin} min`
+                : "Available · receiving leads"}
+          </Typography>
+        </Box>
+        <Switch size="small" color="warning" checked={inMeeting} onChange={handleToggle} disabled={saving} />
       </Box>
-      <Switch size="small" color="warning" checked={inMeeting} onChange={handleToggle} disabled={saving} />
-    </Box>
+
+      {/* NEW — 30 min reminder. Does not auto-close: stays until a button is clicked. */}
+      <Dialog open={showPopup} onClose={() => {}} disableEscapeKeyDown maxWidth="xs" fullWidth>
+        <DialogTitle sx={{ fontWeight: 700 }}>Is your meeting over?</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2">
+            Client Meeting Mode has been ON for {elapsedMin} minutes. New leads are paused for you.
+            Turn it OFF if the meeting is finished.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setSnoozeUntil(Date.now() + 30 * 60 * 1000)}>
+            Still in meeting (remind in 30 min)
+          </Button>
+          <Button variant="contained" color="warning" onClick={() => updateMode(false)} disabled={saving}>
+            Turn OFF now
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }
+// ── NEW: helpers for Followup popup + Calendar ──
+const FU_HEADER = "#0f9b8e";
+const FU_CAL = "#00a8a5";
+const FU_PAGE_SIZE = 5;
+const CAL_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+const pad2 = (n) => String(n).padStart(2, "0");
+const toYMD = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+const fmtDMY = (ymd) => {
+  if (!ymd) return "—";
+  const [y, m, d] = String(ymd).slice(0, 10).split("-");
+  return `${d}/${m}/${y}`;
+};
+const fmtTime12 = (t, padHour) => {
+  if (!t) return "";
+  const [h, m] = String(t).split(":").map(Number);
+  const ap = h >= 12 ? "pm" : "am";
+  const h12 = h % 12 || 12;
+  return padHour ? `${pad2(h12)}:${pad2(m)} ${ap}` : `${h12}:${pad2(m)}${ap}`;
+};
+const fmtDateTime = (iso) =>
+  iso
+    ? new Date(iso)
+        .toLocaleString("en-GB", {
+          day: "2-digit", month: "2-digit", year: "numeric",
+          hour: "2-digit", minute: "2-digit", hour12: true,
+        })
+        .replace(",", "")
+    : "—";
+const calAddDays = (d, n) => {
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  x.setDate(x.getDate() + n);
+  return x;
+};
+const calStartOfWeek = (d) => calAddDays(d, -d.getDay());
+
+// ── NEW: Followup / Appointment popup (share icon click chesthe open avtundi) ──
+function FollowupDialog({ open, onClose, lead }) {
+  const [info, setInfo] = useState(null);
+  const [followups, setFollowups] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [tabIdx, setTabIdx] = useState(0);
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [remarks, setRemarks] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [page, setPage] = useState(1);
+
+  const leadId = lead?.id;
+
+  const load = async () => {
+    if (!leadId) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`${API}/leads/${leadId}/followups`, { headers: authHeader() });
+      const data = await res.json();
+      if (data.success) {
+        setInfo(data.lead);
+        setFollowups(data.followups || []);
+      } else {
+        alert("❌ " + (data.message || "Failed to load followups"));
+      }
+    } catch {
+      alert("❌ Failed to load followups");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!open || !leadId) return;
+    setInfo(null); setFollowups([]); setTabIdx(0);
+    setDate(""); setTime(""); setRemarks(""); setPage(1);
+    load();
+    // eslint-disable-next-line
+  }, [open, leadId]);
+
+  const handleSave = async () => {
+    if (!date || !time || !remarks.trim()) {
+      alert("Next Followup Date, Time and Remarks are required");
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch(`${API}/leads/${leadId}/followups`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeader() },
+        body: JSON.stringify({ followup_date: date, followup_time: time, remarks }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDate(""); setTime(""); setRemarks(""); setPage(1);
+        load();
+      } else {
+        alert("❌ " + (data.message || "Failed to save followup"));
+      }
+    } catch {
+      alert("❌ Failed to save followup");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const markDone = async (id) => {
+    try {
+      const res = await fetch(`${API}/leads/followups/${id}/done`, {
+        method: "PUT",
+        headers: authHeader(),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setFollowups((prev) => prev.map((f) => (f.id === id ? { ...f, done: true } : f)));
+      } else {
+        alert("❌ " + (data.message || "Not authorized"));
+      }
+    } catch {
+      alert("❌ Failed to mark done");
+    }
+  };
+
+  const name = info?.lead_name || lead?.lead_name || "";
+  const email = info?.email || "";
+  const mobile = info?.contact_number || lead?.contact_number || "";
+  const countries = Array.isArray(info?.interested_countries)
+    ? info.interested_countries.join(", ")
+    : info?.interested_countries || "";
+  const stage = info?.status || lead?.status || "Enquiry";
+
+  const totalPages = Math.max(1, Math.ceil(followups.length / FU_PAGE_SIZE));
+  const pageRows = followups.slice((page - 1) * FU_PAGE_SIZE, page * FU_PAGE_SIZE);
+
+  const roField = (icon, value, placeholder) => (
+    <TextField
+      fullWidth
+      size="small"
+      value={value}
+      placeholder={placeholder}
+      InputProps={{
+        readOnly: true,
+        startAdornment: (
+          <InputAdornment position="start" sx={{ color: "#555" }}>{icon}</InputAdornment>
+        ),
+      }}
+      sx={{ "& .MuiInputBase-root": { bgcolor: "#e9ecef" } }}
+    />
+  );
+
+  const lbl = (text, req) => (
+    <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.75, fontSize: 15 }}>
+      {text}{req && <span style={{ color: "#d32f2f" }}> *</span>}
+    </Typography>
+  );
+
+  const badge = (n) => (
+    <Box sx={{ bgcolor: "#343a40", color: "#fff", borderRadius: 1, fontSize: 12, fontWeight: 700, px: 0.9, py: 0.1 }}>
+      {n}
+    </Box>
+  );
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
+      <Box sx={{ bgcolor: FU_HEADER, color: "#fff", px: 3, py: 2, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <Typography variant="h6" fontWeight={600}>Followup / Appointment</Typography>
+        <IconButton onClick={onClose} sx={{ color: "#fff" }} size="small"><CloseIcon /></IconButton>
+      </Box>
+
+      <DialogContent sx={{ pt: 2.5 }}>
+        <Box sx={{ border: "1px solid #ddd", borderRadius: 1.5, boxShadow: 2, p: 2.5, mb: 2 }}>
+          <Grid container spacing={2.5}>
+            <Grid item xs={12} sm={6} md={3}>{lbl("Name")}{roField(<PersonIcon fontSize="small" />, name, "Name")}</Grid>
+            <Grid item xs={12} sm={6} md={3}>{lbl("Email")}{roField(<EmailIcon fontSize="small" />, email, "Email")}</Grid>
+            <Grid item xs={12} sm={6} md={3}>{lbl("Mobile")}{roField(<CallIcon fontSize="small" />, mobile, "Mobile")}</Grid>
+            <Grid item xs={12} sm={6} md={3}>{lbl("Interested Country")}{roField(<PublicIcon fontSize="small" />, countries, "—")}</Grid>
+          </Grid>
+        </Box>
+
+        <Tabs
+          value={tabIdx}
+          onChange={(_, v) => setTabIdx(v)}
+          variant="fullWidth"
+          TabIndicatorProps={{ style: { backgroundColor: FU_HEADER, height: 3 } }}
+          sx={{ mb: 2, borderBottom: "1px solid #e0e0e0" }}
+        >
+          <Tab
+            sx={{ textTransform: "none", fontSize: 18, color: tabIdx === 0 ? FU_HEADER : "#555" }}
+            label={<Stack direction="row" spacing={1} alignItems="center"><span>Followups</span>{badge(followups.length)}</Stack>}
+          />
+          <Tab
+            sx={{ textTransform: "none", fontSize: 18, color: tabIdx === 1 ? FU_HEADER : "#555" }}
+            label={<Stack direction="row" spacing={1} alignItems="center"><span>Appointments</span>{badge(0)}</Stack>}
+          />
+        </Tabs>
+
+        {tabIdx === 1 && (
+          <Typography variant="body2" color="text.secondary" sx={{ py: 4, textAlign: "center" }}>
+            No appointments yet.
+          </Typography>
+        )}
+
+        {tabIdx === 0 && (
+          <>
+            <Box sx={{ border: "1px solid #ddd", borderRadius: 1.5, boxShadow: 2, p: 2.5, mb: 2 }}>
+              <Grid container spacing={2.5}>
+                <Grid item xs={12} md={3}>
+                  {lbl("Next Followup Date", true)}
+                  <TextField fullWidth size="small" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+                </Grid>
+                <Grid item xs={12} md={3}>
+                  {lbl("Next Followup Time", true)}
+                  <TextField fullWidth size="small" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  {lbl("Remarks", true)}
+                  <TextField fullWidth size="small" placeholder="Remarks" value={remarks} onChange={(e) => setRemarks(e.target.value)} />
+                </Grid>
+              </Grid>
+            </Box>
+
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 700 }}>S.No.</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Action</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Created By</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Remarks</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Stage</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Attempt<br />Date / Time</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Next Follow Up<br />Date / Time</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {loading && (
+                    <TableRow><TableCell colSpan={7} align="center" sx={{ py: 3 }}><CircularProgress size={24} /></TableCell></TableRow>
+                  )}
+                  {!loading && followups.length === 0 && (
+                    <TableRow><TableCell colSpan={7} align="center" sx={{ py: 3, color: "text.secondary" }}>No followups yet.</TableCell></TableRow>
+                  )}
+                  {!loading && pageRows.map((f, i) => (
+                    <TableRow key={f.id}>
+                      <TableCell>{(page - 1) * FU_PAGE_SIZE + i + 1}</TableCell>
+                      <TableCell>
+                        <IconButton
+                          size="small"
+                          disabled={!!f.done}
+                          onClick={() => markDone(f.id)}
+                          title={f.done ? "Done" : "Mark as done"}
+                          sx={{ bgcolor: FU_HEADER, color: "#fff", borderRadius: 1, "&:hover": { bgcolor: "#0c7d72" }, "&.Mui-disabled": { bgcolor: "#b0bec5", color: "#fff" } }}
+                        >
+                          <CheckIcon fontSize="small" />
+                        </IconButton>
+                      </TableCell>
+                      <TableCell>
+                        {f.created_by_name || f.commented_by || "—"}
+                        {f.department ? ` (${f.department})` : ""}
+                      </TableCell>
+                      <TableCell>{f.remark}</TableCell>
+                      <TableCell>
+                        <Box sx={{ display: "inline-block", border: "1px solid #333", borderRadius: 0.75, px: 1, py: 0.25, fontSize: 13 }}>{stage}</Box>
+                      </TableCell>
+                      <TableCell>{fmtDateTime(f.created_at)}</TableCell>
+                      <TableCell>{fmtDMY(f.reminder_date)} {fmtTime12(f.reminder_time)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            <Stack direction="row" spacing={0} justifyContent="flex-end" sx={{ mt: 2 }}>
+              <Button size="small" variant="outlined" disabled={page <= 1} onClick={() => setPage(page - 1)}
+                sx={{ textTransform: "none", borderRadius: "4px 0 0 4px", color: "#555", borderColor: "#ddd" }}>Previous</Button>
+              {Array.from({ length: totalPages }, (_, k) => k + 1).map((p) => (
+                <Button key={p} size="small" variant={p === page ? "contained" : "outlined"} onClick={() => setPage(p)}
+                  sx={{ textTransform: "none", minWidth: 40, borderRadius: 0, bgcolor: p === page ? FU_HEADER : undefined, borderColor: "#ddd", color: p === page ? "#fff" : "#555", "&:hover": { bgcolor: p === page ? "#0c7d72" : undefined } }}>{p}</Button>
+              ))}
+              <Button size="small" variant="outlined" disabled={page >= totalPages} onClick={() => setPage(page + 1)}
+                sx={{ textTransform: "none", borderRadius: "0 4px 4px 0", color: "#555", borderColor: "#ddd" }}>Next</Button>
+            </Stack>
+          </>
+        )}
+      </DialogContent>
+
+      <Divider />
+      <DialogActions sx={{ px: 3, py: 2 }}>
+        <Button variant="contained" onClick={handleSave} disabled={saving || tabIdx !== 0}
+          sx={{ textTransform: "none", bgcolor: FU_HEADER, "&:hover": { bgcolor: "#0c7d72" } }}>
+          {saving ? "Saving..." : "Save Followup"}
+        </Button>
+        <Button variant="contained" onClick={onClose}
+          sx={{ textTransform: "none", bgcolor: "#6c757d", "&:hover": { bgcolor: "#5a6268" } }}>
+          Close
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+// ── NEW: Calendar (month / day / week / list) ──
+function FollowupCalendarDialog({ open, onClose }) {
+  const [view, setView] = useState("month");
+  const [cursor, setCursor] = useState(new Date());
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [fuOpen, setFuOpen] = useState(false);
+  const [fuLead, setFuLead] = useState(null);
+
+  const monthFirst = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+  const monthLast = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0);
+  let rangeStart;
+  let rangeEnd;
+  if (view === "month") {
+    rangeStart = calStartOfWeek(monthFirst);
+    rangeEnd = calAddDays(calStartOfWeek(monthLast), 6);
+  } else if (view === "week") {
+    rangeStart = calStartOfWeek(cursor);
+    rangeEnd = calAddDays(rangeStart, 6);
+  } else if (view === "day") {
+    rangeStart = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate());
+    rangeEnd = rangeStart;
+  } else {
+    rangeStart = monthFirst;
+    rangeEnd = monthLast;
+  }
+  const fromStr = toYMD(rangeStart);
+  const toStr = toYMD(rangeEnd);
+  const todayYmd = toYMD(new Date());
+
+  const loadEvents = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API}/leads/calendar?from=${fromStr}&to=${toStr}`, { headers: authHeader() });
+      const data = await res.json();
+      if (data.success) setEvents(data.events || []);
+    } catch {
+      // silent
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (open) loadEvents();
+    // eslint-disable-next-line
+  }, [open, fromStr, toStr]);
+
+  useEffect(() => {
+    if (open) { setView("month"); setCursor(new Date()); }
+  }, [open]);
+
+  const byDate = {};
+  events.forEach((e) => { (byDate[e.date] = byDate[e.date] || []).push(e); });
+
+  const shift = (dir) => {
+    if (view === "month" || view === "list") setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + dir, 1));
+    else if (view === "week") setCursor(calAddDays(cursor, 7 * dir));
+    else setCursor(calAddDays(cursor, dir));
+  };
+
+  const title =
+    view === "day"
+      ? cursor.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+      : view === "week"
+        ? `${rangeStart.toLocaleDateString("en-GB", { day: "numeric", month: "short" })} – ${rangeEnd.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`
+        : cursor.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+
+  const openEvent = (e) => {
+    setFuLead({ id: e.lead_id, lead_name: e.lead_name });
+    setFuOpen(true);
+  };
+
+  const renderEvent = (e, extra) => (
+    <Box
+      key={e.id}
+      onClick={() => openEvent(e)}
+      title={`${e.lead_name}${e.remark ? " – " + e.remark : ""}`}
+      sx={{
+        bgcolor: FU_CAL, color: "#fff", borderRadius: 0.5, px: 1, py: 0.5, mb: 0.5,
+        fontSize: 13, cursor: "pointer", whiteSpace: "nowrap", overflow: "hidden",
+        textOverflow: "ellipsis", "&:hover": { opacity: 0.9 },
+      }}
+    >
+      <b>{fmtTime12(e.time, true)}</b> {e.lead_name}{extra}
+    </Box>
+  );
+
+  const days = [];
+  if (view === "month" || view === "week") {
+    for (let d = rangeStart; d <= rangeEnd; d = calAddDays(d, 1)) days.push(d);
+  }
+
+  const toolBtn = (label, active, onClick) => (
+    <Button
+      key={label}
+      size="small"
+      onClick={onClick}
+      sx={{
+        textTransform: "none", borderRadius: 0, px: 1.5, minWidth: 0,
+        bgcolor: active ? FU_CAL : "#fff", color: active ? "#fff" : "#333",
+        border: "1px solid #ddd", "&:hover": { bgcolor: active ? FU_CAL : "#f5f5f5" },
+      }}
+    >
+      {label}
+    </Button>
+  );
+
+  return (
+    <>
+      <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth>
+        <Box sx={{ bgcolor: FU_HEADER, color: "#fff", px: 3, py: 1.5, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Typography variant="h6" fontWeight={600}>Followup Calendar</Typography>
+          <IconButton onClick={onClose} sx={{ color: "#fff" }} size="small"><CloseIcon /></IconButton>
+        </Box>
+
+        <DialogContent sx={{ pt: 3 }}>
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 1, mb: 2 }}>
+            <Typography variant="h5" sx={{ color: "#333" }}>{title}</Typography>
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              {loading && <CircularProgress size={18} />}
+              <Box sx={{ display: "flex" }}>
+                {["month", "day", "week", "list"].map((v) => toolBtn(v, view === v, () => setView(v)))}
+              </Box>
+              <Box sx={{ display: "flex" }}>
+                {toolBtn("‹", false, () => shift(-1))}
+                {toolBtn("›", false, () => shift(1))}
+              </Box>
+              <Button size="small" onClick={() => setCursor(new Date())}
+                sx={{ textTransform: "none", border: "1px solid #ddd", color: "#777", bgcolor: "#fff" }}>today</Button>
+            </Stack>
+          </Box>
+
+          {(view === "month" || view === "week") && (
+            <Box sx={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", borderLeft: "1px solid #ddd", borderTop: "1px solid #ddd" }}>
+              {CAL_DAYS.map((d, i) => (
+                <Box key={d} sx={{ bgcolor: FU_CAL, color: "#fff", fontWeight: 700, textAlign: "center", py: 1.25, borderRight: "1px solid #ddd" }}>
+                  {view === "week" ? `${d} ${days[i] ? days[i].getDate() : ""}` : d}
+                </Box>
+              ))}
+              {days.map((d) => {
+                const ymd = toYMD(d);
+                const list = byDate[ymd] || [];
+                const isToday = ymd === todayYmd;
+                const other = view === "month" && d.getMonth() !== cursor.getMonth();
+                const limit = view === "month" ? 2 : list.length;
+                return (
+                  <Box key={ymd} sx={{ minHeight: view === "month" ? 130 : 320, p: 0.5, minWidth: 0, borderRight: "1px solid #ddd", borderBottom: "1px solid #ddd", bgcolor: isToday ? "#fcf8e3" : "#fff" }}>
+                    {view === "month" && (
+                      <Typography variant="body2" align="right" sx={{ pr: 0.5, mb: 0.5, color: other ? "#aaa" : "#333" }}>{d.getDate()}</Typography>
+                    )}
+                    {list.slice(0, limit).map((e) => renderEvent(e))}
+                    {list.length > limit && (
+                      <Typography
+                        variant="body2"
+                        onClick={() => { setCursor(d); setView("day"); }}
+                        sx={{ color: "#555", cursor: "pointer", px: 0.5, "&:hover": { textDecoration: "underline" } }}
+                      >
+                        +{list.length - limit} more
+                      </Typography>
+                    )}
+                  </Box>
+                );
+              })}
+            </Box>
+          )}
+
+          {view === "day" && (
+            <Box sx={{ border: "1px solid #ddd", p: 1.5, minHeight: 200 }}>
+              {(byDate[toYMD(cursor)] || []).length === 0 && (
+                <Typography variant="body2" color="text.secondary" sx={{ py: 3, textAlign: "center" }}>No followups on this day.</Typography>
+              )}
+              {(byDate[toYMD(cursor)] || []).map((e) =>
+                renderEvent(e, `${e.agent_name ? "  ·  " + e.agent_name : ""}${e.remark ? "  ·  " + e.remark : ""}`)
+              )}
+            </Box>
+          )}
+
+          {view === "list" && (
+            <Box sx={{ border: "1px solid #ddd" }}>
+              {Object.keys(byDate).length === 0 && (
+                <Typography variant="body2" color="text.secondary" sx={{ py: 3, textAlign: "center" }}>No followups this month.</Typography>
+              )}
+              {Object.keys(byDate).sort().map((ymd) => (
+                <Box key={ymd}>
+                  <Box sx={{ bgcolor: "#f5f5f5", px: 1.5, py: 0.75, fontWeight: 700, borderBottom: "1px solid #ddd" }}>{fmtDMY(ymd)}</Box>
+                  <Box sx={{ p: 1 }}>
+                    {byDate[ymd].map((e) =>
+                      renderEvent(e, `${e.agent_name ? "  ·  " + e.agent_name : ""}${e.remark ? "  ·  " + e.remark : ""}`)
+                    )}
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <FollowupDialog
+        open={fuOpen}
+        onClose={() => { setFuOpen(false); loadEvents(); }}
+        lead={fuLead}
+      />
+    </>
+  );
+}
 // ── Main Lead Management Page ────────────────────────────────────────────
 function LeadManagement() {
   const currentUser = getCurrentUser();
@@ -1676,7 +2247,10 @@ function LeadManagement() {
   const [assignOpen, setAssignOpen] = useState(false);  const [selectedIds, setSelectedIds] = useState([]);
 const [statusFilter, setStatusFilter] = useState("All");
   const [search, setSearch] = useState(""); // Name / Email / Mobile search — client-side filter
-  const [notesOpen, setNotesOpen] = useState(false);
+  const [followupOpen, setFollowupOpen] = useState(false);   // NEW
+  const [followupLead, setFollowupLead] = useState(null);    // NEW
+  const [calendarOpen, setCalendarOpen] = useState(false);   // NEW
+  //   const [notesOpen, setNotesOpen] = useState(false);
   const [notesLead, setNotesLead] = useState(null);
 
   const fetchLeads = async () => {
@@ -1756,12 +2330,20 @@ const [statusFilter, setStatusFilter] = useState("All");
           <Tab label="View Enquiry" />
                     {isChairman && <Tab label="Departments" />}
           {isChairman && <Tab label="Pending Assignment" />}
-          <Tab label="Team Monitor" value={4} />
+          <Tab label="Lead Monitor" value={4} />
                   </Tabs>
         <Stack direction="row" spacing={1} alignItems="center">
           {!isChairman && <ClientMeetingToggle onModeChange={setInMeeting} />}          {isChairman && <ChairmanAssignmentFeed />}
-          <ReminderBell />
-        </Stack>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<EventIcon fontSize="small" />}
+            onClick={() => setCalendarOpen(true)}
+            sx={{ textTransform: "none", color: "#fff", bgcolor: "#0f9b8e", borderColor: "#0f9b8e", "&:hover": { bgcolor: "#0c7d72", borderColor: "#0c7d72" } }}
+          >
+            Calendar
+          </Button>
+          <ReminderBell />        </Stack>
       </Box>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       {inMeeting && (
@@ -1885,8 +2467,8 @@ const [statusFilter, setStatusFilter] = useState("All");
                     onChange={toggleSelectAll}
                   />
                 </TableCell>
-                <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.created.left, width: STICKY_COL.created.width, zIndex: 3, bgcolor: "#f5f5f5", borderRight: "1px solid #c4c4c4" }}>Created - Updated</TableCell>
-
+<TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.action.left, width: STICKY_COL.action.width, zIndex: 3, bgcolor: "#f5f5f5", borderRight: "1px solid #c4c4c4", textAlign: "center" }}>Action</TableCell>
+<TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.created.left, width: STICKY_COL.created.width, zIndex: 3, bgcolor: "#f5f5f5", borderRight: "1px solid #c4c4c4" }}>Created - Updated</TableCell>
 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.name.left, width: STICKY_COL.name.width, zIndex: 3, bgcolor: "#f5f5f5", borderRight: "1px solid #c4c4c4" }}>Name</TableCell>
 
 <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", position: "sticky", left: STICKY_COL.mobile.left, width: STICKY_COL.mobile.width, zIndex: 3, bgcolor: "#f5f5f5", borderRight: "1px solid #c4c4c4" }}>Mobile</TableCell>
@@ -1915,8 +2497,7 @@ const [statusFilter, setStatusFilter] = useState("All");
             <TableBody>
               {filteredLeads.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={14} align="center" sx={{ py: 4, color: "text.secondary" }}>
-                    No enquiries found. Click "+ Add Enquiry" to create one.
+<TableCell colSpan={15} align="center" sx={{ py: 4, color: "text.secondary" }}>                    No enquiries found. Click "+ Add Enquiry" to create one.
                   </TableCell>
                 </TableRow>
               )}
@@ -1930,6 +2511,28 @@ const [statusFilter, setStatusFilter] = useState("All");
                       checked={selectedIds.includes(lead.id)}
                       onChange={() => toggleSelect(lead.id)}
                     />
+                  </TableCell>
+                  {/* NEW — Action column (share icon) */}
+                  <TableCell
+                    padding="none"
+                    sx={{
+                      position: "sticky",
+                      left: STICKY_COL.action.left,
+                      width: STICKY_COL.action.width,
+                      zIndex: 1,
+                      bgcolor: statusRowColor(lead.status),
+                      textAlign: "center",
+                      borderRight: "1px solid #c4c4c4",
+                    }}
+                  >
+                    <IconButton
+                      size="small"
+                      title="Followup / Appointment"
+                      onClick={() => { setFollowupLead(lead); setFollowupOpen(true); }}
+                      sx={{ bgcolor: "#28a745", color: "#fff", borderRadius: 1, "&:hover": { bgcolor: "#1e7e34" } }}
+                    >
+                      <ShareIcon fontSize="small" />
+                    </IconButton>
                   </TableCell>
                  <TableCell
   
@@ -2111,11 +2714,22 @@ const [statusFilter, setStatusFilter] = useState("All");
         onAssigned={() => { setSelectedIds([]); fetchLeads(); }}
       />
 
-      <NotesDialog
+           <NotesDialog
         open={notesOpen}
         onClose={() => setNotesOpen(false)}
         lead={notesLead}
         onSaved={fetchLeads}
+      />
+
+      {/* NEW — Followup popup + Calendar */}
+      <FollowupDialog
+        open={followupOpen}
+        onClose={() => setFollowupOpen(false)}
+        lead={followupLead}
+      />
+      <FollowupCalendarDialog
+        open={calendarOpen}
+        onClose={() => setCalendarOpen(false)}
       />
     </Box>
   );
