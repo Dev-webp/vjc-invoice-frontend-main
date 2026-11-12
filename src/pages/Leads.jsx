@@ -5,7 +5,7 @@ import {
   Paper, Dialog, DialogTitle, DialogContent, DialogActions,
   MenuItem, Chip, Checkbox, Stack, CircularProgress, Alert,
   FormGroup, FormControlLabel, Select, InputLabel, FormControl,
-Tabs, Tab, InputAdornment, Divider, IconButton, Badge,
+Tabs, Tab, InputAdornment, Divider, IconButton, Badge, Popover,
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import CallIcon from "@mui/icons-material/Call";
@@ -2147,8 +2147,10 @@ function FollowupCalendarDialog({ open, onClose }) {
   const [cursor, setCursor] = useState(new Date());
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [fuOpen, setFuOpen] = useState(false);
+    const [fuOpen, setFuOpen] = useState(false);
   const [fuLead, setFuLead] = useState(null);
+  const [moreAnchor, setMoreAnchor] = useState(null);
+  const [moreDay, setMoreDay] = useState(null);
 
   const monthFirst = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
   const monthLast = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0);
@@ -2210,6 +2212,7 @@ function FollowupCalendarDialog({ open, onClose }) {
         : cursor.toLocaleDateString("en-US", { month: "long", year: "numeric" });
 
   const openEvent = (e) => {
+    setMoreAnchor(null); setMoreDay(null);
     setFuLead({ id: e.lead_id, lead_name: e.lead_name });
     setFuOpen(true);
   };
@@ -2296,7 +2299,7 @@ function FollowupCalendarDialog({ open, onClose }) {
                     {list.length > limit && (
                       <Typography
                         variant="body2"
-                        onClick={() => { setCursor(d); setView("day"); }}
+                        onClick={(ev) => { setMoreAnchor(ev.currentTarget); setMoreDay(ymd); }}
                         sx={{ color: "#555", cursor: "pointer", px: 0.5, "&:hover": { textDecoration: "underline" } }}
                       >
                         +{list.length - limit} more
@@ -2337,6 +2340,31 @@ function FollowupCalendarDialog({ open, onClose }) {
             </Box>
           )}
         </DialogContent>
+
+        <Popover
+          open={Boolean(moreAnchor)}
+          anchorEl={moreAnchor}
+          onClose={() => { setMoreAnchor(null); setMoreDay(null); }}
+          anchorOrigin={{ vertical: "top", horizontal: "left" }}
+          transformOrigin={{ vertical: "top", horizontal: "left" }}
+          PaperProps={{ sx: { width: 300, maxHeight: 420, bgcolor: "#f0f0f0", p: 1 } }}
+        >
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", px: 0.5, pb: 1 }}>
+            <Typography sx={{ fontSize: 17, color: "#333" }}>
+              {moreDay
+                ? new Date(moreDay + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
+                : ""}
+            </Typography>
+            <IconButton size="small" onClick={() => { setMoreAnchor(null); setMoreDay(null); }}>
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </Box>
+          <Box sx={{ overflowY: "auto", maxHeight: 340 }}>
+            {(byDate[moreDay] || []).map((e) =>
+              renderEvent(e, e.agent_name ? `  ·  ${e.agent_name}` : "")
+            )}
+          </Box>
+        </Popover>
       </Dialog>
 
       <FollowupDialog
