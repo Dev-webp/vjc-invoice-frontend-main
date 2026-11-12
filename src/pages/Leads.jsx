@@ -33,6 +33,7 @@ import ShareIcon from "@mui/icons-material/Share";   // NEW
 import EventIcon from "@mui/icons-material/Event";   // NEW
 import FlagIcon from "@mui/icons-material/Flag";   // NEW
 import AccessTimeIcon from "@mui/icons-material/AccessTime";   // NEW
+import CheckIcon from "@mui/icons-material/Check";   // NEW — Followup "mark done" button
 import Switch from "@mui/material/Switch";   // NEW — Client Meeting Mode toggle
 import TeamMonitorTab from "./TeamMonitorTab";   // NEW — Team Monitor tab
 const API = import.meta.env.VITE_API_URL || "https://invoice.vjcoverseas.com/api";
