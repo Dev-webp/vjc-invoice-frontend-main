@@ -17,14 +17,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/*"
-          element={
-            <ProtectedRoute>
-              <MainLayout />
-            </ProtectedRoute>
-          }
-        />
         <Route path="/" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>

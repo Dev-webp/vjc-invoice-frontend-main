@@ -34,7 +34,7 @@ import EventIcon from "@mui/icons-material/Event";   // NEW
 import CheckIcon from "@mui/icons-material/Check";   // NEW
 // import Switch from "@mui/material/Switch";   // NEW — Client Meeting Mode toggle
 import TeamMonitorTab from "./TeamMonitorTab";   // NEW — Team Monitor tab
-const API = "https://invoice.vjcoverseas.com/api";
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 // ── Assumption: after login you store the logged-in user's basic info here.
 // If your Login.jsx stores it under a different key / shape, just change
 // this one line below (getCurrentUser) — nothing else needs to change.
