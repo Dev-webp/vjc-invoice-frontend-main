@@ -1737,7 +1737,7 @@ function ClientMeetingToggle({ onModeChange }) {
 // ── NEW: helpers for Followup popup + Calendar ──
 const FU_HEADER = "#0f9b8e";
 const FU_CAL = "#00a8a5";
-const FU_PAGE_SIZE = 5;
+const FU_PAGE_SIZE = 10;
 const CAL_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const pad2 = (n) => String(n).padStart(2, "0");
@@ -1781,7 +1781,9 @@ function FollowupDialog({ open, onClose, lead }) {
   const [country, setCountry] = useState("");
   const [saving, setSaving] = useState(false);
   const [page, setPage] = useState(1);
-
+  const [doneId, setDoneId] = useState(null);           // NEW — followup being completed
+  const [doneRemark, setDoneRemark] = useState("");     // NEW
+  const [doneSaving, setDoneSaving] = useState(false);  // NEW
   const leadId = lead?.id;
 
   const load = async () => {
@@ -1851,15 +1853,40 @@ function FollowupDialog({ open, onClose, lead }) {
       } else {
         alert("❌ " + (data.message || "Not authorized"));
       }
-    } catch {
+       } catch {
       alert("❌ Failed to mark done");
+    }
+  };
+
+  // NEW — tick opens the Remarks popup; OK saves the reason and marks the row Completed
+  const completeFollowup = async () => {
+    if (!doneRemark.trim()) { alert("Remarks are required"); return; }
+    setDoneSaving(true);
+    try {
+      const res = await fetch(`${API}/leads/followups/${doneId}/done`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...authHeader() },
+        body: JSON.stringify({ remark: doneRemark.trim() }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDoneId(null);
+        setDoneRemark("");
+        load();
+      } else {
+        alert("❌ " + (data.message || "Not authorized"));
+      }
+    } catch {
+      alert("❌ Failed to complete followup");
+    } finally {
+      setDoneSaving(false);
     }
   };
 
   const name = info?.lead_name || lead?.lead_name || "";
   const email = info?.email || "";
   const mobile = info?.contact_number || lead?.contact_number || "";
-  const stage = info?.status || lead?.status || "Enquiry";
+    const stage = "Enquiry";   // CHANGED — always "Enquiry" in the followup popup
 
   const totalPages = Math.max(1, Math.ceil(followups.length / FU_PAGE_SIZE));
   const pageRows = followups.slice((page - 1) * FU_PAGE_SIZE, page * FU_PAGE_SIZE);
@@ -2006,7 +2033,7 @@ function FollowupDialog({ open, onClose, lead }) {
             <TableHead>
               <TableRow>
                 <TableCell sx={{ width: 70 }}>S.No.</TableCell>
-                <TableCell sx={{ width: 90 }}>Action</TableCell>
+                <TableCell sx={{ width: 110 }}>Action</TableCell>
                 <TableCell sx={{ width: 230 }}>Created By</TableCell>
                 <TableCell>Remarks</TableCell>
                 <TableCell sx={{ width: 120 }}>Stage</TableCell>
@@ -2022,25 +2049,36 @@ function FollowupDialog({ open, onClose, lead }) {
                 <TableRow><TableCell colSpan={7} align="center" sx={{ py: 3, color: "text.secondary" }}>No followups yet.</TableCell></TableRow>
               )}
               {!loading && pageRows.map((f, i) => (
-                <TableRow key={f.id}>
+                <TableRow key={f.id} sx={f.done ? { bgcolor: "#5cb85c" } : undefined}>
                   <TableCell>{(page - 1) * FU_PAGE_SIZE + i + 1}</TableCell>
-                  <TableCell>
-                    <IconButton
-                      size="small"
-                      disabled={!!f.done}
-                      onClick={() => markDone(f.id)}
-                      title={f.done ? "Done" : "Mark as done"}
-                      sx={{ width: 34, height: 34, bgcolor: FU_HEADER, color: "#fff", borderRadius: 1, "&:hover": { bgcolor: "#0c7d72" }, "&.Mui-disabled": { bgcolor: "#b0bec5", color: "#fff" } }}
-                    >
-                      <CheckIcon fontSize="small" />
-                    </IconButton>
+                                    <TableCell>
+                    {f.done ? (
+                      <Box sx={{ display: "inline-block", bgcolor: "#3d9a3d", color: "#fff", borderRadius: 1, px: 1, py: 0.5, fontSize: 14, fontWeight: 600 }}>
+                        Completed
+                      </Box>
+                    ) : (
+                      <IconButton
+                        size="small"
+                        onClick={() => { setDoneId(f.id); setDoneRemark(""); }}
+                        title="Mark as done"
+                        sx={{ width: 34, height: 34, bgcolor: FU_HEADER, color: "#fff", borderRadius: 1, "&:hover": { bgcolor: "#0c7d72" } }}
+                      >
+                        <CheckIcon fontSize="small" />
+                      </IconButton>
+                    )}
                   </TableCell>
                   <TableCell>
                     {f.created_by_name || f.commented_by || "—"}
                     {f.department && (<><br />({f.department})</>)}
                   </TableCell>
-                  <TableCell>{f.remark}</TableCell>
                   <TableCell>
+                    {f.remark}
+                    {f.done && f.completion_remark && (
+                      <Box sx={{ mt: 0.75, fontSize: 14, fontWeight: 600 }}>
+                        Completed: {f.completion_remark}
+                      </Box>
+                    )}
+                  </TableCell>                  <TableCell>
                     <Box sx={{ display: "inline-block", border: "1px solid #3d4a6b", color: "#3d4a6b", borderRadius: "4px", px: 1.25, py: 0.25, fontSize: 14, fontWeight: 600 }}>{stage}</Box>
                   </TableCell>
                   <TableCell>{fmtDateTime(f.created_at)}</TableCell>
@@ -2073,7 +2111,33 @@ function FollowupDialog({ open, onClose, lead }) {
           sx={{ textTransform: "none", minWidth: 84, bgcolor: FU_HEADER, "&:hover": { bgcolor: "#0c7d72" } }}>
           {saving ? "Saving..." : "Save"}
         </Button>
-      </DialogActions>
+            </DialogActions>
+
+      {/* NEW — Remarks popup: opens when the green tick is clicked */}
+      <Dialog open={doneId !== null} onClose={() => setDoneId(null)} maxWidth="xs" fullWidth>
+        <DialogTitle sx={{ textAlign: "center", fontWeight: 600 }}>Remarks</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            fullWidth
+            multiline
+            rows={4}
+            placeholder="Complete Remarks"
+            value={doneRemark}
+            onChange={(e) => setDoneRemark(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: "center", pb: 3, gap: 1 }}>
+          <Button variant="contained" onClick={completeFollowup} disabled={doneSaving || !doneRemark.trim()}
+            sx={{ textTransform: "none", minWidth: 84, bgcolor: FU_HEADER, "&:hover": { bgcolor: "#0c7d72" } }}>
+            {doneSaving ? "Saving..." : "OK"}
+          </Button>
+          <Button variant="contained" onClick={() => setDoneId(null)}
+            sx={{ textTransform: "none", minWidth: 84, bgcolor: "#6c7a89", "&:hover": { bgcolor: "#59656f" } }}>
+            Cancel
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Dialog>
   );
 }
