@@ -1641,8 +1641,10 @@ function ClientMeetingToggle({ onModeChange }) {
   }, [endedMin]);
 
   const elapsedMin = inMeeting && startedAt ? Math.floor((now - startedAt) / 60000) : 0;
-  const overdue = inMeeting && !!startedAt && now - startedAt >= 30 * 60 * 1000;
+    const overdue = inMeeting && !!startedAt && now - startedAt >= 30 * 60 * 1000;
   const showPopup = overdue && now >= snoozeUntil;
+  // NEW — timer colour: green 0-15 min, orange 15-30 min, red 30+ min
+  const meetingColor = !inMeeting ? "#0f6e56" : elapsedMin >= 30 ? "#d32f2f" : elapsedMin >= 15 ? "#eb6834" : "#1e9e5a";
 
   // NEW — browser tab title changes while the popup is showing
   useEffect(() => {
@@ -1691,8 +1693,8 @@ function ClientMeetingToggle({ onModeChange }) {
       <Box
         sx={{
           display: "flex", alignItems: "center", gap: 1,
-          border: "1px solid", borderColor: overdue ? "#d32f2f" : inMeeting ? "#eb6834" : "#c9cfd9",
-          borderRadius: 5, pl: 1.5, pr: 0.5, py: 0.25, bgcolor: "#fff",
+                   border: "1px solid", borderColor: inMeeting ? meetingColor : "#c9cfd9",
+          borderRadius: 5, pl: 1.5, pr: 0.5, py: 0.25, bgcolor: overdue ? "#fdecea" : "#fff",
         }}
       >
         <Box>
@@ -1701,8 +1703,7 @@ function ClientMeetingToggle({ onModeChange }) {
           </Typography>
           <Typography
             variant="caption"
-            sx={{ display: "block", lineHeight: 1.2, fontSize: 10.5, color: overdue ? "#d32f2f" : inMeeting ? "#b94a1a" : "#0f6e56" }}
-          >
+            sx={{ display: "block", lineHeight: 1.2, fontSize: 10.5, fontWeight: inMeeting ? 700 : 400, color: meetingColor }}          >
             ● {inMeeting
               ? `In meeting · ${elapsedMin} min · leads paused`
               : endedMin !== null
@@ -1715,8 +1716,7 @@ function ClientMeetingToggle({ onModeChange }) {
 
       {/* NEW — 30 min reminder. Does not auto-close: stays until a button is clicked. */}
       <Dialog open={showPopup} onClose={() => {}} disableEscapeKeyDown maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Is your meeting over?</DialogTitle>
-        <DialogContent>
+        <DialogTitle sx={{ fontWeight: 700, color: "#d32f2f" }}>Is your meeting over?</DialogTitle>        <DialogContent>
           <Typography variant="body2">
             Client Meeting Mode has been ON for {elapsedMin} minutes. New leads are paused for you.
             Turn it OFF if the meeting is finished.

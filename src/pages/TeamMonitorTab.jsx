@@ -297,6 +297,7 @@ const load = useCallback(
 
   const openLeads = data?.open_leads || [];
   const redFlags = data?.red_flag_feed || [];
+  const meetings = data?.meetings?.agents || [];   // NEW — Client Meetings summary
 
   const pending = Number(s.pending_assignment || 0);
   const sla = pct(s.contacted, s.assigned);
@@ -1243,6 +1244,83 @@ onChange={(e) => {
         </Panel>
       </Box>
 
+            {/* NEW — Client Meetings: how many meetings, how long, who is over 30 min */}
+      <Box sx={{ mt: 1.5 }}>
+        <Panel
+          title="Client Meetings"
+          subtitle={`Meeting Mode usage · ${rangeLabel}`}
+          icon={<AccessTimeRoundedIcon />}
+          action={tag(
+            `${meetings.reduce((n, m) => n + Number(m.meetings || 0), 0)} meetings`,
+            "#e4efff",
+            COLORS.blue
+          )}
+        >
+          <Box sx={{ overflowX: "auto" }}>
+            <Box sx={{ minWidth: 560 }}>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: "minmax(140px,1.4fr) 80px 110px 110px 80px 120px",
+                  gap: 0.7, px: 0.5, py: 1, bgcolor: "#f5f8fd", borderRadius: 1.5,
+                  color: COLORS.muted, fontSize: 10, fontWeight: 750,
+                }}
+              >
+                <span>Agent</span>
+                <span>Meetings</span>
+                <span>Total time</span>
+                <span>Longest</span>
+                <span>30+ min</span>
+                <span>Status</span>
+              </Box>
+
+              {meetings.map((m) => {
+                const longColor =
+                  Number(m.longest_sec) >= 1800 ? "#d32f2f" : Number(m.longest_sec) >= 900 ? "#eb6834" : "#1e9e5a";
+                return (
+                  <Box
+                    key={m.staff_id}
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: "minmax(140px,1.4fr) 80px 110px 110px 80px 120px",
+                      gap: 0.7, alignItems: "center", px: 0.5, py: 1.05,
+                      borderBottom: `1px solid ${COLORS.border}`, fontSize: 11,
+                    }}
+                  >
+                    <Typography noWrap sx={{ fontSize: 11, fontWeight: 750 }}>
+                      {m.name || `Staff #${m.staff_id}`}
+                    </Typography>
+                    <Typography sx={{ fontSize: 12, fontWeight: 800, color: COLORS.blue }}>
+                      {fmt(m.meetings)}
+                    </Typography>
+                    <Typography sx={{ fontSize: 12, fontWeight: 700 }}>{fmtDur(m.total_sec)}</Typography>
+                    <Typography sx={{ fontSize: 12, fontWeight: 800, color: longColor }}>
+                      {fmtDur(m.longest_sec)}
+                    </Typography>
+                    <Typography
+                      sx={{ fontSize: 12, fontWeight: 800, color: Number(m.over_30) ? "#d32f2f" : COLORS.green }}
+                    >
+                      {fmt(m.over_30)}
+                    </Typography>
+                    <Box>
+                      {m.in_meeting_now
+                        ? tag("In meeting now", "#ffe3e3", "#c62828")
+                        : tag("Completed", "#d9f8ec", "#07865a")}
+                    </Box>
+                  </Box>
+                );
+              })}
+
+              {!meetings.length && (
+                <Typography sx={{ p: 2, color: COLORS.muted, fontSize: 12 }}>
+                  No client meetings recorded for this period.
+                </Typography>
+              )}
+            </Box>
+          </Box>
+        </Panel>
+      </Box>
+
       {self && (
         <Alert severity="info" sx={{ mt: 1.5 }}>
           Showing your own team-monitor data based on your account permissions.
@@ -1393,8 +1471,14 @@ onChange={(e) => {
   );
 }
 
+function fmtDur(sec = 0) {
+  const m = Math.round(Number(sec || 0) / 60);
+  if (m < 60) return `${m} min`;
+  return `${Math.floor(m / 60)}h ${m % 60}m`;
+}
+
 function diffText(current = 0, previous = 0) {
-  const d = Number(current || 0) - Number(previous || 0);
+      const d = Number(current || 0) - Number(previous || 0);
   return `${d >= 0 ? "+" : ""}${d}`;
 }
 
