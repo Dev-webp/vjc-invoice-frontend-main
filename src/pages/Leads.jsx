@@ -508,7 +508,7 @@ function AddEnquiryForm({ onSaved, isChairman }) {
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const [staffList, setStaffList] = useState([]);   // NEW — for direct-assign dropdown
-
+  const [dup, setDup] = useState([]);   // NEW — existing leads that match the typed number
   // NEW — only chairman/mis-executive can fetch the employee list
   useEffect(() => {
     if (!isChairman) return;
@@ -520,6 +520,27 @@ function AddEnquiryForm({ onSaved, isChairman }) {
 
   const set = (field) => (e) => setForm({ ...form, [field]: e.target.value });
 
+  // NEW — duplicate check: when a number has 10+ digits, look it up (waits 0.5 s after typing stops)
+  useEffect(() => {
+    const digits = (v) => String(v || "").replace(/\D/g, "");
+    const n1 = digits(form.contact_number);
+    const n2 = digits(form.alternate_contact_number);
+    if (n1.length < 10 && n2.length < 10) { setDup([]); return; }
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      try {
+        const q = new URLSearchParams();
+        if (n1.length >= 10) q.set("number", n1);
+        if (n2.length >= 10) q.set("alt", n2);
+        const res = await fetch(`${API}/leads/check-duplicate?${q.toString()}`, { headers: authHeader() });
+        const data = await res.json();
+        if (!cancelled) setDup(data.success ? (data.duplicates || []) : []);
+      } catch {
+        if (!cancelled) setDup([]);
+      }
+    }, 500);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [form.contact_number, form.alternate_contact_number]);
   
 
   const validate = () => {
@@ -534,6 +555,7 @@ function AddEnquiryForm({ onSaved, isChairman }) {
 
   const handleSave = async () => {
     if (!validate()) return;
+        if (dup.length > 0) return;   // NEW — number already exists, do not create a duplicate
     setSaving(true);
     try {
       const res = await fetch(`${API}/leads`, {
@@ -545,7 +567,9 @@ function AddEnquiryForm({ onSaved, isChairman }) {
       if (data.success) {
         setForm(EMPTY_LEAD_FORM);
         setErrors({});
-        onSaved(); // refreshes the list + switches to "View Enquiry" tab
+               onSaved(); // refreshes the list + switches to "View Enquiry" tab
+      } else if (data.duplicate) {
+        setDup(data.duplicates || []);   // NEW — server says this number already exists
       } else {
         alert("❌ " + (data.message || "Failed to save enquiry"));
       }
@@ -566,6 +590,25 @@ function AddEnquiryForm({ onSaved, isChairman }) {
       </Box>
 
       <CardContent sx={{ p: 3 }}>
+                {/* NEW — duplicate number alert */}
+        {dup.length > 0 && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            <Typography variant="body2" sx={{ fontWeight: 700, mb: 0.5 }}>
+              This number already exists in the system. Do not add a new enquiry.
+            </Typography>
+            {dup.map((d) => (
+              <Typography key={d.id} variant="body2">
+                {d.lead_name} · {d.contact_number} · Status: {d.status || "New"} · Assigned to: {d.assigned_to_name || "Not assigned"} · Created {fmtDateTime(d.created_at)}
+                {d.status === "Dead"
+                  ? " → see the Dead Enquiry tab"
+                  : !d.assigned_to
+                    ? " → in Pending Assignment (manager)"
+                    : " → search this number in View Enquiry"}
+              </Typography>
+            ))}
+          </Alert>
+        )}
+
         {/* ── SECTION 1: Personal Details — 3 fields per row, side by side ── */}
         <SectionHeader icon={<PersonIcon sx={{ color: "#0f9b8e" }} />} label="Personal Details" />
         <Grid container spacing={2.5} sx={{ mb: 1 }}>
@@ -588,10 +631,10 @@ function AddEnquiryForm({ onSaved, isChairman }) {
           <Grid item xs={12} sm={6} md={4}>
             <BoxedField
               icon={<CallIcon fontSize="small" />}
-              label="Contact Number"
+                           label="Contact Number"
               required
-              error={!!errors.contact_number}
-              helperText={errors.contact_number}
+              error={!!errors.contact_number || dup.length > 0}
+              helperText={errors.contact_number || "This number already exists"}
             >
               <TextField
                 variant="standard" fullWidth placeholder="Contact Number" sx={boxedFieldSx}
@@ -759,8 +802,8 @@ function AddEnquiryForm({ onSaved, isChairman }) {
             variant="contained"
             size="large"
             sx={{ bgcolor: "#0f9b8e", "&:hover": { bgcolor: "#0c7d72" } }}
-            onClick={handleSave}
-            disabled={saving}
+                       onClick={handleSave}
+            disabled={saving || dup.length > 0}
           >
             {saving ? "Saving..." : "Save Enquiry"}
           </Button>
