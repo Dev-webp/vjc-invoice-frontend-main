@@ -509,6 +509,8 @@ function AddEnquiryForm({ onSaved, isChairman }) {
   const [saving, setSaving] = useState(false);
   const [staffList, setStaffList] = useState([]);   // NEW — for direct-assign dropdown
   const [dup, setDup] = useState([]);   // NEW — existing leads that match the typed number
+  const [choice, setChoice] = useState("");   // NEW — "new" = user chose "Create new enquiry (same customer)"
+  const [reopening, setReopening] = useState(false);   // NEW
   // NEW — only chairman/mis-executive can fetch the employee list
   useEffect(() => {
     if (!isChairman) return;
@@ -543,6 +545,44 @@ function AddEnquiryForm({ onSaved, isChairman }) {
   }, [form.contact_number, form.alternate_contact_number]);
   
 
+    // NEW — a changed number resets the "create new enquiry" choice
+  useEffect(() => { setChoice(""); }, [form.contact_number, form.alternate_contact_number]);
+
+  // NEW — repeat-enquiry rules:
+  //  • ACTIVE enquiry, SAME service      -> blocked (existing details are shown)
+  //  • ACTIVE enquiry, DIFFERENT service -> allowed (separate enquiry, history kept)
+  //  • Closed / Dead enquiry             -> choose: Reopen it, or create a new enquiry (same customer)
+  const norm = (v) => String(v || "").trim().toLowerCase();
+  const isInactiveLead = (d) => d.status === "Closed" || d.status === "Dead";
+  const blocking = dup.filter(
+    (d) => !isInactiveLead(d) && (!norm(d.service_type) || (form.service_type && norm(d.service_type) === norm(form.service_type)))
+  );
+  const inactiveMatches = dup.filter(isInactiveLead);
+  const needsChoice = blocking.length === 0 && inactiveMatches.length > 0 && choice !== "new";
+
+  const handleReopen = async (leadId) => {
+    if (!window.confirm("Reopen this enquiry? Old follow-ups, notes and history stay as they are.")) return;
+    setReopening(true);
+    try {
+      const res = await fetch(`${API}/leads/${leadId}/reopen`, { method: "PUT", headers: authHeader() });
+      const data = await res.json();
+      if (data.success) {
+        if (data.assigned === false) {
+          alert("Enquiry reopened, but no consultant was available. It is now in Pending Assignment.");
+        }
+        setForm(EMPTY_LEAD_FORM);
+        setErrors({});
+        onSaved(); // refreshes the list + switches to "View Enquiry" tab
+      } else {
+        alert("❌ " + (data.message || "Failed to reopen enquiry"));
+      }
+    } catch {
+      alert("❌ Failed to reopen enquiry");
+    } finally {
+      setReopening(false);
+    }
+  };
+
   const validate = () => {
     const e = {};
     if (!form.lead_name.trim()) e.lead_name = "Lead Name is required";
@@ -555,13 +595,13 @@ function AddEnquiryForm({ onSaved, isChairman }) {
 
   const handleSave = async () => {
     if (!validate()) return;
-        if (dup.length > 0) return;   // NEW — number already exists, do not create a duplicate
+        if (blocking.length > 0 || needsChoice) return;   // NEW — only an active same-service enquiry (or an unanswered choice) stops saving   // NEW — number already exists, do not create a duplicate
     setSaving(true);
     try {
       const res = await fetch(`${API}/leads`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeader() },
-        body: JSON.stringify(form),
+               body: JSON.stringify({ ...form, confirm_new_enquiry: choice === "new" }),
       });
       const data = await res.json();
       if (data.success) {
@@ -590,22 +630,49 @@ function AddEnquiryForm({ onSaved, isChairman }) {
       </Box>
 
       <CardContent sx={{ p: 3 }}>
-                {/* NEW — duplicate number alert */}
+                       {/* NEW — existing enquiries for this number (repeat-enquiry rules) */}
         {dup.length > 0 && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert severity={blocking.length > 0 ? "error" : "warning"} sx={{ mb: 2 }}>
             <Typography variant="body2" sx={{ fontWeight: 700, mb: 0.5 }}>
-              This number already exists in the system. Do not add a new enquiry.
+              {blocking.length > 0
+                ? "An active enquiry already exists for this customer and service, so a duplicate cannot be created."
+                : "This customer already exists in the system. Earlier enquiry details are kept."}
             </Typography>
+
             {dup.map((d) => (
-              <Typography key={d.id} variant="body2">
-                {d.lead_name} · {d.contact_number} · Status: {d.status || "New"} · Assigned to: {d.assigned_to_name || "Not assigned"} · Created {fmtDateTime(d.created_at)}
-                {d.status === "Dead"
-                  ? " → see the Dead Enquiry tab"
-                  : !d.assigned_to
-                    ? " → in Pending Assignment (manager)"
-                    : " → search this number in View Enquiry"}
-              </Typography>
+              <Box key={d.id} sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap", py: 0.25 }}>
+                <Typography variant="body2">
+                  {d.lead_name} · {d.contact_number} · {d.service_type || "Service not set"} · Status: {d.status || "New"} · Consultant: {d.assigned_to_name || "Not assigned"} · Created {fmtDateTime(d.created_at)}
+                </Typography>
+                <Button size="small" onClick={() => window.open(`/lead-history/${d.id}`, "_blank")} sx={{ textTransform: "none" }}>
+                  View details
+                </Button>
+                {isInactiveLead(d) && (
+                  <Button size="small" variant="outlined" color="inherit" disabled={reopening} onClick={() => handleReopen(d.id)} sx={{ textTransform: "none" }}>
+                    {reopening ? "Reopening..." : "Reopen enquiry"}
+                  </Button>
+                )}
+              </Box>
             ))}
+
+            {blocking.length === 0 && inactiveMatches.length > 0 && (
+              <Box sx={{ mt: 1 }}>
+                <Typography variant="body2" sx={{ mb: 0.5 }}>
+                  {choice === "new"
+                    ? "A new enquiry will be created under this customer. Fill the details and save."
+                    : "Choose Reopen enquiry, or create a new enquiry for this customer, to continue."}
+                </Typography>
+                <Button size="small" variant="contained" disabled={choice === "new"} onClick={() => setChoice("new")} sx={{ textTransform: "none" }}>
+                  Create new enquiry (same customer)
+                </Button>
+              </Box>
+            )}
+
+            {blocking.length === 0 && inactiveMatches.length === 0 && (
+              <Typography variant="body2" sx={{ mt: 0.5 }}>
+                This customer has an active enquiry for another service. You can save a separate enquiry; the earlier history stays.
+              </Typography>
+            )}
           </Alert>
         )}
 
@@ -633,8 +700,8 @@ function AddEnquiryForm({ onSaved, isChairman }) {
               icon={<CallIcon fontSize="small" />}
                            label="Contact Number"
               required
-              error={!!errors.contact_number || dup.length > 0}
-              helperText={errors.contact_number || "This number already exists"}
+                            error={!!errors.contact_number || blocking.length > 0}
+              helperText={errors.contact_number || "An active enquiry for this service already exists"}
             >
               <TextField
                 variant="standard" fullWidth placeholder="Contact Number" sx={boxedFieldSx}
@@ -803,7 +870,7 @@ function AddEnquiryForm({ onSaved, isChairman }) {
             size="large"
             sx={{ bgcolor: "#0f9b8e", "&:hover": { bgcolor: "#0c7d72" } }}
                        onClick={handleSave}
-            disabled={saving || dup.length > 0}
+            disabled={saving || blocking.length > 0 || needsChoice}
           >
             {saving ? "Saving..." : "Save Enquiry"}
           </Button>
