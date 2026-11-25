@@ -36,6 +36,7 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";   // NEW
 import CheckIcon from "@mui/icons-material/Check";   // NEW — Followup "mark done" button
 import Switch from "@mui/material/Switch";   // NEW — Client Meeting Mode toggle
 import TeamMonitorTab from "./TeamMonitorTab";   // NEW — Team Monitor tab
+import RecyclingQueueTab from "./RecyclingQueueTab";
 const API = import.meta.env.VITE_API_URL || "https://invoice.vjcoverseas.com/api";
 // ── Assumption: after login you store the logged-in user's basic info here.
 // If your Login.jsx stores it under a different key / shape, just change
@@ -2754,7 +2755,8 @@ const [statusFilter, setStatusFilter] = useState("All");
                     {isChairman && <Tab label="Departments" />}
           {isChairman && <Tab label="Pending Assignment" />}
           <Tab label="Lead Monitor" value={4} />
-          <Tab label="Dead Enquiry" value={5} />
+                    <Tab label="Dead Enquiry" value={5} />
+          {isChairman && <Tab label="Recycling Queue" value={6} />}
                   </Tabs>
         <Stack direction="row" spacing={1} alignItems="center">
           {!isChairman && <ClientMeetingToggle onModeChange={setInMeeting} />}          {isChairman && <ChairmanAssignmentFeed />}
@@ -2797,6 +2799,7 @@ const [statusFilter, setStatusFilter] = useState("All");
       {tab === 4 && <TeamMonitorTab onGoPending={isChairman ? () => setTab(3) : undefined} onGoView={() => setTab(1)} />}
       {/* NEW — Tab 5: Dead Enquiry (chairman + employee) */}
       {tab === 5 && <DeadEnquiryTab />}
+      {tab === 6 && isChairman && <RecyclingQueueTab canAct={currentUser.role === "chairman"} />}
 
       {/* ── Tab 1: View Enquiry ── */}
       {tab === 1 && (
