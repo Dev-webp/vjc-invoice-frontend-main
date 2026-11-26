@@ -1,9 +1,10 @@
-// NEW FILE (v3) — Recycling Queue + Rules tab (already wired into Leads.jsx: 1 import + 1 Tab + 1 render line)
+// NEW FILE (v4) — Recycling Queue + Rules tab (already wired into Leads.jsx: 1 import + 1 Tab + 1 render line)
 import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, Chip, Button, CircularProgress, Alert, Stack, Menu, MenuItem, Checkbox, TextField,
-  Select, FormControl, InputLabel, ToggleButtonGroup, ToggleButton,
+  Paper, Chip, Button, CircularProgress, Alert, Stack, Checkbox, TextField,
+  Select, FormControl, InputLabel, MenuItem, ToggleButtonGroup, ToggleButton,
+  Dialog, DialogTitle, DialogContent, DialogActions,
 } from "@mui/material";
 
 const API = import.meta.env.VITE_API_URL || "https://invoice.vjcoverseas.com/api";
@@ -40,9 +41,26 @@ const SUPPRESS_REASONS = [
 ];
 const DEAD_REASONS = [
   ["not_reachable", "Not Reachable"],
-  ["budget", "Budget"],
+  ["no_response", "No Response / Follow-up Missed"],
+  ["budget", "Budget / Not Now"],
   ["timing", "Timing"],
+  ["not_interested", "Not Interested"],
+  ["wrong_number", "Wrong Number / Invalid"],
+  ["duplicate", "Duplicate"],
+  ["not_eligible", "Not Eligible / Service Not Offered"],
+  ["do_not_contact", "Do Not Contact / Opt-out"],
 ];
+const DEAD_HINT = {
+  not_reachable: "Eligible only after the minimum attempts on distinct days + cooldown.",
+  no_response: "Eligible after minimum attempts + cooldown. If the client asked for a date, enter it — it waits until it passes.",
+  budget: "Held until the customer-confirmed future date. Date is required.",
+  timing: "Held until the customer-confirmed future date. Date is required.",
+  not_interested: "Customer refused — goes to Exception / suppression review. Never auto-recycled.",
+  wrong_number: "Suppressed immediately and flagged for data correction. No dial / recycle.",
+  duplicate: "Suppressed and linked to the original (canonical) lead.",
+  not_eligible: "Goes to Exception — disqualify or manager decision. No blind recycle.",
+  do_not_contact: "Permanent suppression until documented re-consent / authorized correction.",
+};
 
 const GRID = "1px solid #d5dbe5";
 const cell = { border: GRID, py: 1, px: 1.2, fontSize: 13, verticalAlign: "middle" };
@@ -50,6 +68,7 @@ const head = {
   border: "1px solid #0b3471", bgcolor: "#0b3471", color: "#fff", fontWeight: 700,
   fontSize: 12.5, py: 1.1, px: 1.2, whiteSpace: "nowrap",
 };
+const fmtDate = (v) => (v ? new Date(v).toLocaleDateString("en-GB") : "-");
 
 // ───────────────────────── Rules (trigger matrix) ─────────────────────────
 function RulesPanel({ canEdit }) {
@@ -195,6 +214,115 @@ function RulesPanel({ canEdit }) {
   );
 }
 
+// ───────────────────────── Admin action dialog (mandatory reason, actor is logged) ─────────────────────────
+const EMPTY_FORM = { note: "", reason: "", outcome: "", date: "", duplicateOf: "", deptId: "", holdMode: "7", holdDate: "" };
+
+function ActionDialog({ dlg, departments, busy, onClose, onSubmit }) {
+  const [f, setF] = useState(EMPTY_FORM);
+  useEffect(() => { setF(EMPTY_FORM); }, [dlg?.type, dlg?.lead?.id]);
+  if (!dlg) return null;
+  const { type, lead } = dlg;
+  const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
+
+  const titles = {
+    recycle: "Recycle now (admin override)",
+    unhold: "Release hold",
+    hold: "Hold lead",
+    suppress: "Suppress lead",
+    release: "Release suppression",
+    dead: "Dead reason",
+    dept: "Set department",
+  };
+  const noteLabel = {
+    release: "Reason (documented re-consent / authorized correction) — required",
+    dead: "Notes — required",
+  }[type] || "Reason — required";
+
+  const dateNeeded = type === "dead" && ["budget", "timing"].includes(f.reason);
+  const dateShown = type === "dead" && ["budget", "timing", "no_response"].includes(f.reason);
+  const dupShown = (type === "dead" || type === "suppress") && f.reason === "duplicate";
+
+  let problem = "";
+  if (String(f.note).trim().length < 3) problem = "Reason / notes are mandatory";
+  else if (type === "dead" && !f.reason) problem = "Select a reason";
+  else if (type === "dead" && String(f.outcome).trim().length < 2) problem = "Outcome is mandatory";
+  else if (dateNeeded && !f.date) problem = "Customer-confirmed date is required";
+  else if (dupShown && !String(f.duplicateOf).trim()) problem = "Enter the canonical (original) lead ID";
+  else if (type === "suppress" && !f.reason) problem = "Select a reason";
+  else if (type === "dept" && !f.deptId) problem = "Select a department";
+  else if (type === "hold" && f.holdMode === "date" && !f.holdDate) problem = "Select the date";
+
+  return (
+    <Dialog open onClose={onClose} fullWidth maxWidth="sm">
+      <DialogTitle>
+        {titles[type]} <Typography component="span" variant="body2" color="text.secondary">— {lead.lead_name}</Typography>
+      </DialogTitle>
+      <DialogContent>
+        <Stack spacing={2} sx={{ mt: 1 }}>
+          {type === "dead" && (
+            <Alert severity="info" sx={{ py: 0 }}>
+              Latest attempt: <b>{fmtDate(lead.last_attempt_at)}</b> · Attempts: <b>{lead.contact_attempts}</b> on <b>{lead.attempt_days}</b> distinct day(s)
+            </Alert>
+          )}
+          {(type === "dead" || type === "suppress") && (
+            <FormControl size="small" fullWidth>
+              <InputLabel>Reason</InputLabel>
+              <Select label="Reason" value={f.reason} onChange={set("reason")}>
+                {(type === "dead" ? DEAD_REASONS : SUPPRESS_REASONS).map(([k, l]) => <MenuItem key={k} value={k}>{l}</MenuItem>)}
+              </Select>
+            </FormControl>
+          )}
+          {type === "dead" && f.reason && <Typography variant="caption" color="text.secondary">{DEAD_HINT[f.reason]}</Typography>}
+          {type === "dead" && (
+            <TextField size="small" label="Outcome (e.g. phone switched off, customer refused) — required"
+              value={f.outcome} onChange={set("outcome")} inputProps={{ maxLength: 120 }} />
+          )}
+          {dateShown && (
+            <TextField size="small" type="date" label={dateNeeded ? "Customer-confirmed next contact date — required" : "Date requested by client (optional)"}
+              InputLabelProps={{ shrink: true }} value={f.date} onChange={set("date")} />
+          )}
+          {dupShown && (
+            <TextField size="small" type="number" label="Canonical (original) lead ID — required"
+              value={f.duplicateOf} onChange={set("duplicateOf")} />
+          )}
+          {type === "dept" && (
+            <FormControl size="small" fullWidth>
+              <InputLabel>Department</InputLabel>
+              <Select label="Department" value={f.deptId} onChange={set("deptId")}>
+                {departments.map((d) => <MenuItem key={d.id} value={d.id}>{d.name}</MenuItem>)}
+              </Select>
+            </FormControl>
+          )}
+          {type === "hold" && (
+            <>
+              <FormControl size="small" fullWidth>
+                <InputLabel>Hold</InputLabel>
+                <Select label="Hold" value={f.holdMode} onChange={set("holdMode")}>
+                  <MenuItem value="7">7 days</MenuItem>
+                  <MenuItem value="30">30 days</MenuItem>
+                  <MenuItem value="date">Until a date (intake, visa window, customer date)</MenuItem>
+                </Select>
+              </FormControl>
+              {f.holdMode === "date" && (
+                <TextField size="small" type="date" label="Hold until (end of this date)" InputLabelProps={{ shrink: true }}
+                  value={f.holdDate} onChange={set("holdDate")} />
+              )}
+            </>
+          )}
+          <TextField size="small" multiline minRows={2} label={noteLabel} value={f.note} onChange={set("note")} inputProps={{ maxLength: 255 }} />
+          <Typography variant="caption" color="text.secondary">Your name is recorded against this action.</Typography>
+        </Stack>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose} sx={{ textTransform: "none" }}>Cancel</Button>
+        <Button variant="contained" disabled={!!problem || busy} onClick={() => onSubmit(type, lead, f)} sx={{ textTransform: "none" }}>
+          {problem || "Confirm"}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
 // ───────────────────────── Queue ─────────────────────────
 export default function RecyclingQueueTab({ canAct }) {
   const [view, setView] = useState("queue");
@@ -204,9 +332,9 @@ export default function RecyclingQueueTab({ canAct }) {
   const [cfg, setCfg] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [busyId, setBusyId] = useState(null);
+  const [busy, setBusy] = useState(false);
   const [filter, setFilter] = useState("all");
-  const [menu, setMenu] = useState({ anchor: null, leadId: null, type: null });
+  const [dlg, setDlg] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -237,61 +365,30 @@ export default function RecyclingQueueTab({ canAct }) {
 
   const shown = filter === "all" ? items : items.filter((i) => i.state === filter);
 
-  const act = async (id, url, method, body) => {
-    setBusyId(id);
+  const submit = async (type, lead, f) => {
+    const note = f.note.trim();
+    let url; let method = "PUT"; let body;
+    if (type === "recycle") { url = "recycle"; method = "POST"; body = { note }; }
+    else if (type === "unhold") { url = "hold"; body = { days: 0, note }; }
+    else if (type === "hold") { url = "hold"; body = f.holdMode === "date" ? { until: f.holdDate, note } : { days: Number(f.holdMode), note }; }
+    else if (type === "suppress") { url = "suppress"; body = { reason: f.reason, duplicate_of: f.duplicateOf || undefined, note }; }
+    else if (type === "release") { url = "release"; body = { note }; }
+    else if (type === "dept") { url = "department"; body = { department_id: Number(f.deptId), note }; }
+    else if (type === "dead") {
+      url = "dead-reason";
+      body = { reason: f.reason, outcome: f.outcome.trim(), date: f.date || undefined, duplicate_of: f.duplicateOf || undefined, note };
+    }
+    setBusy(true);
     try {
-      const res = await fetch(`${API}/recycle/${id}/${url}`, {
-        method, headers: jsonHeaders(), body: body ? JSON.stringify(body) : undefined,
-      });
+      const res = await fetch(`${API}/recycle/${lead.id}/${url}`, { method, headers: jsonHeaders(), body: JSON.stringify(body) });
       const data = await res.json();
       if (!data.success) alert("❌ " + (data.message || "Failed"));
+      else setDlg(null);
     } catch {
       alert("❌ Request failed");
     }
-    setBusyId(null);
+    setBusy(false);
     load();
-  };
-
-  const closeMenu = () => setMenu({ anchor: null, leadId: null, type: null });
-  const askDate = (msg) => {
-    const d = window.prompt(msg, "");
-    if (d === null) return null;
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(d.trim())) { alert("Please enter the date as YYYY-MM-DD"); return null; }
-    return d.trim();
-  };
-
-  const pick = (value, label) => {
-    const { leadId, type } = menu;
-    closeMenu();
-    if (!leadId) return;
-    if (type === "suppress") {
-      if (!window.confirm(`Mark this lead as "${label}"?\nIt will be removed from automatic recycling.`)) return;
-      const note = window.prompt("Optional note (why?)", "") || "";
-      act(leadId, "suppress", "PUT", { reason: value, note });
-    } else if (type === "hold") {
-      if (value === "date") {
-        const d = askDate("Hold until which date? (YYYY-MM-DD) — e.g. intake date, visa window, customer date");
-        if (d) act(leadId, "hold", "PUT", { until: d });
-      } else act(leadId, "hold", "PUT", { days: value });
-    } else if (type === "dead") {
-      let date;
-      if (value !== "not_reachable") {
-        date = askDate(`${label}: customer follow-up date? (YYYY-MM-DD)`);
-        if (!date) return;
-      }
-      act(leadId, "dead-reason", "PUT", { reason: value, date });
-    } else if (type === "dept") {
-      if (!window.confirm(`Set department to "${label}" for this lead?`)) return;
-      act(leadId, "department", "PUT", { department_id: value });
-    }
-  };
-
-  const menuItems = () => {
-    if (menu.type === "suppress") return SUPPRESS_REASONS.map(([k, l]) => [k, l]);
-    if (menu.type === "dead") return DEAD_REASONS.map(([k, l]) => [k, l]);
-    if (menu.type === "dept") return departments.map((d) => [d.id, d.name]);
-    if (menu.type === "hold") return [[7, "Hold 7 days"], [30, "Hold 30 days"], ["date", "Hold until date…"]];
-    return [];
   };
 
   const FilterChip = ({ k, label }) => (
@@ -309,6 +406,7 @@ export default function RecyclingQueueTab({ canAct }) {
   );
 
   const showingSuppressed = filter === "suppressed";
+  const btn = { textTransform: "none" };
 
   return (
     <Box>
@@ -320,7 +418,7 @@ export default function RecyclingQueueTab({ canAct }) {
             <ToggleButton value="rules" sx={{ textTransform: "none", px: 2 }}>Rules</ToggleButton>
           </ToggleButtonGroup>
         </Stack>
-        {view === "queue" && <Button size="small" variant="outlined" onClick={load} sx={{ textTransform: "none" }}>Refresh</Button>}
+        {view === "queue" && <Button size="small" variant="outlined" onClick={load} sx={btn}>Refresh</Button>}
       </Stack>
 
       {view === "rules" ? (
@@ -330,11 +428,12 @@ export default function RecyclingQueueTab({ canAct }) {
           {cfg && (
             <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
               Max cycles {cfg.maxCycles} · Cooling {cfg.coolingDays}d after each recycle. Timeframes per trigger are in the Rules tab (calendar days).
+              Every admin action needs a reason and is logged with your name. The next consultant is always chosen by round-robin.
             </Typography>
           )}
           <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.5 }}>
             Total age = since lead created · No-activity = since last note / follow-up / assignment (status edits don’t count) ·
-            In status = since status last changed · Since assigned = with current consultant.
+            In status = since status last changed · Since assigned = with current consultant · Attempts = notes (distinct days).
             Suppressed leads (Converted, Disqualified, Do Not Contact, Invalid, Duplicate, Legal) are never recycled.
           </Typography>
 
@@ -357,7 +456,7 @@ export default function RecyclingQueueTab({ canAct }) {
               <Alert severity="info">No suppressed leads.</Alert>
             ) : (
               <TableContainer component={Paper} sx={{ maxHeight: "68vh", border: GRID, borderRadius: 1 }}>
-                <Table size="small" stickyHeader sx={{ borderCollapse: "collapse", minWidth: 900 }}>
+                <Table size="small" stickyHeader sx={{ borderCollapse: "collapse", minWidth: 950 }}>
                   <TableHead>
                     <TableRow>
                       <TableCell sx={{ ...head, width: 48 }} align="center">#</TableCell>
@@ -378,13 +477,18 @@ export default function RecyclingQueueTab({ canAct }) {
                         <TableCell sx={{ ...cell, whiteSpace: "nowrap" }}>{l.contact_number}</TableCell>
                         <TableCell sx={cell} align="center">{l.status}</TableCell>
                         <TableCell sx={cell}>{l.consultant_name || "-"}</TableCell>
-                        <TableCell sx={cell}><b>{l.lifecycle_status}</b></TableCell>
+                        <TableCell sx={cell}>
+                          <b>{l.lifecycle_status}</b>
+                          {l.duplicate_of && (
+                            <Typography variant="caption" display="block" color="text.secondary">
+                              Duplicate of #{l.duplicate_of}{l.duplicate_of_name ? ` (${l.duplicate_of_name})` : ""}
+                            </Typography>
+                          )}
+                        </TableCell>
                         <TableCell sx={cell}>{l.suppress_note || "-"}</TableCell>
                         {canAct && (
                           <TableCell sx={cell} align="center">
-                            <Button size="small" variant="outlined" disabled={busyId === l.id}
-                              onClick={() => window.confirm("Allow this lead to be recycled again?") && act(l.id, "release", "PUT")}
-                              sx={{ textTransform: "none" }}>Release</Button>
+                            <Button size="small" variant="outlined" onClick={() => setDlg({ type: "release", lead: l })} sx={btn}>Release</Button>
                           </TableCell>
                         )}
                       </TableRow>
@@ -397,7 +501,7 @@ export default function RecyclingQueueTab({ canAct }) {
             <Alert severity="info">No leads in this list right now.</Alert>
           ) : (
             <TableContainer component={Paper} sx={{ maxHeight: "68vh", border: GRID, borderRadius: 1 }}>
-              <Table size="small" stickyHeader sx={{ borderCollapse: "collapse", minWidth: 1600 }}>
+              <Table size="small" stickyHeader sx={{ borderCollapse: "collapse", minWidth: 1700 }}>
                 <TableHead>
                   <TableRow>
                     <TableCell sx={{ ...head, width: 44 }} align="center">#</TableCell>
@@ -411,7 +515,8 @@ export default function RecyclingQueueTab({ canAct }) {
                     <TableCell sx={head} align="center">No activity (d)</TableCell>
                     <TableCell sx={head} align="center">In status (d)</TableCell>
                     <TableCell sx={head} align="center">Since assigned (d)</TableCell>
-                    <TableCell sx={head} align="center">Attempts</TableCell>
+                    <TableCell sx={head} align="center">Attempts (days)</TableCell>
+                    <TableCell sx={head} align="center">Last attempt</TableCell>
                     <TableCell sx={head} align="center">Reminders sent</TableCell>
                     <TableCell sx={head}>Rule result</TableCell>
                     {canAct && <TableCell sx={head} align="center">Action</TableCell>}
@@ -445,9 +550,10 @@ export default function RecyclingQueueTab({ canAct }) {
                         <TableCell sx={cell} align="center">{l.idle_days}</TableCell>
                         <TableCell sx={cell} align="center">{l.days_in_status}</TableCell>
                         <TableCell sx={cell} align="center">{l.days_since_assignment}</TableCell>
-                        <TableCell sx={cell} align="center">{l.contact_attempts}</TableCell>
+                        <TableCell sx={cell} align="center">{l.contact_attempts} ({l.attempt_days})</TableCell>
+                        <TableCell sx={{ ...cell, whiteSpace: "nowrap" }} align="center">{fmtDate(l.last_attempt_at)}</TableCell>
                         <TableCell sx={cell} align="center">{l.reminders_sent}</TableCell>
-                        <TableCell sx={{ ...cell, minWidth: 210 }}>
+                        <TableCell sx={{ ...cell, minWidth: 220 }}>
                           <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 0.5 }}>
                             <Box sx={{
                               px: 1.2, py: 0.2, borderRadius: 1, fontSize: 11.5, fontWeight: 700,
@@ -460,31 +566,20 @@ export default function RecyclingQueueTab({ canAct }) {
                           <TableCell sx={cell} align="center">
                             <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap" rowGap={1}>
                               {l.state === "eligible" && (
-                                <Button size="small" variant="contained" disabled={busyId === l.id}
-                                  onClick={() => window.confirm("Recycle this lead to the next consultant now?") && act(l.id, "recycle", "POST")}
-                                  sx={{ textTransform: "none" }}>Recycle now</Button>
+                                <Button size="small" variant="contained" onClick={() => setDlg({ type: "recycle", lead: l })} sx={btn}>Recycle now</Button>
                               )}
                               {noDept && (
-                                <Button size="small" variant="contained" color="warning" disabled={busyId === l.id}
-                                  onClick={(e) => setMenu({ anchor: e.currentTarget, leadId: l.id, type: "dept" })}
-                                  sx={{ textTransform: "none" }}>Set department ▾</Button>
+                                <Button size="small" variant="contained" color="warning" onClick={() => setDlg({ type: "dept", lead: l })} sx={btn}>Set department</Button>
                               )}
                               {l.status === "Dead" && (
-                                <Button size="small" variant="outlined" disabled={busyId === l.id}
-                                  onClick={(e) => setMenu({ anchor: e.currentTarget, leadId: l.id, type: "dead" })}
-                                  sx={{ textTransform: "none" }}>Dead reason ▾</Button>
+                                <Button size="small" variant="outlined" onClick={() => setDlg({ type: "dead", lead: l })} sx={btn}>Dead reason</Button>
                               )}
                               {holdOn ? (
-                                <Button size="small" variant="outlined" disabled={busyId === l.id}
-                                  onClick={() => act(l.id, "hold", "PUT", { days: 0 })} sx={{ textTransform: "none" }}>Release hold</Button>
+                                <Button size="small" variant="outlined" onClick={() => setDlg({ type: "unhold", lead: l })} sx={btn}>Release hold</Button>
                               ) : (
-                                <Button size="small" variant="outlined" disabled={busyId === l.id}
-                                  onClick={(e) => setMenu({ anchor: e.currentTarget, leadId: l.id, type: "hold" })}
-                                  sx={{ textTransform: "none" }}>Hold ▾</Button>
+                                <Button size="small" variant="outlined" onClick={() => setDlg({ type: "hold", lead: l })} sx={btn}>Hold</Button>
                               )}
-                              <Button size="small" variant="outlined" color="error" disabled={busyId === l.id}
-                                onClick={(e) => setMenu({ anchor: e.currentTarget, leadId: l.id, type: "suppress" })}
-                                sx={{ textTransform: "none" }}>Suppress ▾</Button>
+                              <Button size="small" variant="outlined" color="error" onClick={() => setDlg({ type: "suppress", lead: l })} sx={btn}>Suppress</Button>
                             </Stack>
                           </TableCell>
                         )}
@@ -496,11 +591,7 @@ export default function RecyclingQueueTab({ canAct }) {
             </TableContainer>
           )}
 
-          <Menu anchorEl={menu.anchor} open={Boolean(menu.anchor)} onClose={closeMenu}>
-            {menuItems().map(([value, label]) => (
-              <MenuItem key={String(value)} onClick={() => pick(value, label)}>{label}</MenuItem>
-            ))}
-          </Menu>
+          <ActionDialog dlg={dlg} departments={departments} busy={busy} onClose={() => setDlg(null)} onSubmit={submit} />
         </>
       )}
     </Box>
