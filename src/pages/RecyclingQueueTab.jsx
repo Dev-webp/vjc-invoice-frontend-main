@@ -1,4 +1,4 @@
-// NEW FILE (v4) — Recycling Queue + Rules tab (already wired into Leads.jsx: 1 import + 1 Tab + 1 render line)
+// NEW FILE (v5) — Recycling Queue + Rules tab (already wired into Leads.jsx: 1 import + 1 Tab + 1 render line)
 import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
@@ -6,6 +6,8 @@ import {
   Select, FormControl, InputLabel, MenuItem, ToggleButtonGroup, ToggleButton,
   Dialog, DialogTitle, DialogContent, DialogActions,
 } from "@mui/material";
+
+import { AttemptHistoryDialog, NotificationsPanel } from "./ContactAttemptTab";
 
 const API = import.meta.env.VITE_API_URL || "https://invoice.vjcoverseas.com/api";
 const authHeader = () => ({ Authorization: `Bearer ${localStorage.getItem("vjc_invoice_auth")}` });
@@ -98,10 +100,11 @@ function RulesPanel({ canEdit }) {
   const depId = scope === "global" ? null : Number(scope);
   const find = (dep, key) => data?.rules.find((x) => (x.department_id || null) === dep && x.trigger_key === key);
   const effective = (key) => {
-    const own = depId ? find(depId, key) : null;
+    const tdef = data.triggers.find((x) => x.key === key) || {};
+    const own = depId && !tdef.globalOnly ? find(depId, key) : null;
     const glob = find(null, key);
     const src = own || glob || data.defaults[key];
-    return { enabled: src.enabled, value: src.value, overridden: depId ? !!own : !!glob };
+    return { enabled: src.enabled, value: src.value, overridden: depId && !tdef.globalOnly ? !!own : !!glob };
   };
 
   const save = async (key) => {
@@ -172,31 +175,32 @@ function RulesPanel({ canEdit }) {
               const enabled = e.enabled ?? cur.enabled;
               const value = e.value ?? cur.value;
               const dirty = e.enabled !== undefined || e.value !== undefined;
-              const noValue = t.key === "dead_budget_timing";
+              const noValue = !!t.noValue;
+              const locked = !canEdit || (t.globalOnly && !!depId);
               return (
                 <TableRow key={t.key} sx={{ bgcolor: i % 2 ? "#f7f9fc" : "#fff" }}>
                   <TableCell sx={{ ...cell, fontWeight: 600 }}>{t.label}</TableCell>
                   <TableCell sx={cell} align="center">
-                    <Checkbox size="small" checked={!!enabled} disabled={!canEdit}
+                    <Checkbox size="small" checked={!!enabled} disabled={locked || !!t.alwaysOn}
                       onChange={(ev) => setEdits({ ...edits, [t.key]: { ...e, enabled: ev.target.checked } })} />
                   </TableCell>
                   <TableCell sx={cell} align="center">
                     {noValue ? "—" : (
-                      <TextField size="small" type="number" value={value} disabled={!canEdit}
+                      <TextField size="small" type="number" value={value} disabled={locked}
                         inputProps={{ min: 0, max: 3650, style: { width: 70, textAlign: "center" } }}
                         onChange={(ev) => setEdits({ ...edits, [t.key]: { ...e, value: ev.target.value } })} />
                     )}
                   </TableCell>
                   <TableCell sx={cell}>{t.unit}</TableCell>
                   <TableCell sx={cell}>
-                    {cur.overridden ? <b>{depId ? "Department override" : "Global (custom)"}</b> : depId ? "Inherited" : "Built-in default"}
+                    {t.globalOnly && depId ? "Global only" : cur.overridden ? <b>{depId ? "Department override" : "Global (custom)"}</b> : depId ? "Inherited" : "Built-in default"}
                   </TableCell>
                   {canEdit && (
                     <TableCell sx={cell} align="center">
                       <Stack direction="row" spacing={1} justifyContent="center">
-                        <Button size="small" variant="contained" disabled={!dirty || saving === t.key}
+                        <Button size="small" variant="contained" disabled={!dirty || saving === t.key || locked}
                           onClick={() => save(t.key)} sx={{ textTransform: "none" }}>Save</Button>
-                        {cur.overridden && (
+                        {cur.overridden && !locked && (
                           <Button size="small" variant="outlined" disabled={saving === t.key}
                             onClick={() => reset(t.key)} sx={{ textTransform: "none" }}>Reset</Button>
                         )}
@@ -210,6 +214,51 @@ function RulesPanel({ canEdit }) {
         </Table>
       </TableContainer>
       {!canEdit && <Typography variant="caption" color="text.secondary">View only. Only the chairman can change rules.</Typography>}
+    </Box>
+  );
+}
+
+// ───────────────────────── Analytics (manager flags — patterns only, never an accusation) ─────────────────────────
+function AnalyticsPanel() {
+  const [data, setData] = useState(null);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    fetch(`${API}/recycle/analytics`, { headers: authHeader() }).then((r) => r.json())
+      .then((d) => (d.success ? setData(d) : setError(d.message || "Failed to load")))
+      .catch(() => setError("Request failed"));
+  }, []);
+  if (error) return <Alert severity="error">{error}</Alert>;
+  if (!data) return <Box sx={{ p: 4, textAlign: "center" }}><CircularProgress size={28} /></Box>;
+  return (
+    <Box>
+      <Alert severity="info" sx={{ mb: 2 }}>
+        These are <b>patterns for manager review only</b> — not a conclusion about any consultant. Early-Dead uses status-change tracking, so it covers
+        leads marked Dead since tracking started.
+      </Alert>
+      <TableContainer component={Paper} sx={{ border: GRID, borderRadius: 1 }}>
+        <Table size="small" sx={{ borderCollapse: "collapse", minWidth: 900 }}>
+          <TableHead><TableRow>
+            {["Consultant", "Leads", "Dead", `Dead within ${data.thresholds.flagEarlyDeadDays}d of assignment`, `Leads postponed ${data.thresholds.flagPostponeCount}+ times`, "Total reschedules", "Review flag"].map((h) => <TableCell key={h} sx={head}>{h}</TableCell>)}
+          </TableRow></TableHead>
+          <TableBody>
+            {data.consultants.map((c, i) => (
+              <TableRow key={c.id} sx={{ bgcolor: i % 2 ? "#f7f9fc" : "#fff" }}>
+                <TableCell sx={{ ...cell, fontWeight: 600 }}>{c.name}</TableCell>
+                <TableCell sx={cell} align="center">{c.assigned_total}</TableCell>
+                <TableCell sx={cell} align="center">{c.dead_total}</TableCell>
+                <TableCell sx={cell} align="center">{c.early_dead}</TableCell>
+                <TableCell sx={cell} align="center">{c.repeat_postponed_leads}</TableCell>
+                <TableCell sx={cell} align="center">{c.reschedules_total}</TableCell>
+                <TableCell sx={cell}>
+                  {c.flags.length === 0 ? "—" : c.flags.map((f) => (
+                    <Chip key={f} size="small" color="warning" variant="outlined" label={`Review suggested: ${f}`} sx={{ mr: 0.5, mb: 0.5 }} />
+                  ))}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </Box>
   );
 }
@@ -335,6 +384,7 @@ export default function RecyclingQueueTab({ canAct }) {
   const [busy, setBusy] = useState(false);
   const [filter, setFilter] = useState("all");
   const [dlg, setDlg] = useState(null);
+  const [hist, setHist] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -416,6 +466,7 @@ export default function RecyclingQueueTab({ canAct }) {
           <ToggleButtonGroup size="small" exclusive value={view} onChange={(_, v) => v && setView(v)}>
             <ToggleButton value="queue" sx={{ textTransform: "none", px: 2 }}>Queue</ToggleButton>
             <ToggleButton value="rules" sx={{ textTransform: "none", px: 2 }}>Rules</ToggleButton>
+            <ToggleButton value="analytics" sx={{ textTransform: "none", px: 2 }}>Analytics</ToggleButton>
           </ToggleButtonGroup>
         </Stack>
         {view === "queue" && <Button size="small" variant="outlined" onClick={load} sx={btn}>Refresh</Button>}
@@ -423,11 +474,15 @@ export default function RecyclingQueueTab({ canAct }) {
 
       {view === "rules" ? (
         <RulesPanel canEdit={canAct} />
+      ) : view === "analytics" ? (
+        <AnalyticsPanel />
       ) : (
         <>
+          <NotificationsPanel />
           {cfg && (
             <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-              Max cycles {cfg.maxCycles} · Cooling {cfg.coolingDays}d after each recycle. Timeframes per trigger are in the Rules tab (calendar days).
+              Cooling {cfg.coolingDays}d after each recycle. Timeframes, max cycles per service and routing capacity are in the Rules tab (calendar days).
+              Next consultant = round-robin cursor of the lead’s own team/service; the previous owner is skipped.
               Every admin action needs a reason and is logged with your name. The next consultant is always chosen by round-robin.
             </Typography>
           )}
@@ -560,11 +615,14 @@ export default function RecyclingQueueTab({ canAct }) {
                               bgcolor: st.bg, color: st.fg, border: `1px solid ${st.border}`,
                             }}>{st.label}</Box>
                             <Typography variant="caption" color="text.secondary">{l.reason}</Typography>
+                            {l.blocked_reason && <Typography variant="caption" sx={{ color: "#b3261e", fontWeight: 600 }}>⚠ {l.blocked_reason}</Typography>}
+                            {l.queued_at && <Typography variant="caption" color="text.secondary">Queued since {fmtDate(l.queued_at)}</Typography>}
                           </Box>
                         </TableCell>
                         {canAct && (
                           <TableCell sx={cell} align="center">
                             <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap" rowGap={1}>
+                              <Button size="small" variant="outlined" onClick={() => setHist(l)} sx={btn}>Attempts</Button>
                               {l.state === "eligible" && (
                                 <Button size="small" variant="contained" onClick={() => setDlg({ type: "recycle", lead: l })} sx={btn}>Recycle now</Button>
                               )}
@@ -592,6 +650,7 @@ export default function RecyclingQueueTab({ canAct }) {
           )}
 
           <ActionDialog dlg={dlg} departments={departments} busy={busy} onClose={() => setDlg(null)} onSubmit={submit} />
+          {hist && <AttemptHistoryDialog leadId={hist.id} leadName={hist.lead_name} onClose={() => setHist(null)} />}
         </>
       )}
     </Box>
