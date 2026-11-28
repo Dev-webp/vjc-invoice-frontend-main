@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, Button,
   CircularProgress, Alert, Stack, TextField, Select, FormControl, InputLabel, MenuItem, Checkbox,
-  FormControlLabel, Dialog, DialogTitle, DialogContent, DialogActions,
+  FormControlLabel, Dialog, DialogTitle, DialogContent, DialogActions, Accordion, AccordionSummary, AccordionDetails,
 } from "@mui/material";
 
 const API = import.meta.env.VITE_API_URL || "https://invoice.vjcoverseas.com/api";
@@ -61,6 +61,77 @@ export function NotificationsPanel() {
         </Typography>
       ))}
     </Alert>
+  );
+}
+
+// ───────── Lead brief: what the consultant who receives a lead sees (neutral label, customer facts, promises, restrictions) ─────────
+export function LeadBriefDialog({ leadId, onClose }) {
+  const [b, setB] = useState(null);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    let live = true;
+    fetch(`${API}/recycle/${leadId}/brief`, { headers: authHeader() }).then((r) => r.json())
+      .then((d) => { if (!live) return; if (d.success) setB(d.brief); else setError(d.message || "Failed to load"); })
+      .catch(() => live && setError("Request failed"));
+    return () => { live = false; };
+  }, [leadId]);
+  const Row = ({ k, v }) => (<Typography variant="body2" sx={{ mb: 0.3 }}><b>{k}:</b> {v || "-"}</Typography>);
+  return (
+    <Dialog open onClose={onClose} fullWidth maxWidth="sm">
+      <DialogTitle>{b ? b.label : "Assigned Lead"} {b && <Typography component="span" variant="body2" color="text.secondary">— {b.customer.name}</Typography>}</DialogTitle>
+      <DialogContent>
+        {error && <Alert severity="error">{error}</Alert>}
+        {!b && !error && <Box sx={{ p: 3, textAlign: "center" }}><CircularProgress size={26} /></Box>}
+        {b && (
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <Box>
+              <Typography variant="subtitle2" sx={{ mb: 0.5 }}>Customer</Typography>
+              <Row k="Mobile" v={b.customer.contact} />
+              {b.customer.alternate_contact && <Row k="Alternate" v={b.customer.alternate_contact} />}
+              <Row k="Service" v={b.customer.service} />
+              <Row k="Country" v={b.customer.countries.join(", ")} />
+            </Box>
+            <Alert severity="info" sx={{ py: 0 }}><b>Next action:</b> {b.next_action.text}{b.next_action.customer_confirmed ? " (customer-confirmed)" : ""}</Alert>
+            <Box>
+              <Typography variant="subtitle2" sx={{ mb: 0.5 }}>Contact restrictions</Typography>
+              {b.restrictions.items.length > 0
+                ? <Alert severity="error" sx={{ py: 0 }}>{b.restrictions.items.map((x) => <div key={x}>• {x}</div>)}</Alert>
+                : <Alert severity="success" sx={{ py: 0 }}>None recorded. Please avoid repeated or unwanted contact.</Alert>}
+              {b.restrictions.permission_history.map((p, i) => (
+                <Typography key={i} variant="caption" display="block" color="text.secondary">
+                  {fmtD(p.at)} — {String(p.action).replace(/_/g, " ")}: {p.reason}
+                </Typography>
+              ))}
+            </Box>
+            <Box>
+              <Typography variant="subtitle2" sx={{ mb: 0.5 }}>Promised dates</Typography>
+              {b.promised_dates.length === 0 ? <Typography variant="body2">None recorded.</Typography> : b.promised_dates.map((d, i) => (
+                <Typography key={i} variant="body2">• {fmtD(d.date)}{d.rescheduled_from ? ` (moved from ${fmtD(d.rescheduled_from)})` : ""}</Typography>
+              ))}
+              <Typography variant="caption" color="text.secondary">Keep earlier promises consistent with what the customer was told.</Typography>
+            </Box>
+            {b.earlier_context && (
+              <Box>
+                <Typography variant="subtitle2" sx={{ mb: 0.5 }}>Earlier context</Typography>
+                <Typography variant="body2">{b.earlier_context}</Typography>
+              </Box>
+            )}
+            <Accordion disableGutters variant="outlined">
+              <AccordionSummary expandIcon="▾"><Typography variant="subtitle2">Interaction history ({b.interaction_history.length})</Typography></AccordionSummary>
+              <AccordionDetails>
+                {b.interaction_history.length === 0 ? <Typography variant="body2">No earlier interactions recorded.</Typography> : b.interaction_history.map((h, i) => (
+                  <Typography key={i} variant="body2" sx={{ mb: 0.7 }}>
+                    <Typography component="span" variant="caption" color="text.secondary">{fmt(h.at)} · </Typography>
+                    {h.kind === "attempt" ? `${h.channel}: ${h.outcome}` : "Note"}{h.note ? ` — ${h.note}` : ""}
+                  </Typography>
+                ))}
+              </AccordionDetails>
+            </Accordion>
+          </Stack>
+        )}
+      </DialogContent>
+      <DialogActions><Button onClick={onClose} sx={{ textTransform: "none" }}>Close</Button></DialogActions>
+    </Dialog>
   );
 }
 
@@ -201,6 +272,7 @@ export default function ContactAttemptTab() {
   const [search, setSearch] = useState("");
   const [logFor, setLogFor] = useState(null);
   const [histFor, setHistFor] = useState(null);
+  const [briefFor, setBriefFor] = useState(null);
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
@@ -247,7 +319,7 @@ export default function ContactAttemptTab() {
         <TableContainer component={Paper} sx={{ maxHeight: "68vh", border: GRID, borderRadius: 1 }}>
           <Table size="small" stickyHeader sx={{ borderCollapse: "collapse", minWidth: 900 }}>
             <TableHead><TableRow>
-              {["#", "Lead", "Mobile", "Status", "Cycle", "Attempts", "Last attempt", "Pending follow-up", "Action"].map((h) => <TableCell key={h} sx={head}>{h}</TableCell>)}
+              {["#", "Lead", "Mobile", "Status", "Attempts", "Last attempt", "Pending follow-up", "Action"].map((h) => <TableCell key={h} sx={head}>{h}</TableCell>)}
             </TableRow></TableHead>
             <TableBody>
               {shown.map((l, i) => (
@@ -256,7 +328,6 @@ export default function ContactAttemptTab() {
                   <TableCell sx={{ ...cell, fontWeight: 600 }}>{l.lead_name}</TableCell>
                   <TableCell sx={{ ...cell, whiteSpace: "nowrap" }}>{l.contact_number}</TableCell>
                   <TableCell sx={cell}>{l.status}</TableCell>
-                  <TableCell sx={cell}>{l.cycle_no}</TableCell>
                   <TableCell sx={cell}>{l.attempts}</TableCell>
                   <TableCell sx={{ ...cell, whiteSpace: "nowrap" }}>{fmt(l.last_attempt_at)}</TableCell>
                   <TableCell sx={cell}>
@@ -265,6 +336,7 @@ export default function ContactAttemptTab() {
                   <TableCell sx={{ ...cell, whiteSpace: "nowrap" }}>
                     <Stack direction="row" spacing={1}>
                       <Button size="small" variant="contained" onClick={() => setLogFor(l)} sx={{ textTransform: "none" }}>Log attempt</Button>
+                      <Button size="small" variant="outlined" onClick={() => setBriefFor(l)} sx={{ textTransform: "none" }}>Brief</Button>
                       <Button size="small" variant="outlined" onClick={() => setHistFor(l)} sx={{ textTransform: "none" }}>History</Button>
                     </Stack>
                   </TableCell>
@@ -275,6 +347,7 @@ export default function ContactAttemptTab() {
         </TableContainer>
       )}
       {logFor && <LogDialog lead={logFor} busy={busy} onClose={() => setLogFor(null)} onSubmit={submit} />}
+      {briefFor && <LeadBriefDialog leadId={briefFor.id} onClose={() => setBriefFor(null)} />}
       {histFor && <AttemptHistoryDialog leadId={histFor.id} leadName={histFor.lead_name} onClose={() => setHistFor(null)} />}
     </Box>
   );

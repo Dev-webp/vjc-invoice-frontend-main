@@ -1,4 +1,4 @@
-// NEW FILE (v5) — Recycling Queue + Rules tab (already wired into Leads.jsx: 1 import + 1 Tab + 1 render line)
+// NEW FILE (v6) — Recycling Queue + Rules tab (already wired into Leads.jsx: 1 import + 1 Tab + 1 render line)
 import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
@@ -218,6 +218,123 @@ function RulesPanel({ canEdit }) {
   );
 }
 
+// ───────────────────────── Timeline (Director/Admin: full event history of a lead) ─────────────────────────
+const TYPE_COLOR = { created: "default", assignment: "primary", recycle: "secondary", status: "info", override: "warning", attempt: "success", followup: "default" };
+function TimelineDialog({ lead, onClose }) {
+  const [data, setData] = useState(null);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    let live = true;
+    fetch(`${API}/recycle/${lead.id}/timeline`, { headers: authHeader() }).then((r) => r.json())
+      .then((d) => { if (!live) return; if (d.success) setData(d); else setError(d.message || "Failed to load"); })
+      .catch(() => live && setError("Request failed"));
+    return () => { live = false; };
+  }, [lead.id]);
+  const S = data?.summary;
+  return (
+    <Dialog open onClose={onClose} fullWidth maxWidth="lg">
+      <DialogTitle>Timeline <Typography component="span" variant="body2" color="text.secondary">— {lead.lead_name}</Typography></DialogTitle>
+      <DialogContent>
+        {error && <Alert severity="error">{error}</Alert>}
+        {!data && !error && <Box sx={{ p: 3, textAlign: "center" }}><CircularProgress size={26} /></Box>}
+        {data && (
+          <Stack spacing={2}>
+            <Stack direction="row" spacing={1} flexWrap="wrap" rowGap={1}>
+              <Chip label={`Current owner: ${S.current_owner || "-"}`} />
+              <Chip label={`Prior owners: ${S.prior_owners.length ? S.prior_owners.join(", ") : "none"}`} />
+              <Chip label={`Cycle: ${S.cycles}`} />
+              <Chip label={`Attempts logged: ${S.attempts_logged}`} />
+              <Chip label={`Notes: ${S.notes_total}`} />
+              <Chip label={`Status changes: ${S.status_changes}`} />
+              <Chip label={`Admin overrides: ${S.overrides}`} />
+              {S.dead_reason && <Chip color="warning" label={`Dead reason: ${S.dead_reason}${S.dead_outcome ? ` — ${S.dead_outcome}` : ""}`} />}
+              {S.suppressed && <Chip color="error" label={`Suppressed: ${S.suppressed}`} />}
+            </Stack>
+            <Typography variant="caption" color="text.secondary">
+              Status changes are recorded from the day tracking was installed; earlier status history and who changed a status are not available in the existing system.
+            </Typography>
+            <TableContainer component={Paper} sx={{ maxHeight: "55vh", border: GRID }}>
+              <Table size="small" stickyHeader sx={{ borderCollapse: "collapse" }}>
+                <TableHead><TableRow>{["When", "Type", "Event", "Detail", "By"].map((h) => <TableCell key={h} sx={head}>{h}</TableCell>)}</TableRow></TableHead>
+                <TableBody>
+                  {data.events.map((e, i) => (
+                    <TableRow key={i} sx={{ bgcolor: i % 2 ? "#f7f9fc" : "#fff" }}>
+                      <TableCell sx={{ ...cell, whiteSpace: "nowrap" }}>{new Date(e.at).toLocaleString("en-GB", { dateStyle: "short", timeStyle: "short" })}</TableCell>
+                      <TableCell sx={cell}><Chip size="small" color={TYPE_COLOR[e.type] || "default"} label={e.type} /></TableCell>
+                      <TableCell sx={{ ...cell, fontWeight: 600 }}>{e.title}</TableCell>
+                      <TableCell sx={cell}>{e.detail || "-"}</TableCell>
+                      <TableCell sx={cell}>{e.actor || "-"}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Stack>
+        )}
+      </DialogContent>
+      <DialogActions><Button onClick={onClose} sx={{ textTransform: "none" }}>Close</Button></DialogActions>
+    </Dialog>
+  );
+}
+
+// ───────────────────────── Health (queue / scheduled-run monitoring) ─────────────────────────
+function HealthPanel() {
+  const [data, setData] = useState(null);
+  const [error, setError] = useState("");
+  const load = useCallback(() => {
+    fetch(`${API}/recycle/health`, { headers: authHeader() }).then((r) => r.json())
+      .then((d) => (d.success ? setData(d) : setError(d.message || "Failed to load")))
+      .catch(() => setError("Request failed"));
+  }, []);
+  useEffect(() => { load(); }, [load]);
+  if (error) return <Alert severity="error">{error}</Alert>;
+  if (!data) return <Box sx={{ p: 4, textAlign: "center" }}><CircularProgress size={28} /></Box>;
+  return (
+    <Stack spacing={2}>
+      {data.stale
+        ? <Alert severity="warning">The scheduled recycling job has not run{data.hours_since_last_run === null ? " yet" : ` for ${data.hours_since_last_run} hours`} (alert after {data.staleHours}h). Check the cron entry for /api/recycle/run.</Alert>
+        : <Alert severity="success">Scheduled job last ran {data.hours_since_last_run} hours ago.</Alert>}
+      {data.errors_7d > 0 && <Alert severity="error">{data.errors_7d} recycling error(s) in the last 7 days — see below.</Alert>}
+      {data.blocked > 0 && <Alert severity="warning">{data.blocked} lead(s) are waiting because no other eligible consultant is available.</Alert>}
+      <Stack direction="row" spacing={1} flexWrap="wrap" rowGap={1}>
+        {data.queue_by_state.length === 0 ? <Chip label="Queue is empty (fills when the scheduled job runs)" /> : data.queue_by_state.map((q) => <Chip key={q.state} label={`${q.state}: ${q.c}`} />)}
+        <Button size="small" variant="outlined" onClick={load} sx={{ textTransform: "none" }}>Refresh</Button>
+      </Stack>
+      <Typography variant="subtitle2">Recent errors</Typography>
+      {data.recent_errors.length === 0 ? <Alert severity="info">No errors.</Alert> : (
+        <TableContainer component={Paper} sx={{ border: GRID }}>
+          <Table size="small" sx={{ borderCollapse: "collapse" }}>
+            <TableHead><TableRow>{["When", "Lead", "Stage", "Message"].map((h) => <TableCell key={h} sx={head}>{h}</TableCell>)}</TableRow></TableHead>
+            <TableBody>{data.recent_errors.map((e) => (
+              <TableRow key={e.id}>
+                <TableCell sx={{ ...cell, whiteSpace: "nowrap" }}>{new Date(e.created_at).toLocaleString("en-GB", { dateStyle: "short", timeStyle: "short" })}</TableCell>
+                <TableCell sx={cell}>{e.lead_name || "-"}</TableCell><TableCell sx={cell}>{e.stage}</TableCell><TableCell sx={cell}>{e.message}</TableCell>
+              </TableRow>))}</TableBody>
+          </Table>
+        </TableContainer>
+      )}
+      <Typography variant="subtitle2">Recent runs</Typography>
+      <TableContainer component={Paper} sx={{ border: GRID }}>
+        <Table size="small" sx={{ borderCollapse: "collapse" }}>
+          <TableHead><TableRow>{["Started", "Type", "Checked", "Eligible", "Recycled", "Blocked", "Errors", "Result"].map((h) => <TableCell key={h} sx={head}>{h}</TableCell>)}</TableRow></TableHead>
+          <TableBody>
+            {data.runs.length === 0 && <TableRow><TableCell sx={cell} colSpan={8}>No runs recorded yet.</TableCell></TableRow>}
+            {data.runs.map((r) => (
+              <TableRow key={r.id}>
+                <TableCell sx={{ ...cell, whiteSpace: "nowrap" }}>{new Date(r.started_at).toLocaleString("en-GB", { dateStyle: "short", timeStyle: "short" })}</TableCell>
+                <TableCell sx={cell}>{r.dry ? "Dry run" : "Live"}</TableCell>
+                <TableCell sx={cell}>{r.summary?.checked ?? "-"}</TableCell><TableCell sx={cell}>{r.summary?.eligible ?? "-"}</TableCell>
+                <TableCell sx={cell}>{r.summary?.recycled ?? "-"}</TableCell><TableCell sx={cell}>{r.summary?.no_consultant ?? "-"}</TableCell>
+                <TableCell sx={cell}>{r.summary?.errors ?? "-"}</TableCell>
+                <TableCell sx={cell}>{r.error ? <b style={{ color: "#b3261e" }}>Failed: {r.error}</b> : r.finished_at ? "OK" : "Running / interrupted"}</TableCell>
+              </TableRow>))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Stack>
+  );
+}
+
 // ───────────────────────── Analytics (manager flags — patterns only, never an accusation) ─────────────────────────
 function AnalyticsPanel() {
   const [data, setData] = useState(null);
@@ -385,6 +502,7 @@ export default function RecyclingQueueTab({ canAct }) {
   const [filter, setFilter] = useState("all");
   const [dlg, setDlg] = useState(null);
   const [hist, setHist] = useState(null);
+  const [tl, setTl] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -467,6 +585,7 @@ export default function RecyclingQueueTab({ canAct }) {
             <ToggleButton value="queue" sx={{ textTransform: "none", px: 2 }}>Queue</ToggleButton>
             <ToggleButton value="rules" sx={{ textTransform: "none", px: 2 }}>Rules</ToggleButton>
             <ToggleButton value="analytics" sx={{ textTransform: "none", px: 2 }}>Analytics</ToggleButton>
+            <ToggleButton value="health" sx={{ textTransform: "none", px: 2 }}>Health</ToggleButton>
           </ToggleButtonGroup>
         </Stack>
         {view === "queue" && <Button size="small" variant="outlined" onClick={load} sx={btn}>Refresh</Button>}
@@ -476,6 +595,8 @@ export default function RecyclingQueueTab({ canAct }) {
         <RulesPanel canEdit={canAct} />
       ) : view === "analytics" ? (
         <AnalyticsPanel />
+      ) : view === "health" ? (
+        <HealthPanel />
       ) : (
         <>
           <NotificationsPanel />
@@ -617,11 +738,13 @@ export default function RecyclingQueueTab({ canAct }) {
                             <Typography variant="caption" color="text.secondary">{l.reason}</Typography>
                             {l.blocked_reason && <Typography variant="caption" sx={{ color: "#b3261e", fontWeight: 600 }}>⚠ {l.blocked_reason}</Typography>}
                             {l.queued_at && <Typography variant="caption" color="text.secondary">Queued since {fmtDate(l.queued_at)}</Typography>}
+                            {l.recheck_at && <Typography variant="caption" color="text.secondary">Recheck on {fmtDate(l.recheck_at)}</Typography>}
                           </Box>
                         </TableCell>
                         {canAct && (
                           <TableCell sx={cell} align="center">
                             <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap" rowGap={1}>
+                              <Button size="small" variant="outlined" onClick={() => setTl(l)} sx={btn}>Timeline</Button>
                               <Button size="small" variant="outlined" onClick={() => setHist(l)} sx={btn}>Attempts</Button>
                               {l.state === "eligible" && (
                                 <Button size="small" variant="contained" onClick={() => setDlg({ type: "recycle", lead: l })} sx={btn}>Recycle now</Button>
@@ -650,6 +773,7 @@ export default function RecyclingQueueTab({ canAct }) {
           )}
 
           <ActionDialog dlg={dlg} departments={departments} busy={busy} onClose={() => setDlg(null)} onSubmit={submit} />
+          {tl && <TimelineDialog lead={tl} onClose={() => setTl(null)} />}
           {hist && <AttemptHistoryDialog leadId={hist.id} leadName={hist.lead_name} onClose={() => setHist(null)} />}
         </>
       )}
